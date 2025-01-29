@@ -132,11 +132,12 @@ def get_github_repos(users, ignore_list, limit, dry_run, base_dir):
 
                 repo_url = f"https://github.com/{repo}.git"
                 clone_out = run_command(f'git clone "{repo_url}"', dry_run=dry_run)
-                if clone_out:
-                    stats["cloned"] += 1
-                else:
-                    logger.error(f"Failed to clone repository: {repo}")
-                    stats["skipped"] += 1
+                print("clone out: ", clone_out)
+                #
+                #    stats["cloned"] += 1
+                #else:
+                #    logger.error(f"Failed to clone repository: {repo}")
+                #    stats["skipped"] += 1
 
             progress.update(task, advance=1)
 
@@ -558,7 +559,6 @@ def status_command(base_dir, json_output, recursive):
     if json_output:
         summary_key = "summary"
         while summary_key in repo_stats:
-            # use a different name to avoid collision
             summary_key = f"_{summary_key}_"
 
         repo_stats[summary_key] = summary_stats
@@ -592,8 +592,7 @@ def status_command(base_dir, json_output, recursive):
             summary_table.add_row(key.replace("_", " ").capitalize(), str(value))
         console.print(summary_table)
 
-
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(description="Clone or update GitHub repositories.")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -671,3 +670,5 @@ if __name__ == "__main__":
         display_summary()
 
 
+if __name__ == "__main__":
+    main()

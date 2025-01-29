@@ -1,5 +1,7 @@
 build
 dev
 dist
+*.egg-info
 *.pyc
-
+*.log
+*.swp
