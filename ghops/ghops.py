@@ -131,13 +131,12 @@ def get_github_repos(users, ignore_list, limit, dry_run, base_dir):
                     continue
 
                 repo_url = f"https://github.com/{repo}.git"
-                clone_out = run_command(f'git clone "{repo_url}"', dry_run=dry_run)
-                print("clone out: ", clone_out)
-                #
-                #    stats["cloned"] += 1
-                #else:
-                #    logger.error(f"Failed to clone repository: {repo}")
-                #    stats["skipped"] += 1
+                clone_out = run_command(f'git clone "{repo_url}"', dry_run=dry_run, capture_output=True)
+                if clone_out is not None:
+                    stats["cloned"] += 1
+                else:
+                    logger.error(f"Failed to clone repository: {repo}")
+                    stats["skipped"] += 1
 
             progress.update(task, advance=1)
 
