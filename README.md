@@ -195,4 +195,4 @@ This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-© 2025 [Your Name](https://github.com/queelius)
+© 2025 [Alex Towell](https://github.com/queelius)
