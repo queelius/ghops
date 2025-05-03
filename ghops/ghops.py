@@ -112,7 +112,7 @@ def get_github_repos(users, ignore_list, limit, dry_run, base_dir):
             logger.debug(f"Fetching repositories for {user_display}...")
             user_query = user if user else ""
             repos_output = run_command(
-                f"gh repo list {user_query} --limit {limit} --json nameWithOwner --jq '.[].nameWithOwner'",
+                f'gh repo list {user_query} --limit {limit} --json nameWithOwner --jq ".[].nameWithOwner"',
                 capture_output=True,
                 dry_run=dry_run
             )
