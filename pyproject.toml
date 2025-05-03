@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ghops"
-version = "0.3.3"
+version = "0.4.1"
 description = "A CLI tool for managing GitHub repos"
 readme = "README.md"
 authors = [
@@ -34,6 +34,6 @@ dependencies = [
 ghops = "ghops.ghops:main"
 
 [project.urls]
-Homepage = "https://github.com/yourusername/ghops"
-Source = "https://github.com/yourusername/ghops"
-Issues = "https://github.com/yourusername/ghops/issues"
+Homepage = "https://github.com/queelius/ghops"
+Source = "https://github.com/queelius/ghops"
+Issues = "https://github.com/queelius/ghops/issues"

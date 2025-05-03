@@ -18,7 +18,7 @@ console = Console()
 
 # Configure logging to use RichHandler
 logging.basicConfig(
-    level=logging.DEBUG,  # Set the default logging level
+    level=logging.INFO,
     format="%(message)s",
     datefmt="[%X]",
     handlers=[RichHandler(console=console, rich_tracebacks=True)]
@@ -90,7 +90,7 @@ def is_git_repo(repo_path):
     return (Path(repo_path) / ".git").is_dir()
 
 
-def get_github_repos(users, ignore_list, limit, dry_run, base_dir):
+def get_github_repos(users, ignore_list, limit, dry_run, base_dir, visibility="all"):
     """
     Fetches repositories from GitHub users/orgs and clones them.
 
@@ -100,13 +100,14 @@ def get_github_repos(users, ignore_list, limit, dry_run, base_dir):
         limit (int): Maximum number of repositories to fetch per user/org.
         dry_run (bool): If True, simulate actions without making changes.
         base_dir (str): Base directory to clone repositories into.
+        visibility (str): Repository visibility ('all', 'public', 'private').
     """
     # Ensure the base directory exists
     Path(base_dir).mkdir(parents=True, exist_ok=True)
     os.chdir(base_dir)
 
     with Progress() as progress:
-        task = progress.add_task("[cyan]Fetching repositories...", total=len(users))
+        user_task = progress.add_task(f"[cyan]Fetching user repositories...", total=len(users))
         for user in users:
             user_display = user if user else "authenticated user"
             logger.debug(f"Fetching repositories for {user_display}...")
@@ -114,15 +115,15 @@ def get_github_repos(users, ignore_list, limit, dry_run, base_dir):
             repos_output = run_command(
                 f'gh repo list {user_query} --limit {limit} --json nameWithOwner --jq ".[].nameWithOwner"',
                 capture_output=True,
-                dry_run=dry_run
-            )
+                dry_run=dry_run)
 
             if not repos_output:
                 logger.warning(f"No repositories found for {user_display}.")
-                progress.update(task, advance=1)
+                user_task.update(repo_task, advance=1)
                 continue
 
             repos = repos_output.split("\n")
+            repo_task = progress.add_task(f"[cyan]Fetching repositories for {user_display}...", total=len(repos))
             for repo in repos:
                 repo_name = repo.split("/")[-1]
                 if repo_name in ignore_list:
@@ -137,8 +138,9 @@ def get_github_repos(users, ignore_list, limit, dry_run, base_dir):
                 else:
                     logger.error(f"Failed to clone repository: {repo}")
                     stats["skipped"] += 1
+                progress.update(repo_task, advance=1)
 
-            progress.update(task, advance=1)
+            progress.update(user_task, advance=1)
 
 
 def get_git_status(repo_path):
@@ -605,6 +607,7 @@ def main():
     parser_get.add_argument("--limit", type=int, default=1000, help="Limit number of repositories to fetch.")
     parser_get.add_argument("--dry-run", action="store_true", help="Simulate actions without making changes.")
     parser_get.add_argument("--dir", type=str, help="Directory to clone repositories into. Defaults to the current directory.")
+    parser_get.add_argument("--visibility", choices=["all", "public", "private"], default="all", help="Repository visibility.")
 
     # Subcommand: update
     parser_update = subparsers.add_parser("update", help="Update all Git repositories in the specified directory.")
@@ -642,7 +645,8 @@ def main():
             ignore_list=args.ignore,
             limit=args.limit,
             dry_run=args.dry_run,
-            base_dir=base_dir
+            base_dir=base_dir,
+            visibility=args.visibility
         )
     elif args.command == "update":
         base_dir = os.path.abspath(args.dir)
