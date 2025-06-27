@@ -27,11 +27,12 @@ classifiers = [
 
 dependencies = [
   "rich>=13.0.0",
-  "pathlib"
+  "pathlib",
+  "toml"
 ]
 
 [project.scripts]
-ghops = "ghops.ghops:main"
+ghops = "ghops.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/queelius/ghops"
