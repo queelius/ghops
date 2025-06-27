@@ -6,6 +6,7 @@ import logging
 import os
 import subprocess
 from pathlib import Path
+from datetime import datetime
 
 from rich.console import Console
 from rich.json import JSON
@@ -35,7 +36,9 @@ stats = {
     "pulled": 0,
     "pushed": 0,
     "conflicts": 0,
-    "conflicts_resolved": 0
+    "conflicts_resolved": 0,
+    "licenses_added": 0,
+    "licenses_skipped": 0
 }
 
 
@@ -90,7 +93,9 @@ def is_git_repo(repo_path):
     return (Path(repo_path) / ".git").is_dir()
 
 
-def get_github_repos(users, ignore_list, limit, dry_run, base_dir, visibility="all"):
+def get_github_repos(users, ignore_list, limit, dry_run, base_dir, visibility="all", 
+                     add_license=False, license_type="mit", author_name=None, author_email=None, 
+                     license_year=None, force_license=False):
     """
     Fetches repositories from GitHub users/orgs and clones them.
 
@@ -101,6 +106,12 @@ def get_github_repos(users, ignore_list, limit, dry_run, base_dir, visibility="a
         dry_run (bool): If True, simulate actions without making changes.
         base_dir (str): Base directory to clone repositories into.
         visibility (str): Repository visibility ('all', 'public', 'private').
+        add_license (bool): If True, add LICENSE files to cloned repositories.
+        license_type (str): Type of license to add (default: 'mit').
+        author_name (str, optional): Author name for license customization.
+        author_email (str, optional): Author email for license customization.
+        license_year (str, optional): Copyright year for license customization.
+        force_license (bool): If True, overwrite existing LICENSE files.
     """
     # Ensure the base directory exists
     Path(base_dir).mkdir(parents=True, exist_ok=True)
@@ -135,6 +146,20 @@ def get_github_repos(users, ignore_list, limit, dry_run, base_dir, visibility="a
                 clone_out = run_command(f'git clone "{repo_url}"', dry_run=dry_run, capture_output=True)
                 if clone_out is not None:
                     stats["cloned"] += 1
+                    
+                    # Add LICENSE file if requested
+                    if add_license:
+                        repo_dir = Path(base_dir) / repo_name
+                        if repo_dir.exists():
+                            add_license_to_repo(
+                                str(repo_dir),
+                                license_key=license_type,
+                                author_name=author_name,
+                                author_email=author_email,
+                                year=license_year,
+                                dry_run=dry_run,
+                                force=force_license
+                            )
                 else:
                     logger.error(f"Failed to clone repository: {repo}")
                     stats["skipped"] += 1
@@ -310,7 +335,9 @@ def find_git_repos(base_dir, recursive):
     return git_repos
 
 
-def update_all_repos(auto_commit, commit_message, auto_resolve_conflicts, prompt, ignore_list, dry_run, base_dir, recursive):
+def update_all_repos(auto_commit, commit_message, auto_resolve_conflicts, prompt, ignore_list, dry_run, base_dir, recursive,
+                     add_license=False, license_type="mit", author_name=None, author_email=None, 
+                     license_year=None, force_license=False):
     """
     Finds all git repositories in the specified directory and updates them.
 
@@ -323,6 +350,12 @@ def update_all_repos(auto_commit, commit_message, auto_resolve_conflicts, prompt
         dry_run (bool): If True, simulate actions without making changes.
         base_dir (str): Base directory to search for Git repositories.
         recursive (bool): If True, search recursively.
+        add_license (bool): If True, add LICENSE files to repositories.
+        license_type (str): Type of license to add (default: 'mit').
+        author_name (str, optional): Author name for license customization.
+        author_email (str, optional): Author email for license customization.
+        license_year (str, optional): Copyright year for license customization.
+        force_license (bool): If True, overwrite existing LICENSE files.
     """
     repo_dirs = find_git_repos(base_dir, recursive)
 
@@ -336,6 +369,18 @@ def update_all_repos(auto_commit, commit_message, auto_resolve_conflicts, prompt
     with Progress() as progress:
         task = progress.add_task("[cyan]Updating repos...", total=len(repo_dirs))
         for repo in repo_dirs:
+            # Add LICENSE file if requested
+            if add_license:
+                add_license_to_repo(
+                    repo,
+                    license_key=license_type,
+                    author_name=author_name,
+                    author_email=author_email,
+                    year=license_year,
+                    dry_run=dry_run,
+                    force=force_license
+                )
+            
             update_repo(repo, auto_commit, commit_message, auto_resolve_conflicts, prompt, dry_run)
             progress.update(task, advance=1)
 
@@ -369,7 +414,9 @@ def reset_stats():
         "pulled": 0,
         "pushed": 0,
         "conflicts": 0,
-        "conflicts_resolved": 0
+        "conflicts_resolved": 0,
+        "licenses_added": 0,
+        "licenses_skipped": 0
     }
 
 
@@ -435,13 +482,14 @@ def display_repo_status(repo_stats, summary_stats, keys, json_output):
         console.print(summary_table)
 
 
-def display_repo_status_table(repo_dirs, json_output):
+def display_repo_status_table(repo_dirs, json_output, base_dir="."):
     """
     Gathers and displays the status of all repositories.
 
     Args:
         repo_dirs (list): List of repository directories.
         json_output (bool): If True, output in JSON format.
+        base_dir (str): Base directory for display purposes.
     """
     if not repo_dirs:
         logger.warning(f"No Git repositories found in '{base_dir}'.")
@@ -593,6 +641,204 @@ def status_command(base_dir, json_output, recursive):
             summary_table.add_row(key.replace("_", " ").capitalize(), str(value))
         console.print(summary_table)
 
+def get_available_licenses():
+    """
+    Fetches the list of available license templates from GitHub API.
+    
+    Returns:
+        list: List of available license keys, or empty list if failed.
+    """
+    try:
+        output = run_command('gh api /licenses', capture_output=True)
+        if output:
+            licenses_data = json.loads(output)
+            return [license_info['key'] for license_info in licenses_data]
+        return []
+    except (json.JSONDecodeError, KeyError) as e:
+        logger.error(f"Failed to parse licenses from GitHub API: {e}")
+        return []
+
+
+def get_license_template(license_key):
+    """
+    Fetches a specific license template from GitHub API.
+    
+    Args:
+        license_key (str): The license key (e.g., 'mit', 'apache-2.0', 'gpl-3.0').
+    
+    Returns:
+        dict: License template data with 'body' and 'name' keys, or None if failed.
+    """
+    try:
+        output = run_command(f'gh api /licenses/{license_key}', capture_output=True)
+        if output:
+            return json.loads(output)
+        return None
+    except (json.JSONDecodeError, KeyError) as e:
+        logger.error(f"Failed to fetch license template for '{license_key}': {e}")
+        return None
+
+
+def customize_license_content(license_body, author_name=None, author_email=None, year=None):
+    """
+    Customizes a license template with user-specific information.
+    
+    Args:
+        license_body (str): The raw license template content.
+        author_name (str, optional): Author's name. If None, tries to get from git config.
+        author_email (str, optional): Author's email. If None, tries to get from git config.
+        year (str, optional): Copyright year. If None, uses current year.
+    
+    Returns:
+        str: Customized license content.
+    """
+    # Get current year if not provided
+    if not year:
+        year = str(datetime.now().year)
+    
+    # Try to get author info from git config if not provided
+    if not author_name:
+        author_name = run_command('git config --global user.name', capture_output=True) or "[fullname]"
+    
+    if not author_email:
+        author_email = run_command('git config --global user.email', capture_output=True) or "[email]"
+    
+    # Common license template placeholders and their replacements
+    replacements = {
+        '[year]': year,
+        '[fullname]': author_name,
+        '[email]': author_email,
+        '<year>': year,
+        '<name of author>': author_name,
+        '<copyright holders>': author_name,
+        'Copyright (c) [year] [fullname]': f'Copyright (c) {year} {author_name}',
+        'Copyright [yyyy] [name of copyright owner]': f'Copyright {year} {author_name}',
+    }
+    
+    customized_content = license_body
+    for placeholder, replacement in replacements.items():
+        customized_content = customized_content.replace(placeholder, replacement)
+    
+    return customized_content
+
+
+def add_license_to_repo(repo_path, license_key="mit", author_name=None, author_email=None, year=None, dry_run=False, force=False):
+    """
+    Adds a LICENSE file to a repository using GitHub's license templates.
+    
+    Args:
+        repo_path (str): Path to the repository.
+        license_key (str): License template key (default: 'mit').
+        author_name (str, optional): Author's name for customization.
+        author_email (str, optional): Author's email for customization.
+        year (str, optional): Copyright year for customization.
+        dry_run (bool): If True, simulate actions without making changes.
+        force (bool): If True, overwrite existing LICENSE file.
+    
+    Returns:
+        bool: True if license was added successfully, False otherwise.
+    """
+    license_path = Path(repo_path) / "LICENSE"
+    
+    # Check if LICENSE file already exists
+    if license_path.exists() and not force:
+        logger.debug(f"LICENSE file already exists in {repo_path}, skipping.")
+        stats["licenses_skipped"] += 1
+        return False
+    
+    # Get license template
+    license_template = get_license_template(license_key)
+    if not license_template:
+        logger.error(f"Failed to fetch license template '{license_key}' for {repo_path}")
+        stats["licenses_skipped"] += 1
+        return False
+    
+    # Customize license content
+    license_content = customize_license_content(
+        license_template['body'],
+        author_name=author_name,
+        author_email=author_email,
+        year=year
+    )
+    
+    if dry_run:
+        logger.info(f"[Dry Run] Would add {license_template['name']} LICENSE to {repo_path}")
+        return True
+    
+    try:
+        # Write LICENSE file
+        with open(license_path, 'w', encoding='utf-8') as f:
+            f.write(license_content)
+        
+        logger.info(f"Added {license_template['name']} LICENSE to {repo_path}")
+        stats["licenses_added"] += 1
+        return True
+        
+    except IOError as e:
+        logger.error(f"Failed to write LICENSE file to {repo_path}: {e}")
+        stats["licenses_skipped"] += 1
+        return False
+
+
+def list_available_licenses():
+    """
+    Lists all available GitHub license templates.
+    
+    Returns:
+        list: List of tuples (key, name) for available licenses.
+    """
+    licenses = []
+    try:
+        output = run_command('gh api /licenses', capture_output=True)
+        if output:
+            licenses_data = json.loads(output)
+            for license_info in licenses_data:
+                licenses.append((license_info['key'], license_info['name']))
+    except (json.JSONDecodeError, KeyError) as e:
+        logger.error(f"Failed to fetch available licenses: {e}")
+    
+    return licenses
+
+def license_command(list_licenses=False, license_key=None):
+    """
+    Handles the 'license' subcommand for listing or showing license templates.
+    
+    Args:
+        list_licenses (bool): If True, list all available licenses.
+        license_key (str, optional): Show details for a specific license.
+    """
+    if list_licenses:
+        licenses = list_available_licenses()
+        if licenses:
+            table = Table(title="Available GitHub License Templates")
+            table.add_column("Key", style="cyan", justify="left")
+            table.add_column("Name", style="magenta", justify="left")
+            
+            for key, name in sorted(licenses):
+                table.add_row(key, name)
+            
+            console.print(table)
+        else:
+            logger.error("Failed to fetch available licenses. Make sure 'gh' CLI is installed and authenticated.")
+    
+    elif license_key:
+        license_template = get_license_template(license_key)
+        if license_template:
+            console.print(f"[bold cyan]License:[/bold cyan] {license_template['name']}")
+            console.print(f"[bold cyan]Key:[/bold cyan] {license_template['key']}")
+            console.print(f"[bold cyan]URL:[/bold cyan] {license_template.get('url', 'N/A')}")
+            console.print("\n[bold cyan]Template Preview:[/bold cyan]")
+            # Show first 20 lines of the license template
+            lines = license_template['body'].split('\n')
+            preview_lines = lines[:20]
+            if len(lines) > 20:
+                preview_lines.append("... (truncated)")
+            console.print('\n'.join(preview_lines))
+        else:
+            logger.error(f"Failed to fetch license template for '{license_key}'")
+    else:
+        logger.error("Please specify either --list or --show <license-key>")
+
 def main():
     parser = argparse.ArgumentParser(description="Clone or update GitHub repositories.")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -608,6 +854,14 @@ def main():
     parser_get.add_argument("--dry-run", action="store_true", help="Simulate actions without making changes.")
     parser_get.add_argument("--dir", type=str, help="Directory to clone repositories into. Defaults to the current directory.")
     parser_get.add_argument("--visibility", choices=["all", "public", "private"], default="all", help="Repository visibility.")
+    
+    # LICENSE arguments for get command
+    parser_get.add_argument("--add-license", action="store_true", help="Add LICENSE files to cloned repositories.")
+    parser_get.add_argument("--license-type", type=str, default="mit", help="License template to use (default: mit). Use 'ghops license --list' to see available options.")
+    parser_get.add_argument("--license-author", type=str, help="Author name for license customization. Defaults to git config user.name.")
+    parser_get.add_argument("--license-email", type=str, help="Author email for license customization. Defaults to git config user.email.")
+    parser_get.add_argument("--license-year", type=str, help="Copyright year for license customization. Defaults to current year.")
+    parser_get.add_argument("--force-license", action="store_true", help="Overwrite existing LICENSE files.")
 
     # Subcommand: update
     parser_update = subparsers.add_parser("update", help="Update all Git repositories in the specified directory.")
@@ -619,12 +873,25 @@ def main():
     parser_update.add_argument("--dry-run", action="store_true", help="Simulate actions without making changes.")
     parser_update.add_argument("--dir", type=str, default=".", help="Base directory to search for Git repositories.")
     parser_update.add_argument("--recursive", action="store_true", help="Recursively search for Git repositories.")
+    
+    # LICENSE arguments for update command
+    parser_update.add_argument("--add-license", action="store_true", help="Add LICENSE files to repositories.")
+    parser_update.add_argument("--license-type", type=str, default="mit", help="License template to use (default: mit). Use 'ghops license --list' to see available options.")
+    parser_update.add_argument("--license-author", type=str, help="Author name for license customization. Defaults to git config user.name.")
+    parser_update.add_argument("--license-email", type=str, help="Author email for license customization. Defaults to git config user.email.")
+    parser_update.add_argument("--license-year", type=str, help="Copyright year for license customization. Defaults to current year.")
+    parser_update.add_argument("--force-license", action="store_true", help="Overwrite existing LICENSE files.")
 
     # Subcommand: status
     parser_status = subparsers.add_parser("status", help="Display status of Git repositories.")
     parser_status.add_argument("--json", action="store_true", help="Output statistics in JSON format. Defaults to table format.")
     parser_status.add_argument("--recursive", action="store_true", help="Recursively search for Git repositories.")
     parser_status.add_argument("--dir", type=str, default=".", help="Directory to search for Git repositories.")
+
+    # Subcommand: license
+    parser_license = subparsers.add_parser("license", help="Manage license templates.")
+    parser_license.add_argument("--list", action="store_true", help="List all available license templates.")
+    parser_license.add_argument("--show", type=str, help="Show details for a specific license template.")
 
     args = parser.parse_args()
 
@@ -634,8 +901,11 @@ def main():
     # Reset stats for each run
     reset_stats()
 
-    # Determine base directory
-    base_dir = os.path.abspath(args.dir)
+    # Determine base directory (only for commands that use it)
+    if hasattr(args, 'dir'):
+        base_dir = os.path.abspath(args.dir)
+    else:
+        base_dir = os.getcwd()
 
     if args.command == "get":
         # If no users are provided, default to the authenticated user
@@ -646,7 +916,13 @@ def main():
             limit=args.limit,
             dry_run=args.dry_run,
             base_dir=base_dir,
-            visibility=args.visibility
+            visibility=args.visibility,
+            add_license=args.add_license,
+            license_type=args.license_type,
+            author_name=args.license_author,
+            author_email=args.license_email,
+            license_year=args.license_year,
+            force_license=args.force_license
         )
     elif args.command == "update":
         base_dir = os.path.abspath(args.dir)
@@ -658,7 +934,13 @@ def main():
             ignore_list=args.ignore,
             dry_run=args.dry_run,
             base_dir=base_dir,
-            recursive=args.recursive
+            recursive=args.recursive,
+            add_license=args.add_license,
+            license_type=args.license_type,
+            author_name=args.license_author,
+            author_email=args.license_email,
+            license_year=args.license_year,
+            force_license=args.force_license
         )
     elif args.command == "status":
         base_dir = os.path.abspath(args.dir)
@@ -666,6 +948,11 @@ def main():
             base_dir=base_dir,
             json_output=args.json,
             recursive=args.recursive
+        )
+    elif args.command == "license":
+        license_command(
+            list_licenses=args.list,
+            license_key=args.show
         )
 
     # Print summary table after 'get' or 'update' operations
