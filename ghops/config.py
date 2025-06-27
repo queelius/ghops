@@ -15,3 +15,6 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger("rich")
+
+# Summary statistics
+stats = {}

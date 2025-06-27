@@ -14,8 +14,8 @@ def reset_stats():
     """
     Resets the summary statistics.
     """
-    global stats
-    stats = {
+    stats.clear()
+    stats.update({
         "cloned": 0,
         "skipped": 0,
         "updated": 0,
@@ -25,8 +25,9 @@ def reset_stats():
         "conflicts": 0,
         "conflicts_resolved": 0,
         "licenses_added": 0,
-        "licenses_skipped": 0
-    }
+        "licenses_skipped": 0,
+        "repos_with_pages": 0
+    })
 
 def display_summary():
     """
@@ -45,6 +46,8 @@ def main():
     """
     Main function for the ghops script.
     """
+    reset_stats()
+
     parser = argparse.ArgumentParser(description="Manage multiple GitHub repositories.")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -84,8 +87,7 @@ def main():
     parser_status.add_argument("-d", "--dir", default=".", help="Directory to search for repos.")
     parser_status.add_argument("-r", "--recursive", action="store_true", help="Search for repos recursively.")
     parser_status.add_argument("--json", action="store_true", help="Output in JSON format.")
-    parser_status.add_argument("--license-details", action="store_true", help="Show detailed license information.")
-    parser_status.add_argument("--show-pages", action="store_true", help="Show GitHub Pages URL.")
+    parser_status.add_argument("--no-pages-check", action="store_false", dest="check_gh_pages", help="Skip checking for GitHub Pages to speed up the process.")
 
     # 'license' command
     parser_license = subparsers.add_parser("license", help="Manage LICENSE files.")
@@ -129,14 +131,15 @@ def main():
         )
     elif args.command == "status":
         repo_dirs = find_git_repos(args.dir, args.recursive)
-        display_repo_status_table(repo_dirs, args.json, args.dir, args.license_details, args.show_pages)
+        display_repo_status_table(repo_dirs, args.json, args.dir, args.check_gh_pages)
     elif args.command == "license":
         if args.list:
             list_licenses(args.json)
         elif args.show:
             show_license_template(args.show, args.json)
 
-    display_summary()
+    if args.command in ["get", "update", "status"]:
+        display_summary()
 
 if __name__ == "__main__":
     main()

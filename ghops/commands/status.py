@@ -5,6 +5,7 @@ import os
 import json
 from rich.table import Table
 from rich.json import JSON
+from rich.progress import Progress
 from ..config import console, logger
 from ..utils import find_git_repos, get_git_status, run_command
 
@@ -52,25 +53,42 @@ def get_gh_pages_url(repo_path):
     if not remote_url:
         return "N/A"
 
-    # Extract owner/repo from URL (https://github.com/owner/repo.git)
+    # Extract owner/repo from URL
     try:
-        owner_repo = '/'.join(remote_url.split('/')[-2:]).replace('.git', '')
+        # Handle https:// and git@ formats
+        if remote_url.startswith("https://"):
+            owner_repo = '/'.join(remote_url.strip().split('/')[-2:]).replace('.git', '')
+        else: # git@github.com:owner/repo.git
+            owner_repo = remote_url.strip().split(':')[-1].replace('.git', '')
     except IndexError:
         return "N/A"
 
     # Use gh api to get pages info
-    pages_info_json = run_command(f"gh api repos/{owner_repo}/pages", capture_output=True, check=False)
+    # The command returns a non-zero exit code if pages are not enabled (404)
+    # We run it from the base dir of the repo to ensure gh can authenticate correctly
+    # We also suppress stderr logging since a 404 is expected for repos without pages
+    pages_info_json = run_command(
+        f"gh api repos/{owner_repo}/pages", 
+        repo_path, 
+        capture_output=True, 
+        check=False, 
+        log_stderr=False
+    )
     if not pages_info_json:
         return "N/A"
     
     try:
         pages_info = json.loads(pages_info_json)
-        if pages_info.get("status") == "built":
+        # The API returns a message field when pages are not found
+        if "message" in pages_info and pages_info["message"] == "Not Found":
+            return "N/A"
+        if pages_info.get("status") in ["built", "building"]:
             return pages_info.get("html_url", "N/A")
     except json.JSONDecodeError:
         return "N/A"
         
     return "N/A"
+
 
 def display_repo_status(repo_stats, summary_stats, keys, json_output):
     """
@@ -123,7 +141,8 @@ def display_repo_status(repo_stats, summary_stats, keys, json_output):
             summary_table.add_row(key.replace("_", " ").capitalize(), str(value))
         console.print(summary_table)
 
-def display_repo_status_table(repo_dirs, json_output, base_dir=".", license_details=False, show_pages=False):
+
+def display_repo_status_table(repo_dirs, json_output, base_dir=".", check_gh_pages=True):
     """
     Gathers and displays the status of all repositories.
 
@@ -131,8 +150,7 @@ def display_repo_status_table(repo_dirs, json_output, base_dir=".", license_deta
         repo_dirs (list): List of repository directories.
         json_output (bool): If True, output in JSON format.
         base_dir (str): Base directory for display purposes.
-        license_details (bool): If True, show detailed license information.
-        show_pages (bool): If True, show GitHub Pages URL.
+        check_gh_pages (bool): If True, check for GitHub Pages URL.
     """
     if not repo_dirs:
         logger.warning(f"No Git repositories found in '{base_dir}'.")
@@ -149,44 +167,51 @@ def display_repo_status_table(repo_dirs, json_output, base_dir=".", license_deta
         "repos_with_pages": 0
     }
 
-    keys = ["path", "status", "branch", "remote_url"]
-    if license_details:
-        keys.append("license")
-    if show_pages:
+    keys = ["path", "status", "branch", "remote_url", "license"]
+    if check_gh_pages:
         keys.append("gh_pages_url")
 
-    for repo_path in repo_dirs:
-        repo_name = os.path.basename(repo_path)
-        status = get_git_status(repo_path)
-        branch = run_command("git rev-parse --abbrev-ref HEAD", repo_path, capture_output=True)
-        remote_url = run_command("git config --get remote.origin.url", repo_path, capture_output=True)
-        license_info = get_license_info(repo_path)
-        gh_pages_url = get_gh_pages_url(repo_path) if show_pages else "N/A"
+    with Progress(
+        "[progress.description]{task.description}",
+        "({task.completed}/{task.total})",
+        transient=False,
+    ) as progress:
+        task = progress.add_task("[cyan]Checking repos...", total=len(repo_dirs))
 
-        repo_stats[repo_name] = {
-            "path": repo_path,
-            "status": "Clean" if not status else "Dirty",
-            "branch": branch,
-            "remote_url": remote_url,
-            "license": license_info,
-            "gh_pages_url": gh_pages_url
-        }
+        for repo_path in repo_dirs:
+            repo_name = os.path.basename(repo_path)
+            progress.update(task, advance=1, description=f"[cyan]Checking {repo_name}...")
+            
+            status = get_git_status(repo_path)
+            branch = run_command("git rev-parse --abbrev-ref HEAD", repo_path, capture_output=True)
+            remote_url = run_command("git config --get remote.origin.url", repo_path, capture_output=True)
+            license_info = get_license_info(repo_path)
+            gh_pages_url = get_gh_pages_url(repo_path) if check_gh_pages else "N/A"
 
-        if not status:
-            summary_stats["clean_repos"] += 1
-        else:
-            summary_stats["dirty_repos"] += 1
-        
-        if license_info != "N/A":
-            summary_stats["repos_with_license"] += 1
-            if license_info in summary_stats["license_types"]:
-                summary_stats["license_types"][license_info] += 1
+            repo_stats[repo_name] = {
+                "path": repo_path,
+                "status": "Clean" if not status else "Dirty",
+                "branch": branch,
+                "remote_url": remote_url,
+                "license": license_info,
+                "gh_pages_url": gh_pages_url
+            }
+
+            if not status:
+                summary_stats["clean_repos"] += 1
             else:
-                summary_stats["license_types"][license_info] = 1
-        else:
-            summary_stats["repos_without_license"] += 1
+                summary_stats["dirty_repos"] += 1
+            
+            if license_info != "N/A":
+                summary_stats["repos_with_license"] += 1
+                if license_info in summary_stats["license_types"]:
+                    summary_stats["license_types"][license_info] += 1
+                else:
+                    summary_stats["license_types"][license_info] = 1
+            else:
+                summary_stats["repos_without_license"] += 1
 
-        if gh_pages_url != "N/A":
-            summary_stats["repos_with_pages"] += 1
+            if gh_pages_url != "N/A":
+                summary_stats["repos_with_pages"] += 1
 
     display_repo_status(repo_stats, summary_stats, keys, json_output)

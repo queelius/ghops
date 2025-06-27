@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from .config import logger
 
-def run_command(command, cwd=".", dry_run=False, capture_output=False, check=True):
+def run_command(command, cwd=".", dry_run=False, capture_output=False, check=True, log_stderr=True):
     """
     Runs a shell command and logs the output.
 
@@ -16,6 +16,7 @@ def run_command(command, cwd=".", dry_run=False, capture_output=False, check=Tru
         dry_run (bool): If True, log the command without executing.
         capture_output (bool): If True, return stdout.
         check (bool): If True, raise CalledProcessError on non-zero exit codes.
+        log_stderr (bool): If False, do not log stderr as an error.
 
     Returns:
         str: The command's stdout if capture_output is True, otherwise None.
@@ -37,13 +38,14 @@ def run_command(command, cwd=".", dry_run=False, capture_output=False, check=Tru
         )
         if result.stdout.strip():
             logger.debug(result.stdout.strip())
-        if result.stderr.strip():
+        if result.stderr.strip() and log_stderr:
             logger.error(result.stderr.strip())
         return result.stdout.strip() if capture_output else None
     except subprocess.CalledProcessError as e:
-        logger.error(f"Command failed with exit code {e.returncode}: {command}")
-        logger.error(f"Stderr: {e.stderr.strip()}")
-        logger.error(f"Stdout: {e.stdout.strip()}")
+        if log_stderr:
+            logger.error(f"Command failed with exit code {e.returncode}: {command}")
+            logger.error(f"Stderr: {e.stderr.strip()}")
+            logger.error(f"Stdout: {e.stdout.strip()}")
         if check:
             raise
         return e.stdout.strip() if capture_output else None
