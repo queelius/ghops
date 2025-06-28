@@ -68,7 +68,7 @@ ghops status [options]
 | `-d`, `--dir` | Directory to search for repos. Defaults to the current directory. |
 | `-r`, `--recursive` | Search for repos recursively. |
 | `--json` | Output in JSON format. |
-| `--license-details` | Show detailed license information. |
+| `--no-pages-check` | Skip checking for GitHub Pages to speed up the process. |
 
 ## `license`
 
