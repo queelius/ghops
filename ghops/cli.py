@@ -181,11 +181,19 @@ def main():
 
     elif args.command == "update":
         update_all_repos(
-            repo_dirs,
-            args.dir,
-            license_type=getattr(args, 'license', None),
-            license_name=getattr(args, 'license_name', None),
-            license_email=getattr(args, 'license_email', None)
+            repo_dirs=repo_dirs,
+            auto_commit=getattr(args, 'auto_commit', False),
+            commit_message=getattr(args, 'commit_message', 'Automated commit by ghops'),
+            auto_resolve_conflicts=getattr(args, 'conflicts', 'abort'),
+            prompt=getattr(args, 'prompt', False),
+            ignore_list=getattr(args, 'ignore', []),
+            dry_run=getattr(args, 'dry_run', False),
+            add_license=bool(getattr(args, 'license', None)),
+            license_type=getattr(args, 'license', 'mit'),
+            author_name=getattr(args, 'license_name', None),
+            author_email=getattr(args, 'license_email', None),
+            license_year=getattr(args, 'license_year', None),
+            force_license=getattr(args, 'force', False)
         )
         display_summary()
 

@@ -215,51 +215,44 @@ class TestUpdateCommand(unittest.TestCase):
         mock_conflicts.assert_not_called()
         mock_push.assert_called_once()
     
-    @patch('ghops.commands.update.find_git_repos')
     @patch('ghops.commands.update.update_repo')
-    def test_update_all_repos_basic(self, mock_update_repo, mock_find_repos):
+    def test_update_all_repos_basic(self, mock_update_repo):
         """Test basic update of all repositories"""
-        # Mock finding repositories
-        mock_find_repos.return_value = [
+        repo_dirs = [
             os.path.join(self.temp_dir, 'repo1'),
             os.path.join(self.temp_dir, 'repo2')
         ]
         
         update_all_repos(
+            repo_dirs=repo_dirs,
             auto_commit=False,
             commit_message="Test",
             auto_resolve_conflicts=None,
             prompt=False,
             ignore_list=[],
-            dry_run=False,
-            base_dir=self.temp_dir,
-            recursive=True
+            dry_run=False
         )
         
         # Should call update_repo for each repository
         self.assertEqual(mock_update_repo.call_count, 2)
-        mock_find_repos.assert_called_once_with(self.temp_dir, True)
     
-    @patch('ghops.commands.update.find_git_repos')
     @patch('ghops.commands.update.update_repo')
-    def test_update_all_repos_with_ignore_list(self, mock_update_repo, mock_find_repos):
+    def test_update_all_repos_with_ignore_list(self, mock_update_repo):
         """Test update with ignored repositories"""
-        # Mock finding repositories
-        mock_find_repos.return_value = [
+        repo_dirs = [
             os.path.join(self.temp_dir, 'repo1'),
             os.path.join(self.temp_dir, 'ignored_repo'),
             os.path.join(self.temp_dir, 'repo2')
         ]
         
         update_all_repos(
+            repo_dirs=repo_dirs,
             auto_commit=False,
             commit_message="Test",
             auto_resolve_conflicts=None,
             prompt=False,
             ignore_list=['ignored_repo'],
-            dry_run=False,
-            base_dir=self.temp_dir,
-            recursive=True
+            dry_run=False
         )
         
         # Should call update_repo only for non-ignored repositories
@@ -271,23 +264,20 @@ class TestUpdateCommand(unittest.TestCase):
         self.assertIn(os.path.join(self.temp_dir, 'repo2'), called_repos)
         self.assertNotIn(os.path.join(self.temp_dir, 'ignored_repo'), called_repos)
     
-    @patch('ghops.commands.update.find_git_repos')
     @patch('ghops.commands.update.add_license_to_repo')
     @patch('ghops.commands.update.update_repo')
-    def test_update_all_repos_with_license(self, mock_update_repo, mock_add_license, mock_find_repos):
+    def test_update_all_repos_with_license(self, mock_update_repo, mock_add_license):
         """Test update with license addition"""
-        # Mock finding repositories
-        mock_find_repos.return_value = [os.path.join(self.temp_dir, 'repo1')]
+        repo_dirs = [os.path.join(self.temp_dir, 'repo1')]
         
         update_all_repos(
+            repo_dirs=repo_dirs,
             auto_commit=False,
             commit_message="Test",
             auto_resolve_conflicts=None,
             prompt=False,
             ignore_list=[],
             dry_run=False,
-            base_dir=self.temp_dir,
-            recursive=True,
             add_license=True,
             license_type="mit",
             author_name="Test Author"
@@ -297,24 +287,18 @@ class TestUpdateCommand(unittest.TestCase):
         mock_add_license.assert_called_once()
         mock_update_repo.assert_called_once()
     
-    @patch('ghops.commands.update.find_git_repos')
-    def test_update_all_repos_no_repositories(self, mock_find_repos):
+    def test_update_all_repos_no_repositories(self):
         """Test update when no repositories are found"""
-        mock_find_repos.return_value = []
-        
         # Should not raise an exception
         update_all_repos(
+            repo_dirs=[],
             auto_commit=False,
             commit_message="Test",
             auto_resolve_conflicts=None,
             prompt=False,
             ignore_list=[],
-            dry_run=False,
-            base_dir=self.temp_dir,
-            recursive=True
+            dry_run=False
         )
-        
-        mock_find_repos.assert_called_once()
 
 
 if __name__ == '__main__':

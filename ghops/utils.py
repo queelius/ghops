@@ -33,19 +33,36 @@ def run_command(command, cwd=".", dry_run=False, capture_output=False, check=Tru
             capture_output=True,
             text=True,
             cwd=cwd,
-            check=check,
+            check=False,  # Disable check here to handle output manually
             encoding='utf-8'
         )
-        if result.stdout.strip():
-            logger.debug(result.stdout.strip())
-        if result.stderr.strip() and log_stderr:
-            logger.error(result.stderr.strip())
+
+        # Log stdout at the appropriate level
+        if result.stdout and result.stdout.strip():
+            # For certain commands, stdout is informational, not an error
+            if command.startswith("git pull") and "already up to date" in result.stdout.lower():
+                logger.info(result.stdout.strip())
+            else:
+                logger.debug(result.stdout.strip())
+
+        # Log stderr only if the command failed
+        if result.returncode != 0:
+            if log_stderr and result.stderr and result.stderr.strip():
+                logger.error(result.stderr.strip())
+            # If check is True, re-raise the exception
+            if check:
+                raise subprocess.CalledProcessError(
+                    result.returncode, command, output=result.stdout, stderr=result.stderr
+                )
+
         return result.stdout.strip() if capture_output else None
     except subprocess.CalledProcessError as e:
         if log_stderr:
             logger.error(f"Command failed with exit code {e.returncode}: {command}")
-            logger.error(f"Stderr: {e.stderr.strip()}")
-            logger.error(f"Stdout: {e.stdout.strip()}")
+            if e.stderr:
+                logger.error(f"Stderr: {e.stderr.strip()}")
+            if e.stdout:
+                logger.error(f"Stdout: {e.stdout.strip()}")
         if check:
             raise
         return e.stdout.strip() if capture_output else None

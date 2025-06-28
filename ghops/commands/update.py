@@ -76,7 +76,7 @@ def push_repo(repo_path, dry_run):
 
 def handle_merge_conflicts(repo_path, strategy, dry_run):
     """
-    Attempts to resolve merge conflicts if any.
+    Attempts to resolve merge or rebase conflicts if any.
 
     Args:
         repo_path (str): Path to the Git repository.
@@ -85,19 +85,30 @@ def handle_merge_conflicts(repo_path, strategy, dry_run):
     """
     conflicts = run_command("git ls-files -u", repo_path, capture_output=True)
     if conflicts:
-        logger.warning(f"Merge conflicts detected in {repo_path}.")
+        # Determine if it's a merge or rebase conflict
+        is_rebase = os.path.isdir(os.path.join(repo_path, ".git", "rebase-merge"))
+        conflict_type = "Rebase" if is_rebase else "Merge"
+        abort_command = "git rebase --abort" if is_rebase else "git merge --abort"
+
+        logger.warning(f"{conflict_type} conflicts detected in {repo_path}.")
         stats["conflicts"] += 1
+        
         if strategy == "abort":
-            logger.info("Aborting merge...")
-            run_command("git merge --abort", repo_path, dry_run)
+            logger.info(f"Aborting {conflict_type.lower()}...")
+            run_command(abort_command, repo_path, dry_run)
         elif strategy == "ours":
-            logger.info("Resolving conflicts using 'ours' strategy...")
-            run_command("git merge --strategy=ours", repo_path, dry_run)
+            logger.info(f"Resolving conflicts using 'ours' strategy...")
+            run_command("git checkout --ours . && git add -A", repo_path, dry_run)
+            run_command(f'git commit -m "Auto-resolved conflicts using ours"', repo_path, dry_run)
+            if is_rebase:
+                run_command("git rebase --continue", repo_path, dry_run)
             stats["conflicts_resolved"] += 1
         elif strategy == "theirs":
-            logger.info("Resolving conflicts using 'theirs' strategy...")
+            logger.info(f"Resolving conflicts using 'theirs' strategy...")
             run_command("git checkout --theirs . && git add -A", repo_path, dry_run)
-            run_command('git commit -m "Auto-resolved merge conflicts using theirs"', repo_path, dry_run)
+            run_command(f'git commit -m "Auto-resolved conflicts using theirs"', repo_path, dry_run)
+            if is_rebase:
+                run_command("git rebase --continue", repo_path, dry_run)
             stats["conflicts_resolved"] += 1
         else:
             logger.warning("Leaving conflicts for manual resolution.")
@@ -130,21 +141,20 @@ def update_repo(repo_path, auto_commit, commit_message, auto_resolve_conflicts, 
 
     push_repo(repo_path, dry_run)
 
-def update_all_repos(auto_commit, commit_message, auto_resolve_conflicts, prompt, ignore_list, dry_run, base_dir, recursive,
+def update_all_repos(repo_dirs, auto_commit, commit_message, auto_resolve_conflicts, prompt, ignore_list, dry_run,
                      add_license=False, license_type="mit", author_name=None, author_email=None, 
                      license_year=None, force_license=False):
     """
     Finds all git repositories in the specified directory and updates them.
 
     Args:
+        repo_dirs (list): List of repository directories to update.
         auto_commit (bool): If True, automatically commit changes before pulling.
         commit_message (str): Commit message for auto-commits.
         auto_resolve_conflicts (str): Conflict resolution strategy.
         prompt (bool): If True, prompt before pushing changes.
         ignore_list (list): List of repository names to ignore.
         dry_run (bool): If True, simulate actions without making changes.
-        base_dir (str): Base directory to search for Git repositories.
-        recursive (bool): If True, search recursively.
         add_license (bool): If True, add LICENSE files to repositories.
         license_type (str): Type of license to add (default: 'mit').
         author_name (str, optional): Author name for license customization.
@@ -152,13 +162,11 @@ def update_all_repos(auto_commit, commit_message, auto_resolve_conflicts, prompt
         license_year (str, optional): Copyright year for license customization.
         force_license (bool): If True, overwrite existing LICENSE files.
     """
-    repo_dirs = find_git_repos(base_dir, recursive)
-
     if ignore_list:
         repo_dirs = [d for d in repo_dirs if os.path.basename(d) not in ignore_list]
 
     if not repo_dirs:
-        logger.warning(f"No Git repositories found in '{base_dir}' with the given parameters.")
+        logger.warning("No Git repositories found matching the criteria.")
         return
 
     with Progress() as progress:
