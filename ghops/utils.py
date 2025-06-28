@@ -87,9 +87,53 @@ def get_git_status(repo_path):
         repo_path (str): Path to the Git repository.
 
     Returns:
-        str: The git status output, or None if an error occurs.
+        dict: A dictionary containing 'status' and 'branch' information, or None if an error occurs.
     """
-    return run_command("git status --porcelain", repo_path, capture_output=True)
+    try:
+        # Get current branch
+        branch_output = run_command("git rev-parse --abbrev-ref HEAD", repo_path, capture_output=True)
+        branch = branch_output.strip() if branch_output else "unknown"
+        
+        # Get status (porcelain format for clean parsing)
+        status_output = run_command("git status --porcelain", repo_path, capture_output=True)
+        
+        if status_output is None:
+            return None
+            
+        # Parse status
+        if not status_output.strip():
+            status = "clean"
+        else:
+            # Count different types of changes
+            lines = status_output.strip().split('\n')
+            modified = sum(1 for line in lines if line.startswith(' M') or line.startswith('M'))
+            added = sum(1 for line in lines if line.startswith('A'))
+            deleted = sum(1 for line in lines if line.startswith(' D') or line.startswith('D'))
+            untracked = sum(1 for line in lines if line.startswith('??'))
+            
+            status_parts = []
+            if modified > 0:
+                status_parts.append(f"{modified} modified")
+            if added > 0:
+                status_parts.append(f"{added} added")
+            if deleted > 0:
+                status_parts.append(f"{deleted} deleted")
+            if untracked > 0:
+                status_parts.append(f"{untracked} untracked")
+            
+            status = ", ".join(status_parts) if status_parts else "changes"
+        
+        return {
+            'status': status,
+            'branch': branch
+        }
+        
+    except Exception as e:
+        # Return a safe default if there's any error
+        return {
+            'status': 'error',
+            'branch': 'unknown'
+        }
 
 def is_git_repo(repo_path):
     """

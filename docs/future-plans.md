@@ -2,21 +2,130 @@
 
 This document outlines planned features and enhancements for `ghops`, organized by priority and complexity.
 
-## Short-term Goals (Next Release)
+## 🎉 v0.6.0 - Major Milestone Completed ✅
+
+### Architecture & Quality Overhaul
+- ✅ **Complete Modular Redesign**: Separated all functionality into dedicated command modules
+- ✅ **Comprehensive Testing**: 138 tests achieving 86% code coverage
+- ✅ **Robust Error Handling**: Graceful handling of network failures and edge cases
+- ✅ **Performance Optimizations**: Optional API checks with performance flags
+- ✅ **Enhanced Documentation**: Complete rewrite of README, usage guide, and API docs
+
+### Enhanced Feature Set
+- ✅ **Advanced Configuration**: JSON/TOML support with environment variable overrides
+- ✅ **License Management**: Full GitHub API integration with template customization
+- ✅ **Social Media Automation**: Multi-platform support with template-driven content
+- ✅ **GitHub Pages Detection**: Multi-method detection for documentation sites
+- ✅ **Improved PyPI Integration**: Enhanced package detection and version tracking
+
+## Previously Implemented ✅
 
 ### PyPI Package Detection and Management
+- ✅ **Package Detection**: Scan repositories for `pyproject.toml`, `setup.py`, `setup.cfg`
+- ✅ **PyPI Status Check**: Query PyPI API to verify packages and get version info
+- ✅ **Status Integration**: Include PyPI package and version columns in status output
+- ✅ **Statistics Tracking**: Track repos with packages, published packages, outdated packages
+- ✅ **Performance Options**: `--no-pypi-check` flag for faster results
 
-**Motivation**: Many Python repositories should be packages but aren't properly configured for PyPI distribution.
+### Configuration System
+- ✅ **Config File Support**: `~/.ghopsrc` with JSON/TOML format support
+- ✅ **Example Generation**: `ghops config generate` command
+- ✅ **Environment Override**: `GHOPS_CONFIG` and per-setting environment variables
 
-#### Package Detection (Code-First Approach)
+### Social Media Framework
+- ✅ **Platform Support**: Framework for Twitter/X, LinkedIn, Mastodon
+- ✅ **Smart Sampling**: Random repository selection for content with filtering
+- ✅ **Template System**: Configurable post templates for different content types
+- ✅ **Preview Mode**: `--dry-run` flag to preview posts before publishing
+- ✅ **Rate Limiting**: Daily limits and time-based posting controls
 
-- **Detect existing packages**: Scan repositories for `pyproject.toml`, `setup.py`, or `setup.cfg` files
-- **Extract package metadata**: Parse packaging files to get the official PyPI package name
-- **PyPI status check**: Query PyPI API to verify if the package exists and get version info
-- **Add to status command**: Include `pypi_package` and `pypi_version` columns in status output
-- **Summary statistics**: Track "repos with packages", "published packages", "outdated packages"
+## 🚀 Next Release Goals (v0.7.0)
+
+### Priority 1: Core Usability Improvements 🎯
+
+#### Single Repository Operations
+
+**Motivation**: Fix the critical usability gap where `ghops` does nothing when run inside a git repository.
+
+**Current Problem**:
+
+```bash
+cd ~/my-awesome-project  # This is a git repo
+ghops status             # Does nothing - very confusing!
+ghops update            # Does nothing - breaks user expectations
+```
+
+**Expected Behavior**:
+
+```bash
+cd ~/my-awesome-project  # This is a git repo  
+ghops status             # Shows detailed status of THIS repo
+ghops update            # Updates THIS repo with enhanced output
+ghops license add mit   # Adds license to THIS repo
+```
+
+**Implementation Features**:
+
+- **Smart Mode Detection**: Auto-detect if current directory is a git repository
+- **Single vs Batch Modes**:
+  - Single repo mode: Detailed output, repo-specific operations
+  - Batch mode: Summary tables, multi-repo operations
+- **Unified Command Interface**:
+  - `ghops status` - Auto-detects mode based on current directory
+  - `ghops status --batch` - Force batch mode even in git directory
+  - `ghops status --single` - Force single mode even outside git directory
+- **Enhanced Single-Repo Output**: More detailed information when focusing on one repository
+
+#### Programmatic API
+
+**Motivation**: Enable `ghops` integration into Python scripts, automation systems, and provide better developer experience.
+
+**API Design Goals**:
+
+- **Clean Python Interface**: Full programmatic access to all `ghops` functionality
+- **Type Safety**: Complete type hints for IDE support and better developer experience
+- **Async Support**: For operations involving network calls and batch processing
+- **Documentation**: Auto-generated API docs via docstrings and MkDocs
+
+**Example API Usage**:
+
+```python
+from ghops import api
+from pathlib import Path
+
+# Single repository operations
+repo = api.repository(Path.cwd())
+status = repo.get_status()
+pypi_info = repo.get_pypi_info()
+pages_url = repo.get_pages_url()
+
+# Batch operations
+results = api.scan_repositories(
+    directory="~/projects",
+    recursive=True,
+    filters={"language": "python", "has_pyproject": True}
+)
+
+# Social media operations
+posts = api.create_social_posts(
+    repositories=results.with_packages(),
+    template="pypi_release",
+    dry_run=True
+)
+```
+
+**Implementation Strategy**:
+
+- **CLI as Thin Wrapper**: Refactor CLI to use the programmatic API internally
+- **Result Objects**: Structured returns instead of console output
+- **Error Handling**: Proper exception hierarchy for programmatic error handling
+- **Testing**: API makes comprehensive testing much easier
+
+### Priority 2: Enhanced Functionality ⚡
 
 #### Auto-Package Generation
+
+**Motivation**: Make it easy to convert existing repositories into publishable Python packages.
 
 - **New command**: `ghops package init` to bootstrap packaging for repositories
 - **Smart defaults**:
@@ -29,167 +138,221 @@ This document outlines planned features and enhancements for `ghops`, organized 
 
 #### Publishing Automation
 
-- **New command**: `ghops package publish` to build and upload packages
-- **Version management**: Integration with existing `bump-version` script
-- **Batch operations**: Publish multiple packages with `--all` flag
-- **Safety checks**: Warn before overwriting existing versions
-- **Dry-run support**: Show what would be published without actually doing it
+- **New command**: `ghops package publish` for automated PyPI uploads
+- **Version management**: Integration with version bumping
+- **Build automation**: Automatic wheel and sdist generation
+- **Safety checks**: Verify package before upload
+- **Batch publishing**: Publish multiple packages with version updates
 
-## Medium-term Goals
+### Repository Filtering and Selection
+
+#### Smart Filtering System
+
+**Motivation**: When managing hundreds of repositories, you need fine-grained control over which repositories to operate on.
+
+- **`.ghopsignore` files**: Similar to `.gitignore`, but for excluding repositories from operations
+  - **Base directory**: Place `.ghopsignore` in the root directory to set global exclusions
+  - **Subdirectory filtering**: `.ghopsignore` in subdirectories excludes repos in that subtree
+  - **Self-exclusion**: If a repository directory contains `.ghopsignore`, it excludes itself
+  - **Pattern matching**: Support glob patterns, regex, and path-based exclusions
+- **Command-line filters**: One-off filtering for specific operations
+  - `--include` and `--exclude` flags with glob patterns
+  - `--filter` for complex expressions (e.g., `--filter "language:python AND has:pyproject.toml"`)
+  - `--limit N` to operate on only N repositories (useful for testing)
+- **Whitelist mode**: Invert the filtering logic
+  - `--whitelist-only` mode where only explicitly included repositories are processed
+  - Useful for focusing on specific projects while ignoring everything else
+  - Can be combined with `.ghopsinclude` files for persistent whitelist configuration
+- **Smart selection**:
+  - `--changed-only`: Only repositories with uncommitted changes
+  - `--outdated-only`: Only repositories behind their remote
+  - `--python-only`: Only repositories with Python code
+  - `--has-issues`: Only repositories with open GitHub issues
+
+#### Filter Configuration
+
+- **Filter profiles**: Named filter configurations for different use cases
+  - `ghops config filter create work --include "work/*" --exclude "*/archive/*"`
+  - `ghops config filter create python --filter "language:python"`
+  - `ghops status --filter-profile python`
+- **Interactive selection**: TUI for selecting repositories visually
+- **Filter testing**: `ghops filter test` to see which repositories match current filters
+
+## Medium-term Goals (v0.7.0 - v0.8.0)
 
 ### Enhanced Repository Intelligence
 
-#### Repository Classification
+#### Language and Framework Detection
 
-- **Language detection**: Identify primary programming language(s)
-- **Project type inference**: Web app, CLI tool, library, documentation site, etc.
-- **Framework detection**: React, Django, FastAPI, etc.
-- **Dependency analysis**: Major dependencies and their versions
+- **Programming language detection**: Beyond just Python, detect Go, Rust, JavaScript, etc.
+- **Framework identification**: Detect React, Django, FastAPI, etc.
+- **Dependency analysis**: Parse `requirements.txt`, `package.json`, `Cargo.toml`, etc.
+- **Technology stack visualization**: Show the full tech stack for each repository
 
-#### GitHub Features Integration
+#### Repository Health Metrics
 
-- **Issues tracking**: Show open/closed issue counts
-- **Pull requests**: Track PR status and merge conflicts
-- **GitHub Actions**: Monitor workflow status and failures
-- **Releases**: Track latest release versions and changelog updates
-- **Topics and labels**: Display repository categorization
+- **Code quality indicators**: Last commit date, test presence, documentation coverage
+- **Community metrics**: Star count, fork count, issue count, contributor count
+- **Maintenance status**: Detect abandoned or actively maintained projects
+- **Security analysis**: Check for known vulnerabilities in dependencies
 
-#### Advanced Status Reporting
+### Enhanced GitHub Integration
 
-- **Security alerts**: Highlight repositories with security vulnerabilities
-- **Dependency updates**: Show outdated dependencies across repositories
-- **Code quality metrics**: Integration with tools like CodeClimate, SonarQube
-- **Test coverage**: Display coverage percentages where available
+#### Issues and Pull Requests
 
-### Workflow Automation
+- **Issue management**: List open issues across all repositories
+- **PR status**: Track open pull requests and their status
+- **Review assignments**: See which PRs need your attention
+- **Milestone tracking**: Monitor progress toward repository milestones
 
-#### Smart Updates
+#### GitHub Actions Integration
 
-- **Conditional updates**: Only pull when remote has changes
-- **Dependency updates**: Automatically update package dependencies
-- **Pre-commit hooks**: Run linters, formatters before commits
-- **Branch management**: Create feature branches for automated updates
+- **Workflow status**: See the status of CI/CD pipelines across repositories
+- **Failed builds**: Quickly identify repositories with failing tests
+- **Deployment status**: Track which repositories have pending deployments
+- **Action summaries**: Aggregate build success rates and performance metrics
 
-#### Batch Operations
+### Advanced Social Media Features
 
-- **Multi-repo search**: Find text/code patterns across all repositories
-- **Bulk refactoring**: Apply changes across multiple repositories
-- **Template synchronization**: Keep common files (like CI configs) in sync
-- **License updates**: Bulk update license files and headers
+#### Real Social Media API Integration
 
-## Long-term Vision
+- **Twitter/X API**: Full implementation with tweet posting
+- **LinkedIn API**: Professional network posting for project updates
+- **Mastodon API**: Decentralized social media support
+- **Instagram API**: Visual content for project screenshots
+- **Reddit API**: Automated posting to relevant programming subreddits
+
+#### Content Intelligence
+
+- **Engagement tracking**: Monitor which posts perform best
+- **Optimal timing**: Learn the best times to post for your audience
+- **Hashtag optimization**: Suggest trending and relevant hashtags
+- **Content personalization**: Adapt content style based on platform
+- **Analytics dashboard**: Track social media impact on repository metrics
+
+#### Automated Campaigns
+
+- **Release announcements**: Auto-post when new versions are published
+- **Documentation updates**: Announce new documentation or tutorials
+- **Achievement celebrations**: Post about star milestones, contributor achievements
+- **Event-driven posting**: React to GitHub events (new stars, forks, etc.)
+
+## Long-term Goals (v0.9.0 - v1.0.0)
+
+### Analytics and SEO Enhancement
+
+#### Google Analytics Integration
+
+**Motivation**: Improve discoverability and track the impact of your open source projects.
+
+- **Analytics setup automation**:
+  - **GitHub Pages**: Auto-configure Google Analytics for GitHub Pages sites
+  - **Documentation sites**: Add analytics to MkDocs, Sphinx, GitBook, etc.
+  - **README badges**: Generate analytics-enabled badges for repository READMEs
+  - **Custom domains**: Handle analytics for repositories with custom domain GitHub Pages
+- **SEO optimization**:
+  - **Meta tag generation**: Auto-generate SEO-friendly meta tags for GitHub Pages
+  - **Sitemap generation**: Create and update sitemaps for better search indexing
+  - **Schema markup**: Add structured data for better search result presentation
+  - **Open Graph tags**: Optimize social media sharing with proper OG tags
+- **Content optimization**:
+  - **README analysis**: Suggest improvements for better search visibility
+  - **Keyword optimization**: Analyze and suggest keywords based on repository content
+  - **Description optimization**: Improve repository descriptions for search engines
+  - **Topic suggestions**: Recommend GitHub topics to improve discoverability
+- **Performance tracking**:
+  - **Traffic analysis**: Aggregate analytics across all your repositories
+  - **Conversion tracking**: Track downloads, clones, stars from different sources
+  - **Search ranking**: Monitor how your repositories rank for relevant keywords
+  - **Referrer analysis**: Understand where your traffic is coming from
+
+#### Analytics Reporting
+
+- **Dashboard generation**: Create unified analytics dashboards across all repositories
+- **Trend analysis**: Track growth patterns and identify successful strategies
+- **Goal tracking**: Set and monitor specific objectives (downloads, stars, contributors)
+- **Competitive analysis**: Compare your repositories against similar projects
 
 ### Advanced GitHub Operations
 
 #### Repository Management
 
-- **Repository creation**: Create new repos with templates and best practices
-- **Settings synchronization**: Standardize repository settings across projects
-- **Team permissions**: Manage collaborator access across repositories
-- **Branch protection**: Configure branch protection rules consistently
+- **Repository creation**: Create new repositories with templates and best practices
+- **Branch management**: Bulk operations on branches across repositories
+- **Webhook management**: Set up and manage webhooks for automation
+- **Settings synchronization**: Keep repository settings consistent across projects
 
-#### GitHub API Integration
+#### Team Collaboration
 
-- **Webhooks management**: Set up and manage repository webhooks
-- **GitHub Apps**: Integration with GitHub Apps for enhanced permissions
-- **Advanced search**: Use GitHub's search API for complex queries
-- **Analytics**: Generate reports on repository activity and health
+- **Team management**: Manage collaborators and permissions across repositories
+- **Organization tools**: Tools for managing repositories at the organization level
+- **Access auditing**: Review and audit access permissions
+- **Compliance reporting**: Generate reports for security and compliance requirements
 
-### Developer Experience Enhancements
+### Enterprise Features
 
-#### Configuration Management
+#### Performance and Scalability
 
-- **Profiles**: Different configurations for work, personal, client projects
-- **Team sharing**: Share configurations and workflows with team members
-- **Plugin system**: Allow community-contributed extensions
-- **Custom templates**: User-defined templates for common project types
-
-#### Integration Ecosystem
-
-- **IDE integration**: VS Code extension, vim plugins
-- **CI/CD integration**: Native support for popular CI/CD platforms
-- **Project management**: Integration with Jira, Notion, Linear
-- **Communication**: Slack/Discord notifications for repository events
-
-### Performance and Scalability
-
-#### Optimization
-
-- **Parallel operations**: Concurrent repository processing
+- **Parallel processing**: Optimize for handling hundreds of repositories
+- **Caching strategies**: Cache GitHub API responses for better performance
 - **Incremental updates**: Only process changed repositories
-- **Caching**: Smart caching of API responses and git status
-- **Background processing**: Long-running operations in the background
+- **Background processing**: Queue long-running operations
 
-#### Enterprise Features
+#### Integration and Extensibility
 
-- **GitHub Enterprise support**: Full compatibility with GitHub Enterprise Server
-- **Large-scale deployments**: Handle hundreds or thousands of repositories
-- **Audit logging**: Track all operations for compliance
-- **Role-based access**: Different permissions for different team members
+- **Plugin system**: Allow third-party extensions and customizations
+- **API endpoints**: Provide REST API for integration with other tools
+- **Webhook support**: React to external events and trigger ghops operations
+- **IDE integration**: Plugins for VS Code, PyCharm, etc.
 
-## Technical Improvements
+#### Enterprise Management
 
-### Architecture Enhancements
-
-- **Plugin architecture**: Modular system for extending functionality
-- **Configuration system**: More sophisticated config file management
-- **Error handling**: Better error messages and recovery strategies
-- **Logging**: Structured logging with different verbosity levels
-
-### User Interface
-
-- **Interactive mode**: TUI (Terminal User Interface) for complex operations
-- **Web dashboard**: Optional web interface for team usage
-- **Mobile companion**: Simple mobile app for monitoring repository health
-- **Rich formatting**: Better use of colors, icons, and layouts in terminal output
-
-## Community and Documentation
-
-### Documentation
-
-- **Video tutorials**: Screen recordings for complex workflows
-- **Best practices guide**: Recommended patterns for different use cases
-- **Troubleshooting**: Common issues and their solutions
-- **API reference**: Complete documentation for all commands and options
-
-### Community Building
-
-- **Plugin marketplace**: Community-contributed extensions
-- **User showcase**: Highlight interesting use cases and configurations
-- **Regular releases**: Predictable release schedule with clear changelogs
-- **Community feedback**: Regular surveys and feature request voting
+- **Multi-user support**: Support for teams and organizations
+- **Role-based access**: Different permission levels for different users
+- **Audit logging**: Comprehensive logging for enterprise compliance
+- **Backup and restore**: Backup configurations and restore operations
 
 ## Implementation Roadmap
 
-### Phase 1: PyPI Integration (v0.6.0)
+### Phase 1: Core Usability (v0.7.0)
 
-- Basic package detection
-- Status command enhancements
-- Auto-package generation
+- Single repository operation mode with smart detection
+- Programmatic API with full type hints and async support
+- Enhanced single-repo output and error handling
+- CLI refactoring to use the API internally
 
-### Phase 2: Advanced Filtering (v0.7.0)
+### Phase 2: Package Management & Filtering (v0.8.0)
 
+- Auto-package generation (`ghops package init`)
+- Publishing automation (`ghops package publish`)
 - `.ghopsignore` file support
 - Command-line filtering options
 - Filter profiles and testing
 
-### Phase 3: Social Media Integration (v0.8.0)
+### Phase 3: Repository Intelligence (v0.9.0)
 
-- Basic Twitter/X and LinkedIn posting
-- PyPI release announcements
-- Random sampling and scheduling
+- Language and framework detection
+- Repository health metrics
+- Enhanced GitHub integration (issues, PRs, actions)
 
-### Phase 4: Analytics and SEO (v0.9.0)
+### Phase 4: Advanced Social Media (v1.0.0)
+
+- Real API integrations for all platforms
+- Content intelligence and optimization
+- Automated campaign management
+
+### Phase 5: Analytics and SEO (v1.1.0)
 
 - Google Analytics automation
 - SEO optimization tools
 - Traffic analysis and reporting
 
-### Phase 5: Enterprise Features (v1.0.0)
+### Phase 6: Enterprise Features (v1.2.0)
 
 - Performance optimizations
 - Advanced GitHub operations
 - Team collaboration features
+- Plugin system and extensibility
 
 ## Contributing to These Goals
 

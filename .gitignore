@@ -1,3 +1,4 @@
+# Build and packaging
 build
 dev
 dist
@@ -6,3 +7,35 @@ dist
 *.log
 *.swp
 site
+
+# Development environments
+.vscode
+.idea/
+*.iml
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.cache
+
+# Python virtual environments
+venv/
+env/
+.env
+.venv
+
+# Configuration files (user-specific)
+.ghopsrc
+.ghopsrc.json
+.ghopsrc.toml
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*~

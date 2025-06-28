@@ -4,16 +4,20 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ghops"
-version = "0.5.0"
+version = "0.6.0"
 description = "A CLI tool for managing GitHub repos"
 readme = "README.md"
 requires-python = ">=3.7"
 keywords = [ "git", "github", "automation", "cli", "devops",]
-classifiers = [ "Development Status :: 3 - Alpha", "Intended Audience :: Developers", "Topic :: Software Development :: Version Control :: Git", "Operating System :: OS Independent", "Programming Language :: Python :: 3"]
-dependencies = [ "rich>=13.0.0", "pathlib", "toml",]
+classifiers = [ "Development Status :: 3 - Alpha", "Intended Audience :: Developers", "Topic :: Software Development :: Version Control :: Git", "Operating System :: OS Independent", "Programming Language :: Python :: 3",]
+dependencies = [ "rich>=13.0.0", "pathlib", "toml", "requests>=2.25.0", "packaging>=21.0",]
 [[project.authors]]
 name = "Alex Towell"
 email = "lex@metafunctor.com"
+
+[project.optional-dependencies]
+test = [ "pytest>=6.0", "pytest-cov>=2.0", "coverage>=5.0",]
+dev = [ "pytest>=6.0", "pytest-cov>=2.0", "coverage>=5.0", "black>=21.0", "flake8>=3.9", "mypy>=0.812",]
 
 [project.scripts]
 ghops = "ghops.cli:main"
