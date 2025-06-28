@@ -1,43 +1,27 @@
 [build-system]
-requires = ["hatchling"]
+requires = [ "hatchling",]
 build-backend = "hatchling.build"
 
 [project]
 name = "ghops"
-version = "0.6.0"
+version = "0.6.1"
 description = "A CLI tool for managing GitHub repos"
 readme = "README.md"
-authors = [
-  { name = "Alex Towell", email = "lex@metafunctor.com" }
-]
-license = { text = "MIT" }
-license-files = ["LICEN[CS]E.*"]
+license-files = [ "LICEN[CS]E.*",]
 requires-python = ">=3.7"
-keywords = ["git", "github", "automation", "cli", "devops"]
-classifiers = [
-  "Development Status :: 4 - Beta",
-  "Topic :: Software Development :: Version Control :: Git",
-  "Operating System :: OS Independent",
-  "Programming Language :: Python :: 3",
-]
-dependencies = [
-  "rich>=13.0.0",
-  "pathlib",
-  "toml",
-  "requests>=2.25.0",
-  "packaging>=21.0",
-]
+keywords = [ "git", "github", "automation", "cli", "devops",]
+classifiers = [ "Development Status :: 4 - Beta", "Topic :: Software Development :: Version Control :: Git", "Operating System :: OS Independent", "Programming Language :: Python :: 3",]
+dependencies = [ "rich>=13.0.0", "pathlib", "toml", "requests>=2.25.0", "packaging>=21.0",]
+[[project.authors]]
+name = "Alex Towell"
+email = "lex@metafunctor.com"
+
+[project.license]
+text = "MIT"
 
 [project.optional-dependencies]
-test = ["pytest>=6.0", "pytest-cov>=2.0", "coverage>=5.0"]
-dev = [
-  "pytest>=6.0",
-  "pytest-cov>=2.0",
-  "coverage>=5.0",
-  "black>=21.0",
-  "flake8>=3.9",
-  "mypy>=0.812",
-]
+test = [ "pytest>=6.0", "pytest-cov>=2.0", "coverage>=5.0",]
+dev = [ "pytest>=6.0", "pytest-cov>=2.0", "coverage>=5.0", "black>=21.0", "flake8>=3.9", "mypy>=0.812",]
 
 [project.scripts]
 ghops = "ghops.cli:main"
@@ -48,10 +32,10 @@ Source = "https://github.com/queelius/ghops"
 Issues = "https://github.com/queelius/ghops/issues"
 
 [tool.setuptools]
-packages = ["ghops", "ghops.commands"]
+packages = [ "ghops", "ghops.commands",]
 
 [tool.setuptools.package-data]
-ghops = ["py.typed"]
+ghops = [ "py.typed",]
 
 [tool.setuptools.exclude-package-data]
-"*" = ["tests", "tests.*", "*.tests", "*.tests.*", "test_*"]
+"*" = [ "tests", "tests.*", "*.tests", "*.tests.*", "test_*",]
