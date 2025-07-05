@@ -6,18 +6,7 @@
 [![Build Status](https://img.shields.io/badge/tests-138%20passing-brightgreen.svg)](https://github.com/queelius/ghops)
 [![License](https://img.shields.io/pypi/l/ghops.svg)](https://github.com/queelius/ghops/blob/main/LICENSE)
 
-A powerful, modular CLI tool for managing GitHub repositories at scale. Automate repository operations, track PyPI packages, manage licenses, and coordinate social media promotion for your open source projects.
-
-## 🎉 What's New in v0.6.0
-
-- **🏗️ Complete Architecture Overhaul**: Fully modular design with separated command modules
-- **🧪 Comprehensive Testing**: 138 tests with 86% coverage - robust and reliable
-- **⚡ Enhanced Performance**: Optional API checks with `--no-pypi-check` and `--no-pages-check` flags
-- **📱 Social Media Automation**: Template-driven posting for Twitter, LinkedIn, and Mastodon
-- **⚙️ Advanced Configuration**: TOML/JSON support with environment variable overrides
-- **📄 License Management**: Full GitHub API integration with template customization
-- **🌐 GitHub Pages Detection**: Multi-method detection for documentation sites
-- **🔧 Error Resilience**: Graceful handling of network failures and edge cases
+A powerful, modular CLI tool for managing GitHub repositories at scale. Automate repository operations, manage licenses, and coordinate social media promotion for your open source projects.
 
 ## ✨ Features
 
@@ -34,13 +23,6 @@ A powerful, modular CLI tool for managing GitHub repositories at scale. Automate
 - **Intelligent Sync**: Smart pull with rebase, conflict detection, and resolution strategies
 - **Progress Tracking**: Real-time progress bars and detailed operation summaries
 - **Flexible Discovery**: Recursive repository scanning with configurable ignore patterns
-
-### 🐍 **PyPI Integration**
-
-- **Smart Package Detection**: Automatically detects Python packages from `pyproject.toml`, `setup.py`, and `setup.cfg`
-- **Publishing Status**: Real-time PyPI status checking with version comparison
-- **Package Analytics**: Track which projects are published and their update status
-- **Performance Optimized**: Optional PyPI checks for faster operations
 
 ### 📄 **License Management**
 
@@ -68,6 +50,14 @@ A powerful, modular CLI tool for managing GitHub repositories at scale. Automate
 - **Environment Overrides**: All settings can be controlled via environment variables
 - **Default Merging**: Intelligent combination of defaults, file settings, and overrides
 - **Example Generation**: Built-in config template generation
+
+### 🤖 **Automated Service Mode**
+
+- **Scheduled Posting**: Run ghops as a background service for automated social media posting
+- **Multi-Directory Support**: Configure multiple repository locations with glob pattern support
+- **Periodic Reporting**: Generate comprehensive repository status reports
+- **Email Notifications**: Automated email alerts and daily summaries
+- **Error Monitoring**: Built-in error detection and email alerts
 
 ## 🚀 Installation
 
@@ -157,19 +147,57 @@ ghops social post --dry-run
   - `--dry-run` - Preview posts without publishing
   - `--platforms PLATFORM [PLATFORM ...]` - Target specific platforms
 
+### Service Mode
+
+- **`ghops service start`** - Start automated posting service
+  - `--dry-run` - Run service in preview mode
+- **`ghops service run-once`** - Execute single posting cycle
+  - `--dry-run` - Preview what would be posted
+
 ## 🔧 Advanced Configuration
 
 `ghops` uses a configuration file located at `~/.ghopsrc` (JSON or TOML format). Set custom location with `GHOPS_CONFIG` environment variable.
 
 ### Key Configuration Sections
 
-#### PyPI Settings
+#### Repository Directories
 
 ```toml
-[pypi]
-check_by_default = true         # Include PyPI info in status command
-timeout_seconds = 10            # API request timeout
-include_test_pypi = false       # Also check test.pypi.org
+[general]
+# Multiple directories with glob pattern support
+repository_directories = [
+    "~/github",           # Direct path
+    "~/projects/*/repos", # Glob pattern
+    "~/work/code"         # Another direct path
+]
+github_username = "your_username"
+```
+
+#### Service Configuration
+
+```toml
+[service]
+enabled = true                  # Enable scheduled posting service
+interval_minutes = 120          # Minutes between posting cycles
+start_time = "09:00"           # Preferred start time
+
+[service.reporting]
+enabled = true                  # Enable periodic reports
+interval_hours = 24            # Hours between reports
+include_stats = true           # Include operation statistics
+include_status = true          # Include repository status
+include_recent_activity = true # Include recent activity
+
+[service.notifications.email]
+enabled = true                 # Enable email notifications
+smtp_server = "smtp.gmail.com" # SMTP server
+smtp_port = 587                # SMTP port
+username = "your@email.com"    # Email username
+password = "app_password"      # Email password/app password
+from_email = "your@email.com"  # From address
+to_email = "your@email.com"    # To address
+daily_summary = true           # Send daily reports
+error_alerts = true            # Send error alerts
 ```
 
 #### Social Media Platforms
@@ -240,6 +268,36 @@ ghops update -r --dir ~/projects
 ghops update -r --license mit --license-name "Your Name" --license-email "you@example.com"
 ```
 
+### Service Mode Operations
+
+```bash
+# Start automated service (background posting and reporting)
+ghops service start
+
+# Test service with dry-run
+ghops service start --dry-run
+
+# Run single cycle for testing
+ghops service run-once --dry-run
+
+# Create systemd service (see examples/ghops.service)
+sudo systemctl enable ghops
+sudo systemctl start ghops
+```
+
+### Multi-Directory Management
+
+```bash
+# Configure multiple repository locations
+ghops config generate  # Edit to add repository_directories
+
+# Status across all configured directories
+ghops status
+
+# Update repositories in all configured locations
+ghops update -r
+```
+
 ## ⚡ Performance & Advanced Usage
 
 ### Performance Options
@@ -247,16 +305,6 @@ ghops update -r --license mit --license-name "Your Name" --license-email "you@ex
 - Use `--no-pypi-check` for faster status checks when you don't need PyPI information
 - Use `--no-pages-check` to skip GitHub Pages detection
 - Configure `max_concurrent_operations` in config for better performance
-
-### PyPI Package Detection
-
-The tool automatically detects Python packages by scanning for:
-
-- `pyproject.toml` files
-- `setup.py` files
-- `setup.cfg` files
-
-It then checks PyPI to see if packages are published and shows version information.
 
 ## 🧪 Testing & Quality
 
@@ -282,7 +330,7 @@ It then checks PyPI to see if packages are published and shows version informati
 
 ```text
 ghops/
-├── cli.py              # Main CLI entry point with argparse
+├── cli.py              # Main CLI entry point with click
 ├── __main__.py         # Python module execution entry
 ├── commands/           # Modular command implementations
 │   ├── get.py         # Repository cloning logic

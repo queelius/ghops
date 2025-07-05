@@ -3,12 +3,13 @@
 import os
 import json
 import requests
-import toml
+import tomllib
 from pathlib import Path
 from typing import Dict, Optional, Tuple, List
 import re
 
-from .config import logger, config
+from .config import logger
+from .config import load_config
 from .utils import run_command
 
 def find_packaging_files(repo_path: str) -> List[str]:
@@ -29,8 +30,8 @@ def find_packaging_files(repo_path: str) -> List[str]:
 def extract_package_name_from_pyproject(file_path: str) -> Optional[str]:
     """Extract package name from pyproject.toml."""
     try:
-        with open(file_path, 'r') as f:
-            data = toml.load(f)
+        with open(file_path, 'rb') as f:
+            data = tomllib.load(f)
         
         # Check [project] section first (PEP 621)
         if 'project' in data and 'name' in data['project']:
@@ -102,6 +103,7 @@ def extract_package_name(file_path: str) -> Optional[str]:
 def check_pypi_package(package_name: str) -> Optional[Dict]:
     """Check if a package exists on PyPI and get its info."""
     try:
+        config = load_config()
         timeout = config.get('pypi', {}).get('timeout_seconds', 10)
         
         # Check main PyPI
@@ -181,8 +183,8 @@ def get_local_package_version(repo_path: str, package_name: str) -> Optional[str
     for file_path in packaging_files:
         if Path(file_path).name == 'pyproject.toml':
             try:
-                with open(file_path, 'r') as f:
-                    data = toml.load(f)
+                with open(file_path, 'rb') as f:
+                    data = tomllib.load(f)
                 
                 # Check [project] section
                 if 'project' in data and 'version' in data['project']:

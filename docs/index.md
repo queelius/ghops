@@ -52,7 +52,7 @@ Welcome to the documentation for **ghops** - a powerful, modular CLI tool for ma
 ### ⚡ **Performance & Quality**
 - Fast operations with real-time progress indicators
 - Configurable filtering and performance options
-- Rich console output with detailed statistics
+- Clean console output with detailed statistics
 - Comprehensive error handling and logging
 
 ## 🚀 Quick Start
@@ -175,7 +175,7 @@ ghops social post --dry-run
 - ✅ **Social Media Framework**: Generate and post content about your projects
 - ✅ **Configuration System**: Flexible configuration with example generation
 - ✅ **Performance Improvements**: Progress bars and faster operations
-- ✅ **Enhanced Status**: Rich status reporting with PyPI and GitHub Pages info
+- ✅ **Enhanced Status**: Clean status reporting with PyPI and GitHub Pages info
 
 ## Community and Support
 

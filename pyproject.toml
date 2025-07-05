@@ -11,7 +11,7 @@ license-files = [ "LICEN[CS]E.*",]
 requires-python = ">=3.7"
 keywords = [ "git", "github", "automation", "cli", "devops",]
 classifiers = [ "Development Status :: 4 - Beta", "Topic :: Software Development :: Version Control :: Git", "Operating System :: OS Independent", "Programming Language :: Python :: 3",]
-dependencies = [ "rich>=13.0.0", "pathlib", "toml", "requests>=2.25.0", "packaging>=21.0",]
+dependencies = [ "pathlib", "toml", "requests>=2.25.0", "packaging>=21.0", "click>=8.0.0",]
 [[project.authors]]
 name = "Alex Towell"
 email = "lex@metafunctor.com"

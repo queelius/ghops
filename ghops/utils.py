@@ -5,6 +5,10 @@ import subprocess
 import os
 from pathlib import Path
 from .config import logger
+import configparser
+import json
+
+JsonValue = str | int | float | bool | None | dict[str, 'JsonValue'] | list['JsonValue']
 
 def run_command(command, cwd=".", dry_run=False, capture_output=False, check=True, log_stderr=True):
     """
@@ -72,33 +76,62 @@ def run_command(command, cwd=".", dry_run=False, capture_output=False, check=Tru
             raise
         return None
 
-def find_git_repos(base_dir, recursive):
-    """
-    Finds all git repositories in the given directory.
+def is_git_repo(path):
+    """Check if a given path is a Git repository."""
+    return os.path.isdir(os.path.join(path, '.git'))
 
-    Args:
-        base_dir (str): Base directory to search.
-        recursive (bool): If True, search recursively.
+def find_git_repos(base_dirs, recursive=False):
+    """Find all git repositories in a given directory or list of directories."""
+    repos = set()
+    if isinstance(base_dirs, str):
+        base_dirs = [base_dirs]
 
-    Returns:
-        list: List of paths to Git repositories.
-    """
-    git_repos = []
-    if recursive:
-        for root, dirs, files in os.walk(base_dir):
-            if ".git" in dirs:
-                git_repos.append(root)
-                # Prevent descending into subdirectories of a git repo
-                dirs[:] = [d for d in dirs if d != ".git"]
-    else:
-        for entry in os.scandir(base_dir):
-            if entry.is_dir() and is_git_repo(entry.path):
-                git_repos.append(entry.path)
-    return git_repos
+    for base_dir in base_dirs:
+        # If the base_dir itself is a repo, and we are not in recursive mode, add it.
+        if is_git_repo(base_dir) and not recursive:
+            repos.add(base_dir)
+            continue # Continue to next base_dir, don't search inside
+
+        # If recursive, walk the directory tree.
+        if recursive:
+            for root, dirs, _ in os.walk(base_dir):
+                if '.git' in dirs:
+                    repos.add(root)
+                    # Once we find a .git dir, don't go deeper into that subdirectory
+                    dirs[:] = [d for d in dirs if d != '.git']
+                # Prune common directories to speed up search
+                dirs[:] = [d for d in dirs if d not in ['node_modules', '__pycache__', '.venv', 'venv', 'env']]
+        # If not recursive, just check the immediate subdirectories.
+        else:
+            try:
+                for item in os.listdir(base_dir):
+                    item_path = os.path.join(base_dir, item)
+                    if os.path.isdir(item_path) and is_git_repo(item_path):
+                        repos.add(item_path)
+            except FileNotFoundError:
+                logger.warning(f"Directory not found: {base_dir}")
+
+    return sorted(list(repos))
+
+def get_remote_url(repo_path):
+    git_config = Path(repo_path) / ".git" / "config"
+    if not git_config.exists():
+        return None
+    parser = configparser.ConfigParser()
+    try:
+        parser.read(git_config)
+        if parser.has_section('remote "origin"'):
+            url = parser.get('remote "origin"', 'url', fallback=None)
+            if url:
+                # Normalize for deduplication
+                return url.rstrip("/").replace(".git", "")
+    except Exception:
+        return None
+    return None
 
 def get_git_status(repo_path):
     """
-    Gets the git status for a given repository.
+    Get the git status of a repository.
 
     Args:
         repo_path (str): Path to the Git repository.
@@ -152,14 +185,161 @@ def get_git_status(repo_path):
             'branch': 'unknown'
         }
 
-def is_git_repo(repo_path):
+def get_gh_pages_url(repo_path):
     """
-    Checks if a directory is a Git repository.
+    Get the GitHub Pages URL for a repository.
+    """
+    try:
+        # Get the remote URL
+        remote_url = run_command("git remote get-url origin", repo_path, capture_output=True, check=False, log_stderr=False)
+        if not remote_url:
+            return None
+        
+        remote_url = remote_url.strip()
+        
+        # Parse the remote URL to get owner and repo name
+        if remote_url.startswith("https://github.com/"):
+            parts = remote_url.replace("https://github.com/", "").replace(".git", "").split("/")
+        elif remote_url.startswith("git@github.com:"):
+            parts = remote_url.replace("git@github.com:", "").replace(".git", "").split("/")
+        else:
+            return None
+        
+        if len(parts) != 2:
+            return None
+        
+        owner, repo = parts
+        
+        # Try multiple methods to detect GitHub Pages
+        
+        # Method 1: Use GitHub CLI if available
+        try:
+            pages_result = run_command(f"gh api repos/{owner}/{repo}/pages", repo_path, capture_output=True, check=False, log_stderr=False)
+            if pages_result:
+                pages_data = json.loads(pages_result)
+                return pages_data.get("html_url")
+        except (json.JSONDecodeError, Exception):
+            pass
+        
+        # Method 2: Check for gh-pages branch
+        try:
+            branches_result = run_command("git branch -r", repo_path, capture_output=True, check=False, log_stderr=False)
+            if branches_result and "origin/gh-pages" in branches_result:
+                return f"https://{owner}.github.io/{repo}/"
+        except Exception:
+            pass
+        
+        # Method 3: Check for docs folder in main branch (GitHub Pages can serve from /docs)
+        docs_path = Path(repo_path) / "docs"
+        if docs_path.exists() and docs_path.is_dir():
+            # Check if there's an index.html or index.md in docs
+            if (docs_path / "index.html").exists() or (docs_path / "index.md").exists():
+                return f"https://{owner}.github.io/{repo}/"
+        
+        # Method 4: Check for GitHub Pages configuration files
+        github_pages_files = [
+            "_config.yml",  # Jekyll
+            "mkdocs.yml",   # MkDocs
+            "conf.py",      # Sphinx (usually in docs/)
+            "book.toml",    # mdBook
+        ]
+        
+        for pages_file in github_pages_files:
+            if (Path(repo_path) / pages_file).exists():
+                return f"https://{owner}.github.io/{repo}/"
+            # Also check in docs/ subdirectory
+            if (Path(repo_path) / "docs" / pages_file).exists():
+                return f"https://{owner}.github.io/{repo}/"
+        
+        # Method 5: Check for common static site generators
+        static_indicators = [
+            "package.json",  # Could be a Node.js static site
+            "gatsby-config.js",  # Gatsby
+            "next.config.js",    # Next.js
+            "nuxt.config.js",    # Nuxt.js
+            "vuepress.config.js", # VuePress
+        ]
+        
+        for indicator in static_indicators:
+            if (Path(repo_path) / indicator).exists():
+                # Check package.json for static site scripts
+                if indicator == "package.json":
+                    try:
+                        with open(Path(repo_path) / "package.json", 'r') as f:
+                            package_data = json.loads(f.read())
+                            scripts = package_data.get("scripts", {})
+                            # Look for common static site build/deploy scripts
+                            static_scripts = ["build", "deploy", "gh-pages", "pages"]
+                            if any(script in scripts for script in static_scripts):
+                                return f"https://{owner}.github.io/{repo}/"
+                    except:
+                        pass
+                else:
+                    return f"https://{owner}.github.io/{repo}/"
+        
+        return None
+        
+    except Exception as e:
+        logger.debug(f"Error getting GitHub Pages URL for {repo_path}: {e}")
+        return None
 
+def find_git_repos_from_config(repo_dirs_config, recursive=False):
+    """
+    Find git repositories from configuration directories.
+    
     Args:
-        repo_path (str): The directory path to check.
-
+        repo_dirs_config (list): List of directory paths from configuration
+        recursive (bool): Whether to search recursively
+    
     Returns:
-        bool: True if the directory is a Git repository, False otherwise.
+        list: List of git repository paths
     """
-    return (Path(repo_path) / ".git").is_dir()
+    if not repo_dirs_config:
+        return []
+    
+    # Expand home directory paths
+    expanded_dirs = []
+    for dir_path in repo_dirs_config:
+        if dir_path.startswith("~"):
+            expanded_dirs.append(os.path.expanduser(dir_path))
+        else:
+            expanded_dirs.append(dir_path)
+    
+    return find_git_repos(expanded_dirs, recursive=recursive)
+
+def get_license_info(repo_path):
+    """
+    Get license information for a repository.
+    """
+    repo_path = Path(repo_path)
+    
+    # Check for common license file names
+    license_files = ['LICENSE', 'LICENSE.txt', 'LICENSE.md', 'LICENCE', 'LICENCE.txt', 'LICENCE.md']
+    
+    for license_file in license_files:
+        license_path = repo_path / license_file
+        if license_path.exists():
+            try:
+                with open(license_path, 'r', encoding='utf-8') as f:
+                    content = f.read().upper()
+                
+                # Simple license detection based on content
+                if 'MIT LICENSE' in content or 'MIT' in content:
+                    return 'MIT'
+                elif 'APACHE LICENSE' in content or 'APACHE' in content:
+                    return 'Apache-2.0'
+                elif 'GNU GENERAL PUBLIC LICENSE' in content or 'GPL' in content:
+                    if 'VERSION 3' in content:
+                        return 'GPL-3.0'
+                    elif 'VERSION 2' in content:
+                        return 'GPL-2.0'
+                    else:
+                        return 'GPL'
+                elif 'BSD' in content:
+                    return 'BSD'
+                else:
+                    return 'Other'
+            except:
+                return 'Unknown'
+    
+    return 'None'

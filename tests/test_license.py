@@ -9,9 +9,9 @@ import json
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-from ghops.commands.license import (
-    list_licenses,
-    show_license_template,
+from ghops.core import (
+    get_available_licenses as list_licenses,
+    get_license_template as show_license_template,
     add_license_to_repo
 )
 
@@ -34,7 +34,7 @@ class TestLicenseCommands(unittest.TestCase):
         os.chdir(self.original_cwd)
         shutil.rmtree(self.temp_dir)
     
-    @patch('ghops.commands.license.run_command')
+    @patch('ghops.core.run_command')
     def test_list_licenses_success(self, mock_run_command):
         """Test successful listing of licenses"""
         mock_response = json.dumps([
@@ -46,21 +46,21 @@ class TestLicenseCommands(unittest.TestCase):
         
         # Note: This function doesn't return anything, it prints to console
         # We're just testing it doesn't raise an exception
-        list_licenses(json_output=True)
+        list_licenses()
         
         mock_run_command.assert_called_once_with("gh api /licenses", capture_output=True)
     
-    @patch('ghops.commands.license.run_command')
+    @patch('ghops.core.run_command')
     def test_list_licenses_command_failure(self, mock_run_command):
         """Test listing licenses when command fails"""
         mock_run_command.return_value = None
         
         # Should not raise exception on command failure
-        list_licenses(json_output=True)
+        list_licenses()
         
         mock_run_command.assert_called_once_with("gh api /licenses", capture_output=True)
     
-    @patch('ghops.commands.license.run_command')
+    @patch('ghops.core.run_command')
     def test_list_licenses_table_output(self, mock_run_command):
         """Test listing licenses with table output"""
         mock_response = json.dumps([
@@ -69,11 +69,11 @@ class TestLicenseCommands(unittest.TestCase):
         mock_run_command.return_value = mock_response
         
         # Should not raise exception with table output
-        list_licenses(json_output=False)
+        list_licenses()
         
         mock_run_command.assert_called_once_with("gh api /licenses", capture_output=True)
     
-    @patch('ghops.commands.license.run_command')
+    @patch('ghops.core.run_command')
     def test_show_license_template_success(self, mock_run_command):
         """Test successful showing of a license template"""
         mock_response = json.dumps({
@@ -84,21 +84,21 @@ class TestLicenseCommands(unittest.TestCase):
         mock_run_command.return_value = mock_response
         
         # Should not raise exception
-        show_license_template("mit", json_output=True)
+        show_license_template("mit")
         
         mock_run_command.assert_called_once_with("gh api /licenses/mit", capture_output=True)
     
-    @patch('ghops.commands.license.run_command')
+    @patch('ghops.core.run_command')
     def test_show_license_template_command_failure(self, mock_run_command):
         """Test showing license when command fails"""
         mock_run_command.return_value = None
         
         # Should not raise exception on command failure
-        show_license_template("invalid", json_output=True)
+        show_license_template("invalid")
         
         mock_run_command.assert_called_once_with("gh api /licenses/invalid", capture_output=True)
     
-    @patch('ghops.commands.license.run_command')
+    @patch('ghops.core.run_command')
     def test_show_license_template_table_output(self, mock_run_command):
         """Test showing license template with table output"""
         mock_response = json.dumps({
@@ -109,11 +109,11 @@ class TestLicenseCommands(unittest.TestCase):
         mock_run_command.return_value = mock_response
         
         # Should not raise exception with table output
-        show_license_template("mit", json_output=False)
+        show_license_template("mit")
         
         mock_run_command.assert_called_once_with("gh api /licenses/mit", capture_output=True)
     
-    @patch('ghops.commands.license.run_command')
+    @patch('ghops.core.run_command')
     def test_add_license_to_repo_success(self, mock_run_command):
         """Test successful addition of license to repository"""
         mock_response = json.dumps({
@@ -121,15 +121,19 @@ class TestLicenseCommands(unittest.TestCase):
         })
         mock_run_command.return_value = mock_response
         
-        add_license_to_repo(
+        result = add_license_to_repo(
             self.test_repo,
-            license_key="mit",
-            author_name="Test Author",
-            author_email="test@example.com",
-            year="2023",
-            dry_run=False,
-            force=False
+            "mit",
+            "Test Author",
+            "test@example.com",
+            "2023",
+            False,
+            False
         )
+        
+        # Should succeed
+        self.assertEqual(result["status"], "success")
+        self.assertEqual(result["path"], str(Path(self.test_repo) / "LICENSE"))
         
         # Check that LICENSE file was created
         license_file = Path(self.test_repo) / "LICENSE"
@@ -143,7 +147,7 @@ class TestLicenseCommands(unittest.TestCase):
         
         mock_run_command.assert_called_once_with("gh api /licenses/mit", capture_output=True)
     
-    @patch('ghops.commands.license.run_command')
+    @patch('ghops.core.run_command')
     def test_add_license_to_repo_dry_run(self, mock_run_command):
         """Test adding license in dry run mode"""
         mock_response = json.dumps({
@@ -151,15 +155,19 @@ class TestLicenseCommands(unittest.TestCase):
         })
         mock_run_command.return_value = mock_response
         
-        add_license_to_repo(
+        result = add_license_to_repo(
             self.test_repo,
-            license_key="mit",
-            author_name="Test Author",
-            author_email="test@example.com",
-            year="2023",
-            dry_run=True,
-            force=False
+            "mit",
+            "Test Author",
+            "test@example.com",
+            "2023",
+            True,
+            True  # dry_run should be True
         )
+        
+        # Should return dry run status
+        self.assertEqual(result["status"], "success_dry_run")
+        self.assertEqual(result["path"], str(Path(self.test_repo) / "LICENSE"))
         
         # Check that LICENSE file was NOT created
         license_file = Path(self.test_repo) / "LICENSE"
@@ -174,26 +182,25 @@ class TestLicenseCommands(unittest.TestCase):
         with open(license_file, 'w') as f:
             f.write("Existing license content")
         
-        with patch('ghops.commands.license.run_command') as mock_run_command:
-            add_license_to_repo(
-                self.test_repo,
-                license_key="mit",
-                author_name="Test Author",
-                author_email="test@example.com",
-                year="2023",
-                dry_run=False,
-                force=False
-            )
-            
-            # Command should not be called
-            mock_run_command.assert_not_called()
-            
-            # File should remain unchanged
-            with open(license_file, 'r') as f:
-                content = f.read()
-                self.assertEqual(content, "Existing license content")
+        result = add_license_to_repo(
+            self.test_repo,
+            "mit",
+            "Test Author",
+            "test@example.com",
+            "2023",
+            False,  # force=False
+            False   # dry_run=False
+        )
+        
+        # Should return skipped status
+        self.assertEqual(result["status"], "skipped")
+        
+        # File should remain unchanged
+        with open(license_file, 'r') as f:
+            content = f.read()
+            self.assertEqual(content, "Existing license content")
     
-    @patch('ghops.commands.license.run_command')
+    @patch('ghops.core.run_command')
     def test_add_license_to_repo_existing_file_with_force(self, mock_run_command):
         """Test adding license when file exists and force is True"""
         # Create existing LICENSE file
@@ -206,15 +213,18 @@ class TestLicenseCommands(unittest.TestCase):
         })
         mock_run_command.return_value = mock_response
         
-        add_license_to_repo(
+        result = add_license_to_repo(
             self.test_repo,
-            license_key="mit",
-            author_name="Test Author",
-            author_email="test@example.com",
-            year="2023",
-            dry_run=False,
-            force=True
+            "mit",
+            "Test Author",
+            "test@example.com",
+            "2023",
+            True,   # force=True
+            False   # dry_run=False
         )
+        
+        # Should succeed
+        self.assertEqual(result["status"], "success")
         
         # File should be overwritten
         with open(license_file, 'r') as f:
@@ -224,20 +234,24 @@ class TestLicenseCommands(unittest.TestCase):
         
         mock_run_command.assert_called_once_with("gh api /licenses/mit", capture_output=True)
     
-    @patch('ghops.commands.license.run_command')
+    @patch('ghops.core.run_command')
     def test_add_license_to_repo_command_failure(self, mock_run_command):
         """Test adding license when GitHub API command fails"""
         mock_run_command.return_value = None
         
-        add_license_to_repo(
+        result = add_license_to_repo(
             self.test_repo,
-            license_key="invalid",
-            author_name="Test Author",
-            author_email="test@example.com",
-            year="2023",
-            dry_run=False,
-            force=False
+            "invalid",
+            "Test Author",
+            "test@example.com",
+            "2023",
+            False,
+            False
         )
+        
+        # Should return error status
+        self.assertEqual(result["status"], "error")
+        self.assertIn("Could not fetch license template", result["message"])
         
         # LICENSE file should not be created
         license_file = Path(self.test_repo) / "LICENSE"
@@ -245,78 +259,92 @@ class TestLicenseCommands(unittest.TestCase):
         
         mock_run_command.assert_called_once_with("gh api /licenses/invalid", capture_output=True)
     
-    @patch('ghops.commands.license.run_command')
+    @patch('ghops.core.run_command')
     def test_add_license_to_repo_invalid_json(self, mock_run_command):
         """Test adding license with invalid JSON response"""
         mock_run_command.return_value = "invalid json"
         
-        # The function doesn't handle JSON decode errors gracefully currently
-        # This is actually a bug that could be fixed, but we'll test the current behavior
-        with self.assertRaises(json.JSONDecodeError):
-            add_license_to_repo(
-                self.test_repo,
-                license_key="mit",
-                author_name="Test Author",
-                author_email="test@example.com",
-                year="2023",
-                dry_run=False,
-                force=False
-            )
+        result = add_license_to_repo(
+            self.test_repo,
+            "mit",
+            "Test Author",
+            "test@example.com",
+            "2023",
+            False,
+            False
+        )
+        
+        # Should return error status
+        self.assertEqual(result["status"], "error")
+        self.assertIn("Could not fetch license template", result["message"])
         
         # LICENSE file should not be created due to the error
         license_file = Path(self.test_repo) / "LICENSE"
         self.assertFalse(license_file.exists())
     
-    @patch('ghops.commands.license.run_command')
-    @patch('ghops.commands.license.datetime')
+    @patch('ghops.core.run_command')
+    @patch('ghops.core.datetime')
     def test_add_license_to_repo_default_year(self, mock_datetime, mock_run_command):
         """Test adding license with default year"""
+        # Mock datetime to return a specific year
         mock_datetime.now.return_value.year = 2023
         mock_response = json.dumps({
             "body": "MIT License\n\nCopyright (c) [year] [fullname]"
         })
         mock_run_command.return_value = mock_response
         
-        add_license_to_repo(
+        result = add_license_to_repo(
             self.test_repo,
-            license_key="mit",
-            author_name="Test Author",
-            author_email="test@example.com",
-            year=None,  # Should use default year
-            dry_run=False,
-            force=False
+            "mit",
+            "Test Author",
+            "test@example.com",
+            None,  # Should use default year
+            False,
+            False
         )
         
-        # Check that current year was used
+        # Should succeed
+        self.assertEqual(result["status"], "success")
+        
+        # Check that the mocked year was used (2023, not 2025)
         license_file = Path(self.test_repo) / "LICENSE"
+        self.assertTrue(license_file.exists())
         with open(license_file, 'r') as f:
             content = f.read()
             self.assertIn("Copyright (c) 2023 Test Author", content)
     
-    @patch('ghops.commands.license.run_command')
+    @patch('ghops.core.run_command')
     def test_add_license_to_repo_no_author_info(self, mock_run_command):
         """Test adding license without author information"""
         mock_response = json.dumps({
-            "body": "MIT License\n\nCopyright (c) [year] [fullname]"
+            "body": "MIT License\n\nCopyright (c) [year] [fullname]\n\nContact: [email]"
         })
         mock_run_command.return_value = mock_response
         
-        add_license_to_repo(
+        result = add_license_to_repo(
             self.test_repo,
-            license_key="mit",
-            author_name=None,  # No author info
-            author_email=None,  # No author info
-            year="2023",
-            dry_run=False,
-            force=False
+            "mit",
+            None,  # No author info
+            None,  # No author info
+            "2023",
+            False,
+            False
         )
         
-        # Check that placeholders remain if no author info provided
+        # Should succeed
+        self.assertEqual(result["status"], "success")
+        
+        # Check that year was replaced but author placeholders remain
         license_file = Path(self.test_repo) / "LICENSE"
+        self.assertTrue(license_file.exists())
         with open(license_file, 'r') as f:
             content = f.read()
-            # Since no author_name is provided, template replacements won't happen
-            self.assertIn("Copyright (c) [year] [fullname]", content)
+            # Year should be replaced even without author info
+            self.assertIn("Copyright (c) 2023 [fullname]", content)
+            # Author and email placeholders should remain
+            self.assertIn("[fullname]", content)
+            self.assertIn("[email]", content)
+            self.assertNotIn("[year]", content)  # Year should be replaced
 
 
 if __name__ == '__main__':

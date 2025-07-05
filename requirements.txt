@@ -1,2 +1,5 @@
-rich
 pathlib
+requests>=2.25.0
+packaging>=21.0
+tweepy
+click>=8.0.0

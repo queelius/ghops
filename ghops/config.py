@@ -2,21 +2,19 @@
 
 import os
 import json
-import toml
+import tomllib
 from pathlib import Path
-from rich.console import Console
-from rich.logging import RichHandler
-import logging
 
-# Rich console for output
-console = Console()
+import logging
+import sys
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format="%(message)s",
-    datefmt="[%X]",
-    handlers=[RichHandler(console=console, rich_tracebacks=True)]
+    format="%(levelname)s: %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stderr) # Default to stderr
+    ]
 )
 logger = logging.getLogger("ghops")
 
@@ -68,8 +66,8 @@ def load_config():
     if config_path.exists():
         try:
             if config_path.suffix.lower() in ['.toml']:
-                with open(config_path, 'r') as f:
-                    file_config = toml.load(f)
+                with open(config_path, 'rb') as f:
+                    file_config = tomllib.load(f)
             else:
                 # Default to JSON format
                 with open(config_path, 'r') as f:
@@ -109,7 +107,7 @@ def get_default_config():
     """Get default configuration."""
     return {
         "general": {
-            "default_directory": "~/github",
+            "repository_directories": ["~/github"],  # List of directories or glob patterns
             "git_user_name": "",
             "git_user_email": "",
             "github_username": "",
@@ -167,6 +165,32 @@ def get_default_config():
                 "exclude_forks": True,
                 "minimum_stars": 0,
                 "hashtag_limit": 5
+            }
+        },
+        "service": {
+            "enabled": False,
+            "interval_minutes": 120,
+            "start_time": "09:00",
+            "reporting": {
+                "enabled": True,
+                "interval_hours": 24,
+                "include_stats": True,
+                "include_status": True,
+                "include_recent_activity": True
+            },
+            "notifications": {
+                "email": {
+                    "enabled": False,
+                    "smtp_server": "",
+                    "smtp_port": 587,
+                    "username": "",
+                    "password": "",
+                    "from_email": "",
+                    "to_email": "",
+                    "use_tls": True,
+                    "daily_summary": True,
+                    "error_alerts": True
+                }
             }
         },
         "filters": {
@@ -239,8 +263,17 @@ hashtag_limit = 5               # Maximum hashtags per post
         with open(config_path, 'w') as f:
             json.dump(config, f, indent=2)
     
-    console.print(f"✅ An example configuration file has been saved to {config_path}")
-    console.print("Edit this file to configure ghops for your needs.")
+    logger.info(f"✅ An example configuration file has been saved to {config_path}")
+    logger.info("Edit this file to configure ghops for your needs.")
+
+def generate_default_config():
+    """Generate a default configuration file at ~/.ghopsrc."""
+    config = get_default_config()
+    config_path = Path.home() / '.ghopsrc'
+    with open(config_path, 'w') as f:
+        json.dump(config, f, indent=2)
+    logger.info(f"✅ Default configuration file has been saved to {config_path}")
+    logger.info("Edit this file to configure ghops for your needs.")
 
 def merge_configs(base_config, override_config):
     """
@@ -323,5 +356,5 @@ def apply_env_overrides(config):
                 
     return config
 
-# Load configuration at module import
-config = load_config()
+
+

@@ -1,12 +1,13 @@
 """
 Handles the 'update' command for updating Git repositories.
 """
+import click
 import os
-from rich.progress import Progress
 
-from ..utils import run_command, find_git_repos, get_git_status
-from ..config import logger, stats
-from .license import add_license_to_repo
+from ghops.config import load_config, logger, stats
+from ghops.core import update_repo
+from ghops.utils import find_git_repos, run_command, get_git_status
+import json
 
 def pull_repo(repo_path, dry_run):
     """
@@ -113,33 +114,28 @@ def handle_merge_conflicts(repo_path, strategy, dry_run):
         else:
             logger.warning("Leaving conflicts for manual resolution.")
 
-def update_repo(repo_path, auto_commit, commit_message, auto_resolve_conflicts, prompt, dry_run):
-    """
-    Updates a single repo: commits, pulls, handles conflicts, and pushes.
+@click.command("update")
+@click.option("--dir", help="Directory to search for repositories (overrides config)")
+@click.option("--recursive", is_flag=True, help="Search recursively for repositories")
+@click.option("--auto-commit", is_flag=True, help="Automatically commit changes")
+@click.option("--commit-message", default="Automated commit by ghops", help="Commit message to use")
+@click.option("--dry-run", is_flag=True, help="Simulate actions without making changes")
+def update_repos_handler(dir, recursive, auto_commit, commit_message, dry_run):
+    """Update Git repositories."""
+    config = load_config()
+    results = []
 
-    Args:
-        repo_path (str): Path to the Git repository.
-        auto_commit (bool): If True, automatically commit changes before pulling.
-        commit_message (str): Commit message for auto-commits.
-        auto_resolve_conflicts (str): Conflict resolution strategy.
-        prompt (bool): If True, prompt before pushing changes.
-        dry_run (bool): If True, simulate actions without making changes.
-    """
-    if auto_commit:
-        commit_changes(repo_path, commit_message, dry_run)
+    if dir:
+        repo_paths = find_git_repos(dir, recursive)
+    else:
+        repo_dirs = config.get("general", {}).get("repository_directories", [])
+        repo_paths = find_git_repos(repo_dirs, recursive=True)
 
-    pull_repo(repo_path, dry_run)
+    for repo_path in repo_paths:
+        result = update_repo(repo_path, auto_commit, commit_message, dry_run)
+        results.append({"repo": os.path.basename(repo_path), **result})
 
-    if auto_resolve_conflicts:
-        handle_merge_conflicts(repo_path, auto_resolve_conflicts, dry_run)
-
-    if prompt and not dry_run:
-        confirm = input(f"Push changes for {repo_path}? [y/N]: ").strip().lower()
-        if confirm != "y":
-            logger.info(f"Skipping push for {repo_path}.")
-            return
-
-    push_repo(repo_path, dry_run)
+    print(json.dumps(results, indent=2))
 
 def update_all_repos(repo_dirs, auto_commit, commit_message, auto_resolve_conflicts, prompt, ignore_list, dry_run,
                      add_license=False, license_type="mit", author_name=None, author_email=None, 
@@ -169,20 +165,25 @@ def update_all_repos(repo_dirs, auto_commit, commit_message, auto_resolve_confli
         logger.warning("No Git repositories found matching the criteria.")
         return
 
-    with Progress() as progress:
-        task = progress.add_task("[cyan]Updating repos...", total=len(repo_dirs))
-        for repo in repo_dirs:
-            # Add LICENSE file if requested
-            if add_license:
-                add_license_to_repo(
-                    repo,
-                    license_key=license_type,
-                    author_name=author_name,
-                    author_email=author_email,
-                    year=license_year,
-                    dry_run=dry_run,
-                    force=force_license
-                )
-            
-            update_repo(repo, auto_commit, commit_message, auto_resolve_conflicts, prompt, dry_run)
-            progress.update(task, advance=1)
+    for repo in repo_dirs:
+        # Add LICENSE file if requested
+        if add_license:
+            add_license_to_repo(
+                repo,
+                license_key=license_type,
+                author_name=author_name,
+                author_email=author_email,
+                year=license_year,
+                dry_run=dry_run,
+                force=force_license
+            )
+        
+        # Handle conflicts before updating
+        if auto_resolve_conflicts:
+            handle_merge_conflicts(repo, auto_resolve_conflicts, dry_run)
+
+        # Prompt before pushing if enabled
+        if prompt:
+            click.confirm(f"Proceed with update for {os.path.basename(repo)}?", abort=True)
+
+        update_repo(repo, auto_commit, commit_message, dry_run)
