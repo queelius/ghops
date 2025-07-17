@@ -214,7 +214,10 @@ class TestDisplayRepoStatusTable(unittest.TestCase):
     @patch('ghops.commands.status.get_gh_pages_url')
     @patch('ghops.commands.status.detect_pypi_package')
     @patch('ghops.commands.status.console')
-    def test_display_repo_status_table_json(self, mock_console, mock_detect_pypi, 
+    @patch('ghops.commands.status.get_git_remote_url')
+    @patch('ghops.commands.status.check_github_repo_status')
+    @patch('os.path.isdir', return_value=True)
+    def test_display_repo_status_table_json(self, mock_isdir, mock_check_gh_status, mock_get_remote, mock_console, mock_detect_pypi, 
                                           mock_pages, mock_license, mock_git_status):
         """Test JSON output format"""
         # Setup mocks
@@ -226,6 +229,8 @@ class TestDisplayRepoStatusTable(unittest.TestCase):
             'is_published': False,
             'package_name': None
         }
+        mock_get_remote.return_value = "https://github.com/user/test_repo.git"
+        mock_check_gh_status.return_value = {'exists': True, 'visibility': 'Public', 'is_fork': False}
         
         repo_dirs = ['test_repo']
         display_repo_status_table(repo_dirs, json_output=True)
@@ -238,6 +243,8 @@ class TestDisplayRepoStatusTable(unittest.TestCase):
         self.assertEqual(call_args[0]['status'], 'clean')
         self.assertEqual(call_args[0]['branch'], 'main')
         self.assertEqual(call_args[0]['license'], 'MIT')
+        self.assertEqual(call_args[0]['on_github'], '✅ Yes')
+        self.assertEqual(call_args[0]['visibility'], 'Public')
     
     @patch('ghops.commands.status.get_git_status')
     @patch('ghops.commands.status.get_license_info')

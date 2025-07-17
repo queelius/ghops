@@ -39,9 +39,32 @@ This document outlines planned features and enhancements for `ghops`, organized 
 - ✅ **Preview Mode**: `--dry-run` flag to preview posts before publishing
 - ✅ **Rate Limiting**: Daily limits and time-based posting controls
 
+### GitHub Integration
+
+- ✅ **Visibility & Presence**: Status table now shows if a repo exists on GitHub and its visibility (Public/Private).
+
 ## 🚀 Next Release Goals (v0.7.0)
 
-### Priority 1: Core Usability Improvements 🎯
+### Priority 1: Core Usability & Automation 🎯
+
+#### GitHub Remote Management
+
+**Motivation**: Many local repositories are not yet tracked on GitHub. `ghops` should streamline the process of creating and linking remote repositories.
+
+**Features**:
+
+- **Auto-Create Remotes**: A new command, `ghops remote create`, will create a GitHub repository for a local-only repo using the `gh` CLI.
+- **Interactive Prompts**: The command will prompt for repository name, visibility (public/private), and description.
+- **Status Integration**: The `ghops status` command will highlight local-only repositories and suggest running the `remote create` command.
+
+#### Automated Homepage URL Update
+
+**Motivation**: When a GitHub Pages site is detected, the project's metadata (`pyproject.toml` or `package.json`) should be updated to reflect the live URL.
+
+**Features**:
+
+- **Homepage Update Command**: A new command, `ghops pages update-homepage`, will automatically find the `homepage` or `urls.Homepage` key in `pyproject.toml` and set it to the detected GitHub Pages URL.
+- **Dry-Run Support**: The command will include a `--dry-run` flag to show the proposed changes without writing to the file.
 
 #### Single Repository Operations
 
@@ -211,31 +234,6 @@ posts = api.create_social_posts(
 - **Failed builds**: Quickly identify repositories with failing tests
 - **Deployment status**: Track which repositories have pending deployments
 - **Action summaries**: Aggregate build success rates and performance metrics
-
-### Advanced Social Media Features
-
-#### Real Social Media API Integration
-
-- **Twitter/X API**: Full implementation with tweet posting
-- **LinkedIn API**: Professional network posting for project updates
-- **Mastodon API**: Decentralized social media support
-- **Instagram API**: Visual content for project screenshots
-- **Reddit API**: Automated posting to relevant programming subreddits
-
-#### Content Intelligence
-
-- **Engagement tracking**: Monitor which posts perform best
-- **Optimal timing**: Learn the best times to post for your audience
-- **Hashtag optimization**: Suggest trending and relevant hashtags
-- **Content personalization**: Adapt content style based on platform
-- **Analytics dashboard**: Track social media impact on repository metrics
-
-#### Automated Campaigns
-
-- **Release announcements**: Auto-post when new versions are published
-- **Documentation updates**: Announce new documentation or tutorials
-- **Achievement celebrations**: Post about star milestones, contributor achievements
-- **Event-driven posting**: React to GitHub events (new stars, forks, etc.)
 
 ## Long-term Goals (v0.9.0 - v1.0.0)
 

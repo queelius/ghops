@@ -2,6 +2,8 @@
 
 import argparse
 from rich.table import Table
+from rich.panel import Panel
+import importlib.metadata
 
 from .config import console, logger, stats, load_config, save_config, generate_config_example
 from .utils import find_git_repos
@@ -53,8 +55,17 @@ def main():
     """
     reset_stats()
     
+    try:
+        version = importlib.metadata.version("ghops")
+    except importlib.metadata.PackageNotFoundError:
+        version = "0.0.0-local"
+
     parser = argparse.ArgumentParser(description="GitHub Operations CLI Tool")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {version}")
     subparsers = parser.add_subparsers(dest="command", help="Available commands", required=False)
+
+    # About command
+    subparsers.add_parser("about", help="Show information about the author")
 
     # Config command
     config_parser = subparsers.add_parser("config", help="Configuration management")
@@ -65,14 +76,14 @@ def main():
     
     # Get command
     get_parser = subparsers.add_parser("get", help="Clone GitHub repositories")
-    get_parser.add_argument("--dir", default=".", help="Directory to clone repositories into")
+    get_parser.add_argument("-d", "--base-dir", dest="dir", default=".", help="Directory to clone repositories into")
     get_parser.add_argument("--license", default="mit", help="License to add to repositories")
     get_parser.add_argument("--license-name", help="Name for license file")
     get_parser.add_argument("--license-email", help="Email for license file")
 
     # Update command
     update_parser = subparsers.add_parser("update", help="Update local repositories")
-    update_parser.add_argument("--dir", default=".", help="Directory containing repositories")
+    update_parser.add_argument("-d", "--base-dir", dest="dir", default=".", help="Directory containing repositories")
     update_parser.add_argument("-r", "--recursive", action="store_true", help="Search recursively for repositories")
     update_parser.add_argument("--license", help="License to add to repositories")
     update_parser.add_argument("--license-name", help="Name for license file")
@@ -80,7 +91,7 @@ def main():
 
     # Status command
     status_parser = subparsers.add_parser("status", help="Show repository status")
-    status_parser.add_argument("--dir", default=".", help="Directory containing repositories")
+    status_parser.add_argument("-d", "--base-dir", dest="dir", default=".", help="Directory containing repositories")
     status_parser.add_argument("-r", "--recursive", action="store_true", help="Search recursively for repositories")
     status_parser.add_argument("--json", action="store_true", help="Output in JSON format")
     status_parser.add_argument("--no-pages-check", action="store_true", help="Skip GitHub Pages check for faster results")
@@ -100,12 +111,12 @@ def main():
     social_subparsers = social_parser.add_subparsers(dest="social_action", help="Social actions")
     
     social_sample_parser = social_subparsers.add_parser("sample", help="Sample repositories for social media")
-    social_sample_parser.add_argument("--dir", default=".", help="Directory containing repositories")
+    social_sample_parser.add_argument("-d", "--base-dir", dest="dir", default=".", help="Directory containing repositories")
     social_sample_parser.add_argument("-r", "--recursive", action="store_true", help="Search recursively")
     social_sample_parser.add_argument("--size", type=int, default=3, help="Number of repositories to sample")
     
     social_post_parser = social_subparsers.add_parser("post", help="Create and post social media content")
-    social_post_parser.add_argument("--dir", default=".", help="Directory containing repositories")
+    social_post_parser.add_argument("-d", "--base-dir", dest="dir", default=".", help="Directory containing repositories")
     social_post_parser.add_argument("-r", "--recursive", action="store_true", help="Search recursively")
     social_post_parser.add_argument("--size", type=int, default=3, help="Number of repositories to sample")
     social_post_parser.add_argument("--dry-run", action="store_true", help="Show what would be posted without posting")
@@ -114,6 +125,17 @@ def main():
 
     if not args.command:
         parser.print_help()
+        return 0
+
+    # Handle about command
+    if args.command == "about":
+        about_text = """
+[bold cyan]ghops[/bold cyan] - A GitHub Operations CLI Tool
+
+[bold]Author:[/bold] Alex Towell <lex@metafunctor.com>
+[italic]"The tools of production should be in the hands of those who use them."[/italic]
+"""
+        console.print(Panel(about_text, title="About", border_style="green"))
         return 0
 
     # Handle config commands

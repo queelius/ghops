@@ -4,7 +4,92 @@ Shared utility functions for ghops.
 import subprocess
 import os
 from pathlib import Path
+import re
+import json
 from .config import logger
+
+def get_git_remote_url(repo_path, remote_name="origin"):
+    """
+    Gets the URL of a specific remote for a Git repository.
+
+    Args:
+        repo_path (str): Path to the Git repository.
+        remote_name (str): The name of the remote (e.g., 'origin').
+
+    Returns:
+        str: The URL of the remote, or None if not found.
+    """
+    try:
+        return run_command(
+            f"git config --get remote.{remote_name}.url",
+            cwd=repo_path,
+            capture_output=True,
+            check=False,
+            log_stderr=False
+        )
+    except Exception:
+        return None
+
+def parse_repo_url(url):
+    """
+    Parses a GitHub URL to extract the owner and repository name.
+    Handles HTTPS and SSH formats.
+
+    Args:
+        url (str): The GitHub repository URL.
+
+    Returns:
+        tuple: A tuple (owner, repo) or (None, None) if parsing fails.
+    """
+    if not url:
+        return None, None
+
+    # HTTPS: https://github.com/owner/repo.git
+    https_match = re.search(r"github\.com/([^/]+)/([^/]+?)(?:\.git)?$", url)
+    if https_match:
+        return https_match.groups()
+
+    # SSH: git@github.com:owner/repo.git
+    ssh_match = re.search(r"git@github\.com:([^/]+)/([^/]+?)(?:\.git)?$", url)
+    if ssh_match:
+        return ssh_match.groups()
+
+    return None, None
+
+
+def check_github_repo_status(owner, repo):
+    """
+    Checks if a GitHub repository exists, its visibility (Public/Private), and if it's a fork.
+
+    Args:
+        owner (str): The repository owner.
+        repo (str): The repository name.
+
+    Returns:
+        dict: A dict with 'exists' (bool), 'visibility' (str), and 'is_fork' (bool).
+    """
+    if not owner or not repo:
+        return {'exists': False, 'visibility': 'N/A', 'is_fork': False}
+    try:
+        command = f"gh repo view {owner}/{repo} --json name,visibility,isFork"
+        result = run_command(command, capture_output=True, check=False, log_stderr=False)
+
+        if result:
+            try:
+                data = json.loads(result)
+                return {
+                    'exists': True,
+                    'visibility': data.get('visibility', 'Unknown').capitalize(),
+                    'is_fork': data.get('isFork', False)
+                }
+            except json.JSONDecodeError:
+                return {'exists': False, 'visibility': 'N/A', 'is_fork': False}
+        else:
+            return {'exists': False, 'visibility': 'N/A', 'is_fork': False}
+    except Exception as e:
+        logger.debug(f"Failed to check GitHub status for {owner}/{repo}: {e}")
+        return {'exists': False, 'visibility': 'Error', 'is_fork': False}
+
 
 def run_command(command, cwd=".", dry_run=False, capture_output=False, check=True, log_stderr=True):
     """
@@ -163,3 +248,41 @@ def is_git_repo(repo_path):
         bool: True if the directory is a Git repository, False otherwise.
     """
     return (Path(repo_path) / ".git").is_dir()
+
+
+def get_license_info(repo_path):
+    """
+    Get license information for a repository.
+    """
+    repo_path = Path(repo_path)
+    
+    # Check for common license file names
+    license_files = ['LICENSE', 'LICENSE.txt', 'LICENSE.md', 'LICENCE', 'LICENCE.txt', 'LICENCE.md']
+    
+    for license_file in license_files:
+        license_path = repo_path / license_file
+        if license_path.exists():
+            try:
+                with open(license_path, 'r', encoding='utf-8') as f:
+                    content = f.read().upper()
+                
+                # Simple license detection based on content
+                if 'MIT LICENSE' in content or 'MIT' in content:
+                    return 'MIT'
+                elif 'APACHE LICENSE' in content or 'APACHE' in content:
+                    return 'Apache-2.0'
+                elif 'GNU GENERAL PUBLIC LICENSE' in content or 'GPL' in content:
+                    if 'VERSION 3' in content:
+                        return 'GPL-3.0'
+                    elif 'VERSION 2' in content:
+                        return 'GPL-2.0'
+                    else:
+                        return 'GPL'
+                elif 'BSD' in content:
+                    return 'BSD'
+                else:
+                    return 'Other'
+            except:
+                return 'Unknown'
+    
+    return 'None'

@@ -12,7 +12,11 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich import box
 
 from ..config import console, logger, stats, config
-from ..utils import find_git_repos, get_git_status, run_command
+from ..utils import (
+    find_git_repos, get_git_status, run_command,
+    parse_repo_url,
+    get_git_remote_url, check_github_repo_status, get_license_info
+)
 from ..pypi import detect_pypi_package, is_package_outdated
 
 def get_gh_pages_url(repo_path):
@@ -113,43 +117,6 @@ def get_gh_pages_url(repo_path):
         logger.debug(f"Error getting GitHub Pages URL for {repo_path}: {e}")
         return None
 
-def get_license_info(repo_path):
-    """
-    Get license information for a repository.
-    """
-    repo_path = Path(repo_path)
-    
-    # Check for common license file names
-    license_files = ['LICENSE', 'LICENSE.txt', 'LICENSE.md', 'LICENCE', 'LICENCE.txt', 'LICENCE.md']
-    
-    for license_file in license_files:
-        license_path = repo_path / license_file
-        if license_path.exists():
-            try:
-                with open(license_path, 'r', encoding='utf-8') as f:
-                    content = f.read().upper()
-                
-                # Simple license detection based on content
-                if 'MIT LICENSE' in content or 'MIT' in content:
-                    return 'MIT'
-                elif 'APACHE LICENSE' in content or 'APACHE' in content:
-                    return 'Apache-2.0'
-                elif 'GNU GENERAL PUBLIC LICENSE' in content or 'GPL' in content:
-                    if 'VERSION 3' in content:
-                        return 'GPL-3.0'
-                    elif 'VERSION 2' in content:
-                        return 'GPL-2.0'
-                    else:
-                        return 'GPL'
-                elif 'BSD' in content:
-                    return 'BSD'
-                else:
-                    return 'Other'
-            except:
-                return 'Unknown'
-    
-    return 'None'
-
 def display_repo_status_table(repo_dirs, json_output=False, base_dir=".", skip_pages_check=False):
     """
     Display the status of repositories in a table format with progress bar.
@@ -187,12 +154,31 @@ def display_repo_status_table(repo_dirs, json_output=False, base_dir=".", skip_p
             for repo_dir in repo_dirs:
                 repo_path = os.path.join(base_dir, repo_dir)
                 progress.update(task, description=f"Checking {repo_dir}...")
+
+                # Check if repo directory exists
+                if not os.path.isdir(repo_path):
+                    logger.warning(f"Directory not found for repo: {repo_dir}")
+                    repo_data.append({
+                        'name': repo_dir,
+                        'status': 'Missing',
+                        'branch': 'N/A',
+                        'license': 'N/A',
+                        'pages_url': None,
+                        'pypi_info': None,
+                        'visibility': 'N/A',
+                        'on_github': 'N/A'
+                    })
+                    progress.advance(task)
+                    continue
                 
                 # Get git status
                 git_status = get_git_status(repo_path)
-                if git_status is None:
-                    git_status = {'status': 'error', 'branch': 'unknown'}
                 
+                # Get GitHub repo status (visibility, existence)
+                remote_url = get_git_remote_url(repo_path)
+                owner, repo_name = parse_repo_url(remote_url)
+                gh_status = check_github_repo_status(owner, repo_name)
+
                 # Get license info
                 license_info = get_license_info(repo_path)
                 
@@ -232,6 +218,8 @@ def display_repo_status_table(repo_dirs, json_output=False, base_dir=".", skip_p
                     'name': repo_dir,
                     'status': git_status['status'],
                     'branch': git_status['branch'],
+                    'on_github': '✅ Yes' if gh_status['exists'] else '❌ No',
+                    'visibility': gh_status['visibility'],
                     'license': license_info,
                     'pages_url': pages_url,
                     'pypi_info': pypi_info
@@ -250,6 +238,8 @@ def display_repo_status_table(repo_dirs, json_output=False, base_dir=".", skip_p
     # Create and display the table
     table = Table(title="Repository Status", box=box.ROUNDED)
     table.add_column("Repository", style="cyan", no_wrap=True)
+    table.add_column("On GitHub", style="bold white")
+    table.add_column("Visibility", style="bold white")
     table.add_column("Status", style="magenta")
     table.add_column("Branch", style="yellow")
     table.add_column("License", style="green")
@@ -264,6 +254,8 @@ def display_repo_status_table(repo_dirs, json_output=False, base_dir=".", skip_p
     for repo in repo_data:
         row = [
             repo['name'],
+            repo['on_github'],
+            repo['visibility'],
             repo['status'],
             repo['branch'],
             repo['license']
@@ -314,21 +306,25 @@ def sample_repositories_for_social_media(repo_dirs, base_dir=".", sample_size=3)
         # Check if it's a valid git repository
         if not os.path.exists(os.path.join(repo_path, '.git')):
             continue
+
+        # Get remote URL for GitHub checks
+        remote_url = get_git_remote_url(repo_path)
+        owner, repo_name = parse_repo_url(remote_url)
             
+        # Apply filters
+        if owner and repo_name:
+            gh_status = check_github_repo_status(owner, repo_name)
+            if posting_config.get('exclude_private', True) and gh_status.get('visibility', 'public').lower() == 'private':
+                logger.debug(f"Excluding private repo: {repo_dir}")
+                continue
+            if posting_config.get('exclude_forks', True) and gh_status.get('is_fork'):
+                logger.debug(f"Excluding fork: {repo_dir}")
+                continue
+
         # Get repository information
         pypi_data = detect_pypi_package(repo_path)
         license_info = get_license_info(repo_path)
         pages_url = get_gh_pages_url(repo_path)
-        
-        # Apply filters
-        if posting_config.get('exclude_private', True):
-            # Check if repo is private (basic check)
-            # This would need more sophisticated GitHub API integration
-            pass
-        
-        if posting_config.get('exclude_forks', True):
-            # Check if repo is a fork (would need GitHub API)
-            pass
         
         repo_info = {
             'name': repo_dir,
