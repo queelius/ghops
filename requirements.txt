@@ -1,2 +1,11 @@
-rich
 pathlib
+toml
+requests>=2.25.0
+packaging>=21.0
+tweepy
+click>=8.0.0
+rich>=13.0.0
+rapidfuzz
+mkdocs>=1.4.0
+mkdocs-material>=9.0.0
+ghp-import>=2.1.0

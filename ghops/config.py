@@ -2,21 +2,19 @@
 
 import os
 import json
-import toml
+import tomllib
 from pathlib import Path
-from rich.console import Console
-from rich.logging import RichHandler
-import logging
 
-# Rich console for output
-console = Console()
+import logging
+import sys
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format="%(message)s",
-    datefmt="[%X]",
-    handlers=[RichHandler(console=console, rich_tracebacks=True)]
+    format="%(levelname)s: %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stderr) # Default to stderr
+    ]
 )
 logger = logging.getLogger("ghops")
 
@@ -47,15 +45,90 @@ def get_config_path():
         if path.exists():
             return path
 
-    home = Path.home()
-    # Check for default config files in order of preference
-    for filename in ['.ghopsrc.toml', '.ghopsrc.json', '.ghopsrc']:
-        path = home / filename
+    # Check ~/.ghops/ directory
+    ghops_dir = Path.home() / '.ghops'
+    for filename in ['config.json', 'config.yaml', 'config.yml']:
+        path = ghops_dir / filename
         if path.exists():
             return path
             
     # If no file exists, return default path for saving
-    return home / '.ghopsrc'
+    return ghops_dir / 'config.json'
+
+def migrate_config_to_tags(config: dict) -> dict:
+    """
+    Migrate old metadata structure to new tag-based structure.
+    
+    Old structure:
+        repository_metadata: {
+            "path": {"organization": "x", "category": "y", "tags": ["a", "b"]}
+        }
+    
+    New structure:
+        repository_tags: {
+            "path": ["org:x", "category:y", "a", "b"]
+        }
+    """
+    # Check if we have old-style metadata
+    if "repository_metadata" in config and "repository_tags" not in config:
+        config["repository_tags"] = {}
+        
+        # Convert each metadata entry to tags
+        for path, metadata in config["repository_metadata"].items():
+            tags = []
+            
+            # Convert organization to org: tag
+            if org := metadata.get("organization"):
+                tags.append(f"org:{org}")
+            
+            # Convert category to category: tag
+            if category := metadata.get("category"):
+                tags.append(f"category:{category}")
+            
+            # Add existing tags
+            if existing_tags := metadata.get("tags"):
+                tags.extend(existing_tags)
+            
+            config["repository_tags"][path] = tags
+        
+        # Remove old metadata
+        del config["repository_metadata"]
+        
+        # Rebuild catalogs from tags
+        rebuild_catalogs_from_tags(config)
+    
+    return config
+
+
+def rebuild_catalogs_from_tags(config: dict) -> None:
+    """Rebuild catalog structure from repository tags."""
+    from .tags import parse_tag
+    
+    config["catalogs"] = {}
+    repo_tags = config.get("repository_tags", {})
+    
+    for path, tags in repo_tags.items():
+        for tag in tags:
+            key, value = parse_tag(tag)
+            
+            # Add to by_tag catalog
+            if "by_tag" not in config["catalogs"]:
+                config["catalogs"]["by_tag"] = {}
+            if tag not in config["catalogs"]["by_tag"]:
+                config["catalogs"]["by_tag"][tag] = []
+            if path not in config["catalogs"]["by_tag"][tag]:
+                config["catalogs"]["by_tag"][tag].append(path)
+            
+            # Add to by_key catalogs for key:value tags
+            if value is not None:
+                catalog_key = f"by_{key}"
+                if catalog_key not in config["catalogs"]:
+                    config["catalogs"][catalog_key] = {}
+                if value not in config["catalogs"][catalog_key]:
+                    config["catalogs"][catalog_key][value] = []
+                if path not in config["catalogs"][catalog_key][value]:
+                    config["catalogs"][catalog_key][value].append(path)
+
 
 def load_config():
     """Load configuration from file."""
@@ -68,8 +141,18 @@ def load_config():
     if config_path.exists():
         try:
             if config_path.suffix.lower() in ['.toml']:
-                with open(config_path, 'r') as f:
-                    file_config = toml.load(f)
+                with open(config_path, 'rb') as f:
+                    file_config = tomllib.load(f)
+            elif config_path.suffix.lower() in ['.yaml', '.yml']:
+                try:
+                    import yaml
+                    with open(config_path, 'r') as f:
+                        file_config = yaml.safe_load(f)
+                except ImportError:
+                    logger.warning("PyYAML not installed. Install with 'pip install pyyaml' for YAML support.")
+                    # Fall back to JSON
+                    with open(config_path, 'r') as f:
+                        file_config = json.load(f)
             else:
                 # Default to JSON format
                 with open(config_path, 'r') as f:
@@ -83,6 +166,9 @@ def load_config():
     # Apply environment variable overrides
     config = apply_env_overrides(config)
     
+    # Migrate old config format to new tag-based format
+    config = migrate_config_to_tags(config)
+    
     return config
 
 def save_config(config):
@@ -94,8 +180,26 @@ def save_config(config):
         config_path.parent.mkdir(parents=True, exist_ok=True)
         
         if config_path.suffix.lower() in ['.toml']:
-            with open(config_path, 'w') as f:
-                toml.dump(config, f)
+            # For TOML we need toml library for writing (tomllib is read-only)
+            try:
+                import toml
+                with open(config_path, 'w') as f:
+                    toml.dump(config, f)
+            except ImportError:
+                logger.warning("toml library not installed. Saving as JSON instead.")
+                config_path = config_path.with_suffix('.json')
+                with open(config_path, 'w') as f:
+                    json.dump(config, f, indent=2)
+        elif config_path.suffix.lower() in ['.yaml', '.yml']:
+            try:
+                import yaml
+                with open(config_path, 'w') as f:
+                    yaml.safe_dump(config, f, default_flow_style=False)
+            except ImportError:
+                logger.warning("PyYAML not installed. Saving as JSON instead.")
+                config_path = config_path.with_suffix('.json')
+                with open(config_path, 'w') as f:
+                    json.dump(config, f, indent=2)
         else:
             # Default to JSON format
             with open(config_path, 'w') as f:
@@ -109,7 +213,7 @@ def get_default_config():
     """Get default configuration."""
     return {
         "general": {
-            "default_directory": "~/github",
+            "repository_directories": ["~/github"],  # List of directories or glob patterns
             "git_user_name": "",
             "git_user_email": "",
             "github_username": "",
@@ -120,6 +224,14 @@ def get_default_config():
             "check_by_default": True,
             "timeout_seconds": 10,
             "include_test_pypi": False
+        },
+        "github": {
+            "token": "",
+            "rate_limit": {
+                "max_retries": 3,
+                "max_delay_seconds": 60,
+                "respect_reset_time": True
+            }
         },
         "logging": {
             "level": "INFO",
@@ -167,6 +279,32 @@ def get_default_config():
                 "exclude_forks": True,
                 "minimum_stars": 0,
                 "hashtag_limit": 5
+            }
+        },
+        "service": {
+            "enabled": False,
+            "interval_minutes": 120,
+            "start_time": "09:00",
+            "reporting": {
+                "enabled": True,
+                "interval_hours": 24,
+                "include_stats": True,
+                "include_status": True,
+                "include_recent_activity": True
+            },
+            "notifications": {
+                "email": {
+                    "enabled": False,
+                    "smtp_server": "",
+                    "smtp_port": 587,
+                    "username": "",
+                    "password": "",
+                    "from_email": "",
+                    "to_email": "",
+                    "use_tls": True,
+                    "daily_summary": True,
+                    "error_alerts": True
+                }
             }
         },
         "filters": {
@@ -239,8 +377,17 @@ hashtag_limit = 5               # Maximum hashtags per post
         with open(config_path, 'w') as f:
             json.dump(config, f, indent=2)
     
-    console.print(f"✅ An example configuration file has been saved to {config_path}")
-    console.print("Edit this file to configure ghops for your needs.")
+    logger.info(f"✅ An example configuration file has been saved to {config_path}")
+    logger.info("Edit this file to configure ghops for your needs.")
+
+def generate_default_config():
+    """Generate a default configuration file at ~/.ghopsrc."""
+    config = get_default_config()
+    config_path = Path.home() / '.ghopsrc'
+    with open(config_path, 'w') as f:
+        json.dump(config, f, indent=2)
+    logger.info(f"✅ Default configuration file has been saved to {config_path}")
+    logger.info("Edit this file to configure ghops for your needs.")
 
 def merge_configs(base_config, override_config):
     """
@@ -323,5 +470,5 @@ def apply_env_overrides(config):
                 
     return config
 
-# Load configuration at module import
-config = load_config()
+
+

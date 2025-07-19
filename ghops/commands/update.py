@@ -1,188 +1,188 @@
 """
 Handles the 'update' command for updating Git repositories.
+
+This command follows our design principles:
+- Default output is JSONL streaming
+- --pretty flag for human-readable table output
+- Core logic returns generators for streaming
+- No side effects in core functions
 """
+
+import click
+import json
 import os
-from rich.progress import Progress
+from pathlib import Path
+from typing import Generator, Dict, Any
 
-from ..utils import run_command, find_git_repos, get_git_status
-from ..config import logger, stats
-from .license import add_license_to_repo
+from ..core import get_repositories_from_path
+from ..render import render_update_table
+from ..utils import run_command, get_git_status, get_remote_url, parse_repo_url
+from ..config import logger
 
-def pull_repo(repo_path, dry_run):
+
+def update_repository(repo_path: str, auto_commit: bool = False, 
+                     commit_message: str = "Auto commit", 
+                     dry_run: bool = False) -> Dict[str, Any]:
     """
-    Pulls the latest changes from the remote repository.
-
-    Args:
-        repo_path (str): Path to the Git repository.
-        dry_run (bool): If True, simulate actions without making changes.
-    """
-    output = run_command("git pull --rebase --autostash", repo_path, dry_run, capture_output=True)
-    if not output:
-        logger.debug(f"No changes to pull in {repo_path}.")
-        stats["skipped"] += 1
-        return
+    Update a single repository.
     
-    if "already up to date." not in output.lower() and "fast-forward" in output.lower():
-        stats["pulled"] += 1
-    else:
-        logger.debug(f"No changes to pull in {repo_path}.")
-        stats["skipped"] += 1        
-
-def commit_changes(repo_path, message, dry_run):
+    Returns a dictionary with update results following standard schema.
     """
-    Commits any uncommitted changes.
-
-    Args:
-        repo_path (str): Path to the Git repository.
-        message (str): Commit message.
-        dry_run (bool): If True, simulate actions without making changes.
-    """
-    status = get_git_status(repo_path)
-    if not status:
-        logger.debug(f"No changes to commit in {repo_path}.")
-        stats["skipped"] += 1
-        return
+    repo_name = os.path.basename(repo_path)
+    result = {
+        "path": os.path.abspath(repo_path),
+        "name": repo_name,
+        "actions": {
+            "committed": False,
+            "pulled": False,
+            "pushed": False,
+            "conflicts": False,
+            "error": None
+        },
+        "details": {}
+    }
     
-    add_output = run_command("git add -A", repo_path, dry_run, capture_output=True)
-    if add_output:
-        logger.debug(f"Added changes to staging area in {repo_path}.")
-    output = run_command(f'git commit -m "{message}"', repo_path, dry_run, capture_output=True)
-    if not output:
-        logger.debug(f"No changes to commit in {repo_path}.")
-        return
-
-    if "nothing to commit" in output.lower():
-        logger.debug(f"No changes were committed in {repo_path}.")
-        stats["skipped"] += 1
-    else:
-        stats["committed"] += 1
-
-def push_repo(repo_path, dry_run):
-    """
-    Pushes committed changes to the remote repository, only incrementing stats
-    if there's actually something to push.
-    """
-    output = run_command("git push", repo_path, dry_run, capture_output=True)
-
-    if not output:
-        logger.debug(f"No changes to push in {repo_path}.")
-        return
-
-    if "everything up-to-date" in output.lower() or "everything up to date" in output.lower():
-        logger.debug(f"Nothing to push for {repo_path}.")
-        stats["skipped"] += 1
-    else:
-        stats["pushed"] += 1
-
-def handle_merge_conflicts(repo_path, strategy, dry_run):
-    """
-    Attempts to resolve merge or rebase conflicts if any.
-
-    Args:
-        repo_path (str): Path to the Git repository.
-        strategy (str): Conflict resolution strategy ('abort', 'ours', 'theirs').
-        dry_run (bool): If True, simulate actions without making changes.
-    """
-    conflicts = run_command("git ls-files -u", repo_path, capture_output=True)
-    if conflicts:
-        # Determine if it's a merge or rebase conflict
-        is_rebase = os.path.isdir(os.path.join(repo_path, ".git", "rebase-merge"))
-        conflict_type = "Rebase" if is_rebase else "Merge"
-        abort_command = "git rebase --abort" if is_rebase else "git merge --abort"
-
-        logger.warning(f"{conflict_type} conflicts detected in {repo_path}.")
-        stats["conflicts"] += 1
+    try:
+        # Check for uncommitted changes
+        status_output = run_command("git status --porcelain", cwd=repo_path, capture_output=True)
+        has_changes = bool(status_output and status_output.strip())
         
-        if strategy == "abort":
-            logger.info(f"Aborting {conflict_type.lower()}...")
-            run_command(abort_command, repo_path, dry_run)
-        elif strategy == "ours":
-            logger.info(f"Resolving conflicts using 'ours' strategy...")
-            run_command("git checkout --ours . && git add -A", repo_path, dry_run)
-            run_command(f'git commit -m "Auto-resolved conflicts using ours"', repo_path, dry_run)
-            if is_rebase:
-                run_command("git rebase --continue", repo_path, dry_run)
-            stats["conflicts_resolved"] += 1
-        elif strategy == "theirs":
-            logger.info(f"Resolving conflicts using 'theirs' strategy...")
-            run_command("git checkout --theirs . && git add -A", repo_path, dry_run)
-            run_command(f'git commit -m "Auto-resolved conflicts using theirs"', repo_path, dry_run)
-            if is_rebase:
-                run_command("git rebase --continue", repo_path, dry_run)
-            stats["conflicts_resolved"] += 1
-        else:
-            logger.warning("Leaving conflicts for manual resolution.")
-
-def update_repo(repo_path, auto_commit, commit_message, auto_resolve_conflicts, prompt, dry_run):
-    """
-    Updates a single repo: commits, pulls, handles conflicts, and pushes.
-
-    Args:
-        repo_path (str): Path to the Git repository.
-        auto_commit (bool): If True, automatically commit changes before pulling.
-        commit_message (str): Commit message for auto-commits.
-        auto_resolve_conflicts (str): Conflict resolution strategy.
-        prompt (bool): If True, prompt before pushing changes.
-        dry_run (bool): If True, simulate actions without making changes.
-    """
-    if auto_commit:
-        commit_changes(repo_path, commit_message, dry_run)
-
-    pull_repo(repo_path, dry_run)
-
-    if auto_resolve_conflicts:
-        handle_merge_conflicts(repo_path, auto_resolve_conflicts, dry_run)
-
-    if prompt and not dry_run:
-        confirm = input(f"Push changes for {repo_path}? [y/N]: ").strip().lower()
-        if confirm != "y":
-            logger.info(f"Skipping push for {repo_path}.")
-            return
-
-    push_repo(repo_path, dry_run)
-
-def update_all_repos(repo_dirs, auto_commit, commit_message, auto_resolve_conflicts, prompt, ignore_list, dry_run,
-                     add_license=False, license_type="mit", author_name=None, author_email=None, 
-                     license_year=None, force_license=False):
-    """
-    Finds all git repositories in the specified directory and updates them.
-
-    Args:
-        repo_dirs (list): List of repository directories to update.
-        auto_commit (bool): If True, automatically commit changes before pulling.
-        commit_message (str): Commit message for auto-commits.
-        auto_resolve_conflicts (str): Conflict resolution strategy.
-        prompt (bool): If True, prompt before pushing changes.
-        ignore_list (list): List of repository names to ignore.
-        dry_run (bool): If True, simulate actions without making changes.
-        add_license (bool): If True, add LICENSE files to repositories.
-        license_type (str): Type of license to add (default: 'mit').
-        author_name (str, optional): Author name for license customization.
-        author_email (str, optional): Author email for license customization.
-        license_year (str, optional): Copyright year for license customization.
-        force_license (bool): If True, overwrite existing LICENSE files.
-    """
-    if ignore_list:
-        repo_dirs = [d for d in repo_dirs if os.path.basename(d) not in ignore_list]
-
-    if not repo_dirs:
-        logger.warning("No Git repositories found matching the criteria.")
-        return
-
-    with Progress() as progress:
-        task = progress.add_task("[cyan]Updating repos...", total=len(repo_dirs))
-        for repo in repo_dirs:
-            # Add LICENSE file if requested
-            if add_license:
-                add_license_to_repo(
-                    repo,
-                    license_key=license_type,
-                    author_name=author_name,
-                    author_email=author_email,
-                    year=license_year,
-                    dry_run=dry_run,
-                    force=force_license
+        if has_changes and auto_commit:
+            # Commit changes
+            if not dry_run:
+                run_command("git add -A", cwd=repo_path)
+                commit_output = run_command(
+                    f'git commit -m "{commit_message}"', 
+                    cwd=repo_path, 
+                    capture_output=True
                 )
+                if commit_output and "nothing to commit" not in commit_output.lower():
+                    result["actions"]["committed"] = True
+                    result["details"]["commit_message"] = commit_message
+            else:
+                result["actions"]["committed"] = True
+                result["details"]["commit_message"] = f"[DRY RUN] {commit_message}"
+        
+        # Pull latest changes
+        if not dry_run:
+            pull_output = run_command(
+                "git pull --rebase --autostash", 
+                cwd=repo_path, 
+                capture_output=True,
+                check=False
+            )
             
-            update_repo(repo, auto_commit, commit_message, auto_resolve_conflicts, prompt, dry_run)
-            progress.update(task, advance=1)
+            if pull_output:
+                if "already up to date" not in pull_output.lower():
+                    result["actions"]["pulled"] = True
+                    result["details"]["pull_output"] = pull_output.strip()
+                
+                # Check for conflicts
+                if "conflict" in pull_output.lower():
+                    result["actions"]["conflicts"] = True
+                    result["details"]["conflict_type"] = "rebase"
+        else:
+            result["details"]["pull_output"] = "[DRY RUN] Would pull latest changes"
+        
+        # Push if we committed
+        if result["actions"]["committed"] and not dry_run:
+            push_output = run_command("git push", cwd=repo_path, capture_output=True)
+            if push_output and "everything up-to-date" not in push_output.lower():
+                result["actions"]["pushed"] = True
+                result["details"]["push_output"] = push_output.strip()
+        elif result["actions"]["committed"] and dry_run:
+            result["details"]["push_output"] = "[DRY RUN] Would push changes"
+        
+        # Add remote info
+        remote_url = get_remote_url(repo_path)
+        if remote_url:
+            result["remote"] = {
+                "url": remote_url,
+                "owner": parse_repo_url(remote_url)[0],
+                "name": parse_repo_url(remote_url)[1]
+            }
+            
+    except Exception as e:
+        result["actions"]["error"] = str(e)
+        result["error"] = str(e)
+        result["type"] = "update_error"
+        result["context"] = {
+            "path": repo_path,
+            "operation": "update"
+        }
+    
+    return result
+
+
+def update_repositories(base_dir: str = None, recursive: bool = False,
+                       auto_commit: bool = False, commit_message: str = "Auto commit",
+                       dry_run: bool = False, tag_filters: list = None, 
+                       all_tags: bool = False) -> Generator[Dict[str, Any], None, None]:
+    """
+    Generator that yields update results for repositories.
+    
+    This is a pure function that returns a generator of update result dictionaries.
+    It does not print, format, or interact with the terminal.
+    """
+    from ..config import load_config
+    from ..utils import find_git_repos_from_config
+    
+    # Get repositories based on base_dir or config
+    if base_dir and base_dir != ".":
+        repos = list(get_repositories_from_path(base_dir, recursive))
+    else:
+        config = load_config()
+        repo_dirs = config.get("general", {}).get("repository_directories", [])
+        repos = list(find_git_repos_from_config(repo_dirs))
+    
+    # Apply tag filtering if specified
+    if tag_filters:
+        from ..commands.catalog import get_repositories_by_tags
+        config = load_config()
+        
+        # Get filtered repos
+        filtered_repos = list(get_repositories_by_tags(tag_filters, config, all_tags))
+        filtered_paths = {r["path"] for r in filtered_repos}
+        
+        # Filter the discovered repos
+        repos = [r for r in repos if os.path.abspath(r) in filtered_paths]
+    
+    for repo_path in repos:
+        yield update_repository(repo_path, auto_commit, commit_message, dry_run)
+
+
+@click.command("update")
+@click.option("-d", "--dir", default=".", help="Directory to search for repositories")
+@click.option("-r", "--recursive", is_flag=True, help="Search recursively for repositories")
+@click.option("--auto-commit", is_flag=True, help="Automatically commit changes before pulling")
+@click.option("--commit-message", default="Auto commit", help="Commit message for auto-commits")
+@click.option("--dry-run", is_flag=True, help="Simulate actions without making changes")
+@click.option("-t", "--tag", "tag_filters", multiple=True, help="Filter by tags (e.g., org:torvalds, lang:python)")
+@click.option("--all-tags", is_flag=True, help="Match all tags (default: match any)")
+@click.option("--pretty", is_flag=True, help="Display as formatted table instead of JSONL")
+def update_repos_handler(dir, recursive, auto_commit, commit_message, dry_run, tag_filters, all_tags, pretty):
+    """
+    Update Git repositories by pulling latest changes.
+    
+    By default, outputs JSONL (one JSON object per line) for each repository.
+    Use --pretty for a human-readable table format.
+    """
+    # Get repository updates as a generator
+    updates_generator = update_repositories(
+        base_dir=dir,
+        recursive=recursive,
+        auto_commit=auto_commit,
+        commit_message=commit_message,
+        dry_run=dry_run,
+        tag_filters=tag_filters,
+        all_tags=all_tags
+    )
+    
+    if pretty:
+        # Collect all updates and render as table
+        updates = list(updates_generator)
+        render_update_table(updates)
+    else:
+        # Stream JSONL output (default)
+        for update in updates_generator:
+            print(json.dumps(update, ensure_ascii=False), flush=True)

@@ -6,20 +6,17 @@
 [![Build Status](https://img.shields.io/badge/tests-138%20passing-brightgreen.svg)](https://github.com/queelius/ghops)
 [![License](https://img.shields.io/pypi/l/ghops.svg)](https://github.com/queelius/ghops/blob/main/LICENSE)
 
-A powerful, modular CLI tool for managing GitHub repositories at scale. Automate repository operations, track PyPI packages, manage licenses, and coordinate social media promotion for your open source projects.
-
-## 🎉 What's New in v0.6.0
-
-- **🏗️ Complete Architecture Overhaul**: Fully modular design with separated command modules
-- **🧪 Comprehensive Testing**: 138 tests with 86% coverage - robust and reliable
-- **⚡ Enhanced Performance**: Optional API checks with `--no-pypi-check` and `--no-pages-check` flags
-- **📱 Social Media Automation**: Template-driven posting for Twitter, LinkedIn, and Mastodon
-- **⚙️ Advanced Configuration**: TOML/JSON support with environment variable overrides
-- **📄 License Management**: Full GitHub API integration with template customization
-- **🌐 GitHub Pages Detection**: Multi-method detection for documentation sites
-- **🔧 Error Resilience**: Graceful handling of network failures and edge cases
+A powerful, local-first git project management system that helps developers manage the full lifecycle of their projects across multiple platforms - from local development through hosting, distribution, documentation, and promotion. Your local git repositories are the ground truth, and remote platforms (GitHub, GitLab, PyPI, etc.) are services that enrich and distribute your projects.
 
 ## ✨ Features
+
+### 🎯 **Core Philosophy**
+
+- **Local-First**: Your local git repositories are the source of truth
+- **JSONL by Default**: All commands output newline-delimited JSON for Unix pipeline composition
+- **Tag-Based Organization**: Powerful tagging system with implicit tags from metadata
+- **Query Language**: Fuzzy search with simple boolean expressions
+- **Multi-Platform**: Works with GitHub, GitLab, Bitbucket, and more (coming soon)
 
 ### 🏗️ **Robust Architecture**
 
@@ -27,6 +24,7 @@ A powerful, modular CLI tool for managing GitHub repositories at scale. Automate
 - **Extensible**: Easy to add new commands and functionality  
 - **Well-Tested**: 86% test coverage with 138 comprehensive unit and integration tests
 - **Error Resilient**: Graceful handling of network failures and edge cases
+- **Streaming Output**: Memory-efficient processing of large repository collections
 
 ### 📦 **Repository Management**
 
@@ -34,13 +32,6 @@ A powerful, modular CLI tool for managing GitHub repositories at scale. Automate
 - **Intelligent Sync**: Smart pull with rebase, conflict detection, and resolution strategies
 - **Progress Tracking**: Real-time progress bars and detailed operation summaries
 - **Flexible Discovery**: Recursive repository scanning with configurable ignore patterns
-
-### 🐍 **PyPI Integration**
-
-- **Smart Package Detection**: Automatically detects Python packages from `pyproject.toml`, `setup.py`, and `setup.cfg`
-- **Publishing Status**: Real-time PyPI status checking with version comparison
-- **Package Analytics**: Track which projects are published and their update status
-- **Performance Optimized**: Optional PyPI checks for faster operations
 
 ### 📄 **License Management**
 
@@ -68,6 +59,45 @@ A powerful, modular CLI tool for managing GitHub repositories at scale. Automate
 - **Environment Overrides**: All settings can be controlled via environment variables
 - **Default Merging**: Intelligent combination of defaults, file settings, and overrides
 - **Example Generation**: Built-in config template generation
+
+### 🤖 **Automated Service Mode**
+
+- **Scheduled Posting**: Run ghops as a background service for automated social media posting
+- **Multi-Directory Support**: Configure multiple repository locations with glob pattern support
+- **Periodic Reporting**: Generate comprehensive repository status reports
+- **Email Notifications**: Automated email alerts and daily summaries
+- **Error Monitoring**: Built-in error detection and email alerts
+
+### 🔍 **Repository Discovery & Organization**
+
+- **Tag-Based Catalogs**: Organize repos with explicit tags and auto-generated implicit tags
+- **Powerful Query Language**: Find repos with fuzzy matching: `ghops query "language ~= 'pyton'"`
+- **Metadata Store**: Local database of all repository information for fast queries
+- **Implicit Tags**: Automatic tags like `repo:name`, `lang:python`, `has:docs`, `dir:parent`
+
+### 🛡️ **Repository Auditing**
+
+- **Comprehensive Health Checks**: Audit repos for licenses, READMEs, security issues, and more
+- **Auto-Fix Capabilities**: Automatically fix common issues with `--fix` flag
+- **Security Scanning**: Detect hardcoded secrets and security vulnerabilities
+- **Dependency Auditing**: Check for missing or outdated dependency management
+- **Documentation Health**: Verify documentation setup and configuration
+
+### 📄 **Portfolio Export**
+
+- **Multiple Formats**: Export to Markdown, Hugo, HTML, JSON, CSV, LaTeX, and PDF
+- **Interactive HTML**: Generated HTML includes live search, filtering, and sorting
+- **Hugo Integration**: Create complete Hugo site structure with taxonomies
+- **Grouping & Organization**: Group exports by language, directory, or custom tags
+- **Template Support**: Customizable export templates for all formats
+
+### 📚 **Documentation Management**
+
+- **Multi-Tool Support**: Works with MkDocs, Sphinx, Jekyll, Hugo, and more
+- **Status Checking**: See documentation health across all repos
+- **Build & Serve**: Build and preview documentation locally
+- **Deploy to GitHub Pages**: One-command deployment to GitHub Pages
+- **Bulk Operations**: Manage docs across multiple repos simultaneously
 
 ## 🚀 Installation
 
@@ -110,6 +140,63 @@ ghops social sample --size 3
 ghops social post --dry-run
 ```
 
+### New Command Examples
+
+```bash
+# Repository Organization & Discovery
+ghops catalog add awesome-project python ml research  # Tag a repo
+ghops catalog show -t python                          # Show Python repos
+ghops query "stars > 10 and language ~= 'python'"     # Fuzzy query
+ghops list -t "dir:work" -t "lang:python"            # Filter by multiple tags
+
+# Repository Auditing
+ghops audit all -t "lang:python" --pretty            # Audit all Python repos
+ghops audit security --fix                            # Fix security issues
+ghops audit license --fix --type MIT                  # Add missing licenses
+ghops audit deps -q "has:package.json"               # Audit JS dependencies
+
+# Documentation Management
+ghops docs status -t "has:docs"                      # Check docs status
+ghops docs build -t "tool:mkdocs"                    # Build MkDocs projects
+ghops docs serve repo:myproject                      # Preview docs locally
+ghops docs deploy -t "lang:python" --dry-run         # Deploy to GitHub Pages
+
+# Portfolio Export
+ghops export generate -f hugo --group-by lang        # Export for Hugo site
+ghops export generate -f html -o ./portfolio         # Interactive HTML portfolio
+ghops export generate -q "stars > 5" -f pdf          # Export popular repos to PDF
+ghops export generate -t "dir:work" -f markdown      # Work portfolio in Markdown
+
+# Metadata Management
+ghops metadata refresh --github                       # Update from GitHub
+ghops metadata show repo:ghops --pretty              # Show repo metadata
+ghops metadata stats                                 # Repository statistics
+```
+
+### JSONL Output & Unix Pipelines
+
+All ghops commands output newline-delimited JSON (JSONL) by default, making them perfect for Unix pipelines:
+
+```bash
+# Find repositories with uncommitted changes
+ghops status | jq 'select(.status.uncommitted_changes == true)'
+
+# Count repositories by language
+ghops list | jq -s 'group_by(.language) | map({language: .[0].language, count: length})'
+
+# Export repository URLs to a file
+ghops list | jq -r '.remote.url' > repo-urls.txt
+
+# Find outdated PyPI packages
+ghops status | jq 'select(.package.outdated == true)'
+
+# Audit repositories and get failed checks
+ghops audit all | jq 'select(.status == "fail") | {name, checks: .checks | to_entries | map(select(.value.status == "fail")) | map(.key)}'
+
+# Chain commands - audit Python repos without docs
+ghops list -t "lang:python" | jq -r '.path' | xargs -I {} ghops audit docs {} | jq 'select(.status == "fail")'
+```
+
 ## 📋 Commands
 
 ### Repository Operations
@@ -131,7 +218,7 @@ ghops social post --dry-run
 
 - **`ghops status [options]`** - Comprehensive repository status
   - `-r, --recursive` - Search recursively
-  - `--json` - Output in JSON format for scripting
+  - `--pretty` - Display as formatted table (default: JSONL)
   - `--no-pypi-check` - Skip PyPI status checks (faster)
   - `--no-pages-check` - Skip GitHub Pages detection
   - `--summary` - Show summary statistics
@@ -141,21 +228,88 @@ ghops social post --dry-run
 - **`ghops config generate`** - Create example configuration file
 - **`ghops config show`** - Display current configuration with all merges applied
 
-### License Operations
+### Repository Organization & Discovery
 
-- **`ghops license list [--json]`** - Show available license templates
-- **`ghops license show LICENSE [--json]`** - Display specific license template
+- **`ghops catalog add REPO TAG [TAG ...]`** - Add tags to a repository
+- **`ghops catalog remove REPO TAG [TAG ...]`** - Remove tags from a repository
+- **`ghops catalog show [options]`** - Show tagged repositories
+  - `-t, --tag TAG` - Filter by specific tags
+  - `--all-tags` - Require all specified tags
+  - `--pretty` - Display as formatted table
+
+- **`ghops query EXPRESSION`** - Query repositories with fuzzy matching
+  - Supports: `==`, `!=`, `~=`, `>`, `<`, `contains`, `in`
+  - Examples: `"stars > 10"`, `"language ~= 'pyton'"`, `"'ml' in topics"`
+
+- **`ghops list [options]`** - List repositories with filtering
+  - `-t, --tag TAG` - Filter by tags
+  - `-q, --query EXPR` - Filter by query expression
+  - `--pretty` - Display as formatted table
+
+### Repository Auditing
+
+- **`ghops audit COMMAND [options]`** - Comprehensive repository health checks
+  - **`all`** - Run all audit checks
+  - **`license`** - Check for license files
+  - **`readme`** - Check for README files
+  - **`security`** - Scan for security issues
+  - **`deps`** - Audit dependencies
+  - **`docs`** - Check documentation setup
+  - **`gitignore`** - Verify .gitignore files
+  
+  Common options:
+  - `--fix` - Automatically fix issues found
+  - `-t, --tag TAG` - Filter repositories by tag
+  - `-q, --query EXPR` - Filter by query expression
+  - `--dry-run` - Preview fixes without applying
+
+### Documentation Management
+
+- **`ghops docs status [options]`** - Check documentation status
+- **`ghops docs build [options]`** - Build documentation
+- **`ghops docs serve [options]`** - Preview documentation locally
+- **`ghops docs deploy [options]`** - Deploy to GitHub Pages
+  
+  All support tag/query filtering with `-t` and `-q` options
+
+### Portfolio Export
+
+- **`ghops export generate [options]`** - Export repository portfolios
+  - `-f, --format FORMAT` - Output format: markdown, hugo, html, json, csv, pdf, latex
+  - `-o, --output DIR` - Output directory
+  - `--single-file` - Export to single file
+  - `--group-by PREFIX` - Group by tag prefix (e.g., "dir", "lang")
+  - `--template NAME` - Use custom template
+  - `-t, --tag TAG` - Filter by tags
+  - `-q, --query EXPR` - Filter by query
+
+### Metadata Management
+
+- **`ghops metadata refresh [options]`** - Update repository metadata
+  - `--github` - Fetch from GitHub API
+  - `--path PATH` - Refresh specific repository
+  - `--max-age AGE` - Only refresh if older than (e.g., "7d", "12h")
+
+- **`ghops metadata show REPO`** - Display repository metadata
+  - Accepts repository path or tag selector (e.g., `repo:ghops`)
+
+- **`ghops metadata stats`** - Show metadata statistics
 
 ### Social Media Automation
 
-- **`ghops social sample [options]`** - Preview repository selection
-  - `--size N` - Number of repositories to sample
-  - `--json` - Output in JSON format
-
+- **`ghops social create [options]`** - Generate social media posts
 - **`ghops social post [options]`** - Generate and post content
-  - `--size N` - Number of posts to create
-  - `--dry-run` - Preview posts without publishing
-  - `--platforms PLATFORM [PLATFORM ...]` - Target specific platforms
+  - `-t, --tag TAG` - Filter repositories by tag
+  - `-q, --query EXPR` - Filter by query expression
+  - `--sample-size N` - Number of repos to sample
+  - `--dry-run` - Preview without posting
+
+### Service Mode
+
+- **`ghops service start`** - Start automated posting service
+  - `--dry-run` - Run service in preview mode
+- **`ghops service run-once`** - Execute single posting cycle
+  - `--dry-run` - Preview what would be posted
 
 ## 🔧 Advanced Configuration
 
@@ -163,13 +317,44 @@ ghops social post --dry-run
 
 ### Key Configuration Sections
 
-#### PyPI Settings
+#### Repository Directories
 
 ```toml
-[pypi]
-check_by_default = true         # Include PyPI info in status command
-timeout_seconds = 10            # API request timeout
-include_test_pypi = false       # Also check test.pypi.org
+[general]
+# Multiple directories with glob pattern support
+repository_directories = [
+    "~/github",           # Direct path
+    "~/projects/*/repos", # Glob pattern
+    "~/work/code"         # Another direct path
+]
+github_username = "your_username"
+```
+
+#### Service Configuration
+
+```toml
+[service]
+enabled = true                  # Enable scheduled posting service
+interval_minutes = 120          # Minutes between posting cycles
+start_time = "09:00"           # Preferred start time
+
+[service.reporting]
+enabled = true                  # Enable periodic reports
+interval_hours = 24            # Hours between reports
+include_stats = true           # Include operation statistics
+include_status = true          # Include repository status
+include_recent_activity = true # Include recent activity
+
+[service.notifications.email]
+enabled = true                 # Enable email notifications
+smtp_server = "smtp.gmail.com" # SMTP server
+smtp_port = 587                # SMTP port
+username = "your@email.com"    # Email username
+password = "app_password"      # Email password/app password
+from_email = "your@email.com"  # From address
+to_email = "your@email.com"    # To address
+daily_summary = true           # Send daily reports
+error_alerts = true            # Send error alerts
 ```
 
 #### Social Media Platforms
@@ -204,14 +389,17 @@ exclude_forks = true            # Don't post about forked repos
 ### Check Repository Status
 
 ```bash
-# Full status with PyPI and GitHub Pages
+# Full status with PyPI and GitHub Pages (JSONL output)
 ghops status -r
+
+# Pretty-print table format for human reading
+ghops status -r --pretty
 
 # Fast status check
 ghops status --no-pypi-check
 
-# JSON output for scripting
-ghops status --json
+# Filter and transform with jq
+ghops status | jq 'select(.license.type == "MIT")'
 ```
 
 ### Social Media Promotion
@@ -240,6 +428,36 @@ ghops update -r --dir ~/projects
 ghops update -r --license mit --license-name "Your Name" --license-email "you@example.com"
 ```
 
+### Service Mode Operations
+
+```bash
+# Start automated service (background posting and reporting)
+ghops service start
+
+# Test service with dry-run
+ghops service start --dry-run
+
+# Run single cycle for testing
+ghops service run-once --dry-run
+
+# Create systemd service (see examples/ghops.service)
+sudo systemctl enable ghops
+sudo systemctl start ghops
+```
+
+### Multi-Directory Management
+
+```bash
+# Configure multiple repository locations
+ghops config generate  # Edit to add repository_directories
+
+# Status across all configured directories
+ghops status
+
+# Update repositories in all configured locations
+ghops update -r
+```
+
 ## ⚡ Performance & Advanced Usage
 
 ### Performance Options
@@ -247,16 +465,6 @@ ghops update -r --license mit --license-name "Your Name" --license-email "you@ex
 - Use `--no-pypi-check` for faster status checks when you don't need PyPI information
 - Use `--no-pages-check` to skip GitHub Pages detection
 - Configure `max_concurrent_operations` in config for better performance
-
-### PyPI Package Detection
-
-The tool automatically detects Python packages by scanning for:
-
-- `pyproject.toml` files
-- `setup.py` files
-- `setup.cfg` files
-
-It then checks PyPI to see if packages are published and shows version information.
 
 ## 🧪 Testing & Quality
 
@@ -282,7 +490,7 @@ It then checks PyPI to see if packages are published and shows version informati
 
 ```text
 ghops/
-├── cli.py              # Main CLI entry point with argparse
+├── cli.py              # Main CLI entry point with click
 ├── __main__.py         # Python module execution entry
 ├── commands/           # Modular command implementations
 │   ├── get.py         # Repository cloning logic

@@ -1,0 +1,61 @@
+[
+  {
+    "path": "/home/spinoza/github/repos/ghops",
+    "name": "ghops",
+    "branch": "master",
+    "remote_url": "https://github.com/queelius/ghops",
+    "owner": "queelius",
+    "repo": "ghops",
+    "provider": "github",
+    "last_commit": {
+      "hash": "cd9b035f65d0b1222115cfd7c17b92592bf39984",
+      "author": "Alex Towell",
+      "email": "lex@metafunctor.com",
+      "timestamp": 1752714848,
+      "message": "updates"
+    },
+    "has_uncommitted_changes": true,
+    "languages": {
+      "Python": 2170,
+      "Shell": 2,
+      "C": 7,
+      "JavaScript": 115,
+      "C++": 1,
+      "PowerShell": 1
+    },
+    "language": "Python",
+    "has_docs": true,
+    "docs_tool": "mkdocs",
+    "docs_config": "mkdocs.yml",
+    "file_count": 20792,
+    "total_size": 214380205,
+    "description": null,
+    "stargazers_count": 0,
+    "forks_count": 0,
+    "open_issues_count": 0,
+    "topics": [
+      "devops",
+      "git",
+      "github",
+      "github-ops"
+    ],
+    "archived": false,
+    "disabled": false,
+    "private": false,
+    "fork": false,
+    "created_at": "2025-01-29T07:56:57Z",
+    "updated_at": "2025-07-19T04:57:18Z",
+    "pushed_at": "2025-07-05T12:25:09Z",
+    "homepage": "https://queelius.github.io/ghops/",
+    "has_issues": true,
+    "has_projects": true,
+    "has_downloads": true,
+    "has_wiki": true,
+    "has_pages": true,
+    "license": {
+      "key": "mit",
+      "name": "MIT License",
+      "spdx_id": "MIT"
+    }
+  }
+]

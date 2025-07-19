@@ -1,161 +1,119 @@
-#!/usr/bin/env python3
+"""
+Social media content generation for ghops.
+"""
 
-import json
+from typing import Dict, Any, Optional
 import random
-from datetime import datetime, timedelta
-from pathlib import Path
-from typing import List, Dict, Optional
+import hashlib
 
-from .config import logger, config, console, stats
-from .commands.status import sample_repositories_for_social_media
 
-def format_post_content(template: str, repo_info: Dict, platform: str = "twitter") -> str:
-    """Format a social media post using template and repository information."""
+def generate_social_content(metadata: Dict[str, Any], platform: str, 
+                           platform_config: Dict[str, Any]) -> Optional[str]:
+    """
+    Generate social media content for a repository.
     
-    # Basic repository information
-    variables = {
-        'repo_name': repo_info['name'],
-        'repo_url': f"https://github.com/{config.get('general', {}).get('github_username', 'username')}/{repo_info['name']}",
-        'description': f"A {repo_info.get('license', 'open source')} project",
-        'language': 'Python',  # Could be detected from repo
-        'license': repo_info.get('license', 'Unknown')
+    Args:
+        metadata: Repository metadata
+        platform: Platform name (twitter, linkedin, etc.)
+        platform_config: Platform configuration
+        
+    Returns:
+        Generated content string or None
+    """
+    # Get repository info
+    repo_name = metadata.get('name', 'Unknown')
+    description = metadata.get('description', '')
+    stars = metadata.get('stargazers_count', 0)
+    language = metadata.get('language', 'Unknown')
+    topics = metadata.get('topics', [])
+    homepage = metadata.get('homepage', '')
+    
+    # Get template from config or use default
+    template = platform_config.get('template', get_default_template(platform))
+    
+    # Replace placeholders
+    content = template
+    content = content.replace('{{repo_name}}', repo_name)
+    content = content.replace('{{description}}', description or f"A {language} project")
+    content = content.replace('{{stars}}', str(stars))
+    content = content.replace('{{language}}', language)
+    content = content.replace('{{topics}}', ', '.join(topics[:3]) if topics else language)
+    content = content.replace('{{url}}', homepage or f"https://github.com/{metadata.get('owner', '')}/{repo_name}")
+    
+    # Add hashtags
+    hashtags = generate_hashtags(metadata, platform_config)
+    content = content.replace('{{hashtags}}', ' '.join(hashtags))
+    
+    # Platform-specific length limits
+    if platform == 'twitter':
+        max_length = 280
+        if len(content) > max_length:
+            # Truncate with ellipsis
+            content = content[:max_length-3] + '...'
+    
+    return content
+
+
+def get_default_template(platform: str) -> str:
+    """Get default template for a platform."""
+    templates = {
+        'twitter': "🚀 Check out {{repo_name}}! {{description}} ⭐ {{stars}} stars {{hashtags}} {{url}}",
+        'linkedin': "Excited to share {{repo_name}}! {{description}}\n\n🔧 Built with {{language}}\n⭐ {{stars}} stars on GitHub\n\n{{hashtags}}\n\n{{url}}",
+        'mastodon': "📦 {{repo_name}}: {{description}}\n\n{{hashtags}}\n\n{{url}}"
     }
-    
-    # PyPI-specific information
-    if repo_info.get('pypi_info') and repo_info['pypi_info'].get('is_published'):
-        pypi_info = repo_info['pypi_info']['pypi_info']
-        variables.update({
-            'package_name': repo_info['pypi_info']['package_name'],
-            'version': pypi_info['version'],
-            'pypi_url': pypi_info['url'],
-        })
-    
-    # GitHub Pages information
-    if repo_info.get('pages_url'):
-        variables['pages_url'] = repo_info['pages_url']
-    
-    try:
-        return template.format(**variables)
-    except KeyError as e:
-        logger.warning(f"Missing variable {e} in template for {platform}")
-        return template
+    return templates.get(platform, "Check out {{repo_name}}: {{description}} {{url}}")
 
-def create_social_media_posts(repo_dirs: List[str], base_dir: str = ".", sample_size: int = 3) -> List[Dict]:
-    """Create social media posts for sampled repositories."""
+
+def generate_hashtags(metadata: Dict[str, Any], platform_config: Dict[str, Any]) -> list:
+    """Generate hashtags for a repository."""
+    hashtags = []
     
-    # Sample repositories
-    sampled_repos = sample_repositories_for_social_media(repo_dirs, base_dir, sample_size)
+    # Language hashtag
+    language = metadata.get('language', '').lower()
+    if language:
+        hashtags.append(f"#{language}")
     
-    if not sampled_repos:
-        logger.warning("No eligible repositories found for social media posting")
-        return []
+    # Topic hashtags
+    topics = metadata.get('topics', [])
+    for topic in topics[:2]:  # Limit to 2 topics
+        hashtags.append(f"#{topic.replace('-', '').replace('_', '')}")
     
-    posts = []
+    # Common hashtags from config
+    common_hashtags = platform_config.get('hashtags', ['#opensource', '#github'])
+    hashtags.extend(common_hashtags[:2])  # Limit common hashtags
+    
+    # Deduplicate
+    seen = set()
+    unique_hashtags = []
+    for tag in hashtags:
+        if tag.lower() not in seen:
+            seen.add(tag.lower())
+            unique_hashtags.append(tag)
+    
+    return unique_hashtags[:5]  # Limit total hashtags
+
+
+def generate_social_media_post(metadata: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """
+    Generate a social media post from repository metadata.
+    
+    This is a legacy function for backward compatibility.
+    """
+    from .config import load_config
+    
+    config = load_config()
     platforms = config.get('social_media', {}).get('platforms', {})
     
-    for repo_info in sampled_repos:
-        for platform_name, platform_config in platforms.items():
-            if not platform_config.get('enabled', False):
-                continue
-            
-            templates = platform_config.get('templates', {})
-            
-            # Determine which template to use
-            template_key = 'random_highlight'  # Default
-            
-            if repo_info['is_published'] and 'pypi_release' in templates:
-                template_key = 'pypi_release'
-            elif repo_info.get('pages_url') and 'github_pages' in templates:
-                template_key = 'github_pages'
-            
-            if template_key in templates:
-                content = format_post_content(templates[template_key], repo_info, platform_name)
-                
-                post = {
-                    'platform': platform_name,
-                    'content': content,
-                    'repo_name': repo_info['name'],
-                    'template_used': template_key,
-                    'timestamp': datetime.now().isoformat()
-                }
-                
-                posts.append(post)
+    post_data = {
+        'repo_name': metadata.get('name'),
+        'repo_path': metadata.get('path'),
+        'platforms': {}
+    }
     
-    return posts
-
-def post_to_twitter(content: str, credentials: Dict) -> bool:
-    """Post content to Twitter/X (placeholder implementation)."""
-    # This would require actual Twitter API integration
-    logger.info(f"[TWITTER] Would post: {content}")
-    return True
-
-def post_to_linkedin(content: str, credentials: Dict) -> bool:
-    """Post content to LinkedIn (placeholder implementation)."""
-    # This would require actual LinkedIn API integration
-    logger.info(f"[LINKEDIN] Would post: {content}")
-    return True
-
-def post_to_mastodon(content: str, credentials: Dict) -> bool:
-    """Post content to Mastodon (placeholder implementation)."""
-    # This would require actual Mastodon API integration
-    logger.info(f"[MASTODON] Would post: {content}")
-    return True
-
-def execute_social_media_posts(posts: List[Dict], dry_run: bool = False) -> int:
-    """Execute social media posts."""
+    for platform_name, platform_config in platforms.items():
+        if platform_config.get('enabled', False):
+            content = generate_social_content(metadata, platform_name, platform_config)
+            if content:
+                post_data['platforms'][platform_name] = content
     
-    if not posts:
-        console.print("No posts to execute.")
-        return 0
-    
-    platforms_config = config.get('social_media', {}).get('platforms', {})
-    successful_posts = 0
-    
-    for post in posts:
-        # Handle both 'platform' (single) and 'platforms' (multiple) keys
-        platform_names = post.get('platforms', [post.get('platform')] if post.get('platform') else [])
-        
-        for platform_name in platform_names:
-            if not platform_name:
-                continue
-                
-            platform_config = platforms_config.get(platform_name, {})
-            
-            if not platform_config.get('enabled', False) and not dry_run:
-                logger.warning(f"Platform {platform_name} is not enabled")
-                continue
-            
-            console.print(f"\n📱 Posting to {platform_name.title()}:")
-            console.print(f"   Repository: {post.get('repo_info', {}).get('name', 'Unknown')}")
-            console.print(f"   Content: {post['content']}")
-            
-            if dry_run:
-                console.print("   [yellow]DRY RUN - Not actually posting[/yellow]")
-                successful_posts += 1
-                continue
-            
-            # Execute the actual post
-            success = False
-            try:
-                if platform_name == 'twitter':
-                    success = post_to_twitter(post['content'], platform_config)
-                elif platform_name == 'linkedin':
-                    success = post_to_linkedin(post['content'], platform_config)
-                elif platform_name == 'mastodon':
-                    success = post_to_mastodon(post['content'], platform_config)
-                else:
-                    logger.error(f"Unknown platform: {platform_name}")
-                    continue
-                
-                if success:
-                    console.print("   ✅ Posted successfully!")
-                    successful_posts += 1
-                    stats["social_posts"] += 1
-                else:
-                    console.print("   ❌ Failed to post")
-                    
-            except Exception as e:
-                logger.error(f"Error posting to {platform_name}: {e}")
-                console.print("   ❌ Failed to post")
-    
-    return successful_posts
+    return post_data if post_data['platforms'] else None

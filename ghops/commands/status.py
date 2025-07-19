@@ -1,345 +1,96 @@
 """
 Handles the 'status' command for displaying repository status.
+
+This command follows our design principles:
+- Default output is JSONL streaming
+- --pretty flag for human-readable table output
+- Thin CLI layer that connects core logic to output
 """
-#!/usr/bin/env python3
 
-import os
 import json
-import random
-from pathlib import Path
-from rich.table import Table
+import click
 from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich import box
 
-from ..config import console, logger, stats, config
-from ..utils import (
-    find_git_repos, get_git_status, run_command,
-    parse_repo_url,
-    get_git_remote_url, check_github_repo_status, get_license_info
-)
-from ..pypi import detect_pypi_package, is_package_outdated
+from ..core import get_repository_status
+from ..render import render_status_table, console
+from ..config import load_config
 
-def get_gh_pages_url(repo_path):
+
+@click.command(name='status')
+@click.option('-d', '--dir', default='.', help='Directory to search for repositories')
+@click.option('-r', '--recursive', is_flag=True, help='Search recursively for repositories')
+@click.option('--pretty', is_flag=True, help='Display as formatted table instead of JSONL')
+@click.option('--no-pages', is_flag=True, help='Skip GitHub Pages check for faster results')
+@click.option('--no-pypi', is_flag=True, help='Skip PyPI package detection')
+@click.option('--no-dedup', is_flag=True, help='Show all instances including duplicates and soft links')
+@click.option('-t', '--tag', 'tag_filters', multiple=True, help='Filter by tags (e.g., org:torvalds, lang:python)')
+@click.option('--all-tags', is_flag=True, help='Match all tags (default: match any)')
+def status_handler(dir, recursive, pretty, no_pages, no_pypi, no_dedup, tag_filters, all_tags):
+    """Show repository status.
+    
+    By default, outputs JSONL (one JSON object per line) for each repository.
+    Use --pretty for a human-readable table with progress indication.
     """
-    Get the GitHub Pages URL for a repository.
-    """
-    try:
-        # Get the remote URL
-        remote_url = run_command("git remote get-url origin", repo_path, capture_output=True, check=False, log_stderr=False)
-        if not remote_url:
-            return None
+    # Override config if flags are provided
+    if no_pypi:
+        config = load_config()
+        config['pypi'] = config.get('pypi', {})
+        config['pypi']['check_by_default'] = False
+    
+    # Get repository status as a generator
+    repos_generator = get_repository_status(
+        base_dir=dir,
+        recursive=recursive,
+        skip_pages_check=no_pages,
+        deduplicate=not no_dedup,
+        tag_filters=tag_filters,
+        all_tags=all_tags
+    )
+    
+    if pretty:
+        # For pretty output, we need to collect all repos to show progress
+        repos = []
         
-        remote_url = remote_url.strip()
+        # Count total repos first (quick scan)
+        from ..utils import find_git_repos, find_git_repos_from_config
+        config = load_config()
         
-        # Parse the remote URL to get owner and repo name
-        if remote_url.startswith("https://github.com/"):
-            parts = remote_url.replace("https://github.com/", "").replace(".git", "").split("/")
-        elif remote_url.startswith("git@github.com:"):
-            parts = remote_url.replace("git@github.com:", "").replace(".git", "").split("/")
+        if dir == '.':
+            repo_paths = find_git_repos_from_config(
+                config.get('general', {}).get('repository_directories', []),
+                recursive
+            )
+            if not repo_paths:
+                repo_paths = find_git_repos(dir, recursive)
         else:
-            return None
+            repo_paths = find_git_repos(dir, recursive)
         
-        if len(parts) != 2:
-            return None
+        total_repos = len(repo_paths)
         
-        owner, repo = parts
+        if total_repos == 0:
+            console.print("[yellow]No repositories found.[/yellow]")
+            return
         
-        # Try multiple methods to detect GitHub Pages
-        
-        # Method 1: Use GitHub CLI if available
-        try:
-            pages_result = run_command(f"gh api repos/{owner}/{repo}/pages", repo_path, capture_output=True, check=False, log_stderr=False)
-            if pages_result:
-                pages_data = json.loads(pages_result)
-                return pages_data.get("html_url")
-        except (json.JSONDecodeError, Exception):
-            pass
-        
-        # Method 2: Check for gh-pages branch
-        try:
-            branches_result = run_command("git branch -r", repo_path, capture_output=True, check=False, log_stderr=False)
-            if branches_result and "origin/gh-pages" in branches_result:
-                return f"https://{owner}.github.io/{repo}/"
-        except Exception:
-            pass
-        
-        # Method 3: Check for docs folder in main branch (GitHub Pages can serve from /docs)
-        docs_path = Path(repo_path) / "docs"
-        if docs_path.exists() and docs_path.is_dir():
-            # Check if there's an index.html or index.md in docs
-            if (docs_path / "index.html").exists() or (docs_path / "index.md").exists():
-                return f"https://{owner}.github.io/{repo}/"
-        
-        # Method 4: Check for GitHub Pages configuration files
-        github_pages_files = [
-            "_config.yml",  # Jekyll
-            "mkdocs.yml",   # MkDocs
-            "conf.py",      # Sphinx (usually in docs/)
-            "book.toml",    # mdBook
-        ]
-        
-        for pages_file in github_pages_files:
-            if (Path(repo_path) / pages_file).exists():
-                return f"https://{owner}.github.io/{repo}/"
-            # Also check in docs/ subdirectory
-            if (Path(repo_path) / "docs" / pages_file).exists():
-                return f"https://{owner}.github.io/{repo}/"
-        
-        # Method 5: Check for common static site generators
-        static_indicators = [
-            "package.json",  # Could be a Node.js static site
-            "gatsby-config.js",  # Gatsby
-            "next.config.js",    # Next.js
-            "nuxt.config.js",    # Nuxt.js
-            "vuepress.config.js", # VuePress
-        ]
-        
-        for indicator in static_indicators:
-            if (Path(repo_path) / indicator).exists():
-                # Check package.json for static site scripts
-                if indicator == "package.json":
-                    try:
-                        with open(Path(repo_path) / "package.json", 'r') as f:
-                            package_data = json.loads(f.read())
-                            scripts = package_data.get("scripts", {})
-                            # Look for common static site build/deploy scripts
-                            static_scripts = ["build", "deploy", "gh-pages", "pages"]
-                            if any(script in scripts for script in static_scripts):
-                                return f"https://{owner}.github.io/{repo}/"
-                    except:
-                        pass
-                else:
-                    return f"https://{owner}.github.io/{repo}/"
-        
-        return None
-        
-    except Exception as e:
-        logger.debug(f"Error getting GitHub Pages URL for {repo_path}: {e}")
-        return None
-
-def display_repo_status_table(repo_dirs, json_output=False, base_dir=".", skip_pages_check=False):
-    """
-    Display the status of repositories in a table format with progress bar.
-    """
-    if not repo_dirs:
-        if json_output:
-            console.print_json(data=[])
-        else:
-            console.print("No repositories found.")
-        return
-    
-    repo_data = []
-    
-    # Check if PyPI checking is enabled
-    check_pypi = config.get('pypi', {}).get('check_by_default', True)
-    
-    # Temporarily suppress logging if JSON output is requested
-    original_log_level = None
-    if json_output:
-        import logging
-        original_log_level = logger.level
-        logger.setLevel(logging.CRITICAL)
-    
-    try:
+        # Show progress while collecting
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
-            console=console,
             transient=True,
-            disable=json_output,  # Disable progress bar for JSON output
+            console=console
         ) as progress:
+            task = progress.add_task("Checking repository status...", total=total_repos)
             
-            task = progress.add_task("Scanning repositories...", total=len(repo_dirs))
-            
-            for repo_dir in repo_dirs:
-                repo_path = os.path.join(base_dir, repo_dir)
-                progress.update(task, description=f"Checking {repo_dir}...")
-
-                # Check if repo directory exists
-                if not os.path.isdir(repo_path):
-                    logger.warning(f"Directory not found for repo: {repo_dir}")
-                    repo_data.append({
-                        'name': repo_dir,
-                        'status': 'Missing',
-                        'branch': 'N/A',
-                        'license': 'N/A',
-                        'pages_url': None,
-                        'pypi_info': None,
-                        'visibility': 'N/A',
-                        'on_github': 'N/A'
-                    })
-                    progress.advance(task)
-                    continue
+            for repo in repos_generator:
+                repos.append(repo)
+                progress.update(task, advance=1)
                 
-                # Get git status
-                git_status = get_git_status(repo_path)
-                
-                # Get GitHub repo status (visibility, existence)
-                remote_url = get_git_remote_url(repo_path)
-                owner, repo_name = parse_repo_url(remote_url)
-                gh_status = check_github_repo_status(owner, repo_name)
-
-                # Get license info
-                license_info = get_license_info(repo_path)
-                
-                # Get GitHub Pages URL (unless disabled)
-                pages_url = None
-                if not skip_pages_check:
-                    pages_url = get_gh_pages_url(repo_path)
-                    if pages_url:
-                        stats["repos_with_pages"] += 1
-                
-                # Get PyPI information if enabled
-                pypi_info = None
-                if check_pypi:
-                    pypi_data = detect_pypi_package(repo_path)
-                    if pypi_data['has_packaging_files']:
-                        stats["repos_with_packages"] += 1
-                        
-                    if pypi_data['is_published']:
-                        stats["published_packages"] += 1
-                        pypi_info = {
-                            'package_name': pypi_data['package_name'],
-                            'version': pypi_data['pypi_info']['version'],
-                            'url': pypi_data['pypi_info']['url']
-                        }
-                        
-                        # Check if package is outdated
-                        if is_package_outdated(repo_path, pypi_data['package_name'], pypi_data['pypi_info']['version']):
-                            stats["outdated_packages"] += 1
-                    elif pypi_data['package_name']:
-                        pypi_info = {
-                            'package_name': pypi_data['package_name'],
-                            'version': 'Not published',
-                            'url': None
-                        }
-                
-                repo_data.append({
-                    'name': repo_dir,
-                    'status': git_status['status'],
-                    'branch': git_status['branch'],
-                    'on_github': '✅ Yes' if gh_status['exists'] else '❌ No',
-                    'visibility': gh_status['visibility'],
-                    'license': license_info,
-                    'pages_url': pages_url,
-                    'pypi_info': pypi_info
-                })
-                
-                progress.advance(task)
-    finally:
-        # Restore original log level
-        if original_log_level is not None:
-            logger.setLevel(original_log_level)
-    
-    if json_output:
-        console.print_json(data=repo_data)
-        return
-    
-    # Create and display the table
-    table = Table(title="Repository Status", box=box.ROUNDED)
-    table.add_column("Repository", style="cyan", no_wrap=True)
-    table.add_column("On GitHub", style="bold white")
-    table.add_column("Visibility", style="bold white")
-    table.add_column("Status", style="magenta")
-    table.add_column("Branch", style="yellow")
-    table.add_column("License", style="green")
-    
-    if check_pypi:
-        table.add_column("PyPI Package", style="blue")
-        table.add_column("Version", style="bright_blue")
-    
-    if not skip_pages_check:
-        table.add_column("Pages", style="bright_green")
-    
-    for repo in repo_data:
-        row = [
-            repo['name'],
-            repo['on_github'],
-            repo['visibility'],
-            repo['status'],
-            repo['branch'],
-            repo['license']
-        ]
+                # Update description for GitHub Pages batch check
+                if not no_pages and len(repos) == total_repos:
+                    progress.update(task, description="Finalizing GitHub Pages status...")
         
-        if check_pypi:
-            if repo['pypi_info']:
-                package_name = repo['pypi_info']['package_name']
-                if repo['pypi_info']['url']:
-                    package_name = f"[link={repo['pypi_info']['url']}]{package_name}[/link]"
-                row.append(package_name)
-                row.append(repo['pypi_info']['version'])
-            else:
-                row.extend(['N/A', 'N/A'])
-        
-        # Pages URL (only if not skipped)
-        if not skip_pages_check:
-            if repo['pages_url']:
-                row.append(f"[link={repo['pages_url']}]Active[/link]")
-            else:
-                row.append("None")
-        
-        table.add_row(*row)
-    
-    console.print(table)
-    
-    # Print summary
-    console.print(f"\n📊 Summary: {len(repo_dirs)} repositories")
-    if check_pypi:
-        console.print(f"📦 Packages: {stats['repos_with_packages']} with packaging files, {stats['published_packages']} published")
-        if stats['outdated_packages'] > 0:
-            console.print(f"⚠️  {stats['outdated_packages']} packages have newer versions on PyPI")
-    if not skip_pages_check:
-        console.print(f"📄 Pages: {stats['repos_with_pages']} with GitHub Pages")
-
-def sample_repositories_for_social_media(repo_dirs, base_dir=".", sample_size=3):
-    """
-    Randomly sample repositories for social media posting.
-    """
-    posting_config = config.get('social_media', {}).get('posting', {})
-    
-    # Filter repositories based on configuration
-    eligible_repos = []
-    
-    for repo_dir in repo_dirs:
-        repo_path = os.path.join(base_dir, repo_dir)
-        
-        # Check if it's a valid git repository
-        if not os.path.exists(os.path.join(repo_path, '.git')):
-            continue
-
-        # Get remote URL for GitHub checks
-        remote_url = get_git_remote_url(repo_path)
-        owner, repo_name = parse_repo_url(remote_url)
-            
-        # Apply filters
-        if owner and repo_name:
-            gh_status = check_github_repo_status(owner, repo_name)
-            if posting_config.get('exclude_private', True) and gh_status.get('visibility', 'public').lower() == 'private':
-                logger.debug(f"Excluding private repo: {repo_dir}")
-                continue
-            if posting_config.get('exclude_forks', True) and gh_status.get('is_fork'):
-                logger.debug(f"Excluding fork: {repo_dir}")
-                continue
-
-        # Get repository information
-        pypi_data = detect_pypi_package(repo_path)
-        license_info = get_license_info(repo_path)
-        pages_url = get_gh_pages_url(repo_path)
-        
-        repo_info = {
-            'name': repo_dir,
-            'path': repo_path,
-            'license': license_info,
-            'pages_url': pages_url,
-            'pypi_info': pypi_data,
-            'has_package': pypi_data['has_packaging_files'],
-            'is_published': pypi_data['is_published']
-        }
-        
-        eligible_repos.append(repo_info)
-    
-    # Randomly sample from eligible repositories
-    sample_size = min(sample_size, len(eligible_repos))
-    sampled_repos = random.sample(eligible_repos, sample_size)
-    
-    return sampled_repos
+        # Render as table
+        render_status_table(repos)
+    else:
+        # Stream JSONL output (default behavior)
+        for repo in repos_generator:
+            print(json.dumps(repo, ensure_ascii=False), flush=True)

@@ -1,18 +1,47 @@
 # ghops Documentation
 
-Welcome to the documentation for **ghops** - a powerful, modular CLI tool for managing GitHub repositories at scale.
+Welcome to the documentation for **ghops** - a powerful, local-first git project management system that helps developers manage the full lifecycle of their projects across multiple platforms.
 
 ## What is ghops?
 
-`ghops` (GitHub Operations) is a robust command-line tool that helps developers and organizations manage multiple GitHub repositories efficiently. Whether you're maintaining dozens of open source projects or managing repositories across a team, `ghops` provides automation, insights, and quality tooling to streamline your workflow.
+`ghops` is a comprehensive project management tool that treats your local git repositories as the source of truth, with remote platforms (GitHub, GitLab, PyPI, etc.) serving as enrichment and distribution services. It provides powerful organization, discovery, auditing, and export capabilities for managing projects at scale.
 
-## 🎯 Key Features
+## 🎯 Core Philosophy
 
-### 🏗️ **Robust Architecture**
-- **Modular Design**: Clean separation of concerns with dedicated command modules
-- **Extensible**: Easy to add new commands and functionality
-- **Well-Tested**: 86% test coverage with 138 comprehensive unit and integration tests
-- **Error Resilient**: Graceful handling of network failures and edge cases
+- **Local-First**: Your local git repositories are the ground truth
+- **JSONL by Default**: All commands output newline-delimited JSON for Unix pipeline composition
+- **Tag-Based Organization**: Powerful tagging system with implicit tags from metadata
+- **Query Language**: Fuzzy search with simple boolean expressions
+- **Multi-Platform**: Works with GitHub, GitLab, Bitbucket, and more (coming soon)
+
+## ✨ Key Features
+
+### 🔍 **Repository Discovery & Organization**
+- **Tag-Based Catalogs**: Organize repos with explicit tags and auto-generated implicit tags
+- **Powerful Query Language**: Find repos with fuzzy matching: `ghops query "language ~= 'pyton'"`
+- **Metadata Store**: Local database of all repository information for fast queries
+- **Implicit Tags**: Automatic tags like `repo:name`, `lang:python`, `has:docs`, `dir:parent`
+
+### 🛡️ **Repository Auditing**
+- **Comprehensive Health Checks**: Audit repos for licenses, READMEs, security issues, and more
+- **Auto-Fix Capabilities**: Automatically fix common issues with `--fix` flag
+- **Security Scanning**: Detect hardcoded secrets and security vulnerabilities
+- **Dependency Auditing**: Check for missing or outdated dependency management
+- **Documentation Health**: Verify documentation setup and configuration
+
+### 📄 **Portfolio Export**
+- **Multiple Formats**: Export to Markdown, Hugo, HTML, JSON, CSV, LaTeX, and PDF
+- **Interactive HTML**: Generated HTML includes live search, filtering, and sorting
+- **Hugo Integration**: Create complete Hugo site structure with taxonomies
+- **Grouping & Organization**: Group exports by language, directory, or custom tags
+- **Template Support**: Customizable export templates for all formats
+
+### 📚 **Documentation Management**
+- **Multi-Tool Support**: Works with MkDocs, Sphinx, Jekyll, Hugo, and more
+- **Status Checking**: See documentation health across all repos
+- **Build & Serve**: Build and preview documentation locally
+- **Deploy to GitHub Pages**: One-command deployment to GitHub Pages
+- **Bulk Operations**: Manage docs across multiple repos simultaneously
 
 ### 🚀 **Repository Management**
 - Clone all your GitHub repositories with a single command
@@ -52,8 +81,14 @@ Welcome to the documentation for **ghops** - a powerful, modular CLI tool for ma
 ### ⚡ **Performance & Quality**
 - Fast operations with real-time progress indicators
 - Configurable filtering and performance options
-- Rich console output with detailed statistics
+- Clean console output with detailed statistics
 - Comprehensive error handling and logging
+
+### 🔧 **Unix Philosophy & JSONL Output**
+- All commands output newline-delimited JSON (JSONL) by default
+- Stream-friendly format for processing millions of repos
+- Compose with standard Unix tools (jq, grep, awk)
+- Human-readable tables available with `--pretty` flag
 
 ## 🚀 Quick Start
 
@@ -67,8 +102,14 @@ ghops config generate
 # Clone all your repositories
 ghops get
 
-# Check status of all repositories
+# Check status of all repositories (outputs JSONL)
 ghops status -r
+
+# Pretty-print status as a table
+ghops status -r --pretty
+
+# Filter repos with jq
+ghops status | jq 'select(.status.uncommitted_changes == true)'
 
 # Sample repositories for social media (dry run)
 ghops social sample --size 3
@@ -133,6 +174,8 @@ ghops social post --dry-run
 - ✅ **Robust Error Handling**: Graceful handling of network failures and edge cases
 - ✅ **Progress Indicators**: Real-time progress bars for long-running operations
 - ✅ **Concurrent Operations**: Configurable parallel processing for better performance
+- ✅ **JSONL Streaming**: Stream-friendly output for processing large repository sets
+- ✅ **Unix Pipeline Integration**: Compose with jq, grep, and other standard tools
 
 #### 📱 **Advanced Social Media Framework**
 
@@ -175,7 +218,7 @@ ghops social post --dry-run
 - ✅ **Social Media Framework**: Generate and post content about your projects
 - ✅ **Configuration System**: Flexible configuration with example generation
 - ✅ **Performance Improvements**: Progress bars and faster operations
-- ✅ **Enhanced Status**: Rich status reporting with PyPI and GitHub Pages info
+- ✅ **Enhanced Status**: Clean status reporting with PyPI and GitHub Pages info
 
 ## Community and Support
 

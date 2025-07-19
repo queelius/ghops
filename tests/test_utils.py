@@ -159,3 +159,73 @@ class TestGetGitStatus(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+import pytest
+from ghops.utils import find_git_repos
+
+
+@pytest.fixture
+def mock_git_repos(fs):
+    """Create a mock file system with git repositories."""
+    fs.create_dir("/test/repo1/.git")
+    fs.create_dir("/test/repo2/.git")
+    fs.create_dir("/test/not_a_repo/subdir")
+    fs.create_dir("/test/level2/repo3/.git")
+    fs.create_dir("/test_single_repo/.git")
+    fs.create_dir("/test_single_repo/subdir/repo4/.git")
+
+
+def test_find_git_repos_single_dir_no_recursion(mock_git_repos):
+    # Test with a single directory, no recursion
+    repos = find_git_repos("/test", recursive=False)
+    assert sorted(repos) == ["/test/repo1", "/test/repo2"]
+
+
+def test_find_git_repos_single_dir_recursive(mock_git_repos):
+    # Test with a single directory, with recursion
+    repos = find_git_repos("/test", recursive=True)
+    assert sorted(repos) == ["/test/level2/repo3", "/test/repo1", "/test/repo2"]
+
+
+def test_find_git_repos_list_of_dirs(mock_git_repos):
+    # Test with a list of directories
+    repos = find_git_repos(["/test", "/test_single_repo"], recursive=True)
+    assert sorted(repos) == [
+        "/test/level2/repo3",
+        "/test/repo1",
+        "/test/repo2",
+        "/test_single_repo",
+        "/test_single_repo/subdir/repo4",
+    ]
+
+
+def test_find_git_repos_base_dir_is_repo(mock_git_repos):
+    # Test when the base directory itself is a repo
+    # Without recursion, should only find the base
+    repos = find_git_repos("/test_single_repo", recursive=False)
+    assert repos == ["/test_single_repo"]
+
+    # With recursion, should find both the parent and the nested repo
+    repos_recursive = find_git_repos("/test_single_repo", recursive=True)
+    assert sorted(repos_recursive) == ["/test_single_repo", "/test_single_repo/subdir/repo4"]
+
+
+def test_find_git_repos_empty(fs):
+    # Test with no git repos in the specified path
+    fs.create_dir("/empty_dir/subdir")
+    repos = find_git_repos("/empty_dir", recursive=True)
+    assert repos == []
+
+
+def test_find_git_repos_nonexistent_dir(mock_git_repos):
+    # Test with a non-existent directory
+    repos = find_git_repos("/nonexistent")
+    assert repos == []
+
+
+def test_find_git_repos_handles_string_and_list_input(mock_git_repos):
+    # The function should handle both a single string and a list of strings
+    repos_str = find_git_repos("/test", recursive=True)
+    repos_list = find_git_repos(["/test"], recursive=True)
+    assert sorted(repos_str) == sorted(repos_list)
+    assert sorted(repos_str) == ["/test/level2/repo3", "/test/repo1", "/test/repo2"]

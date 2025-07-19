@@ -310,6 +310,134 @@ posts = api.create_social_posts(
 - **Audit logging**: Comprehensive logging for enterprise compliance
 - **Backup and restore**: Backup configurations and restore operations
 
+## 🔧 Future Repository Operations
+
+### Core Repository Operations
+
+**Philosophy**: `ghops` should focus on repository-level operations while maintaining composability with other tools through streaming JSONL output.
+
+#### Sync Operations
+```bash
+ghops sync --dry-run      # Show what would be synchronized
+ghops sync --pull-only    # Only pull changes, don't push
+ghops sync --force        # Force sync even with conflicts
+```
+
+**Features**:
+- Bulk pull/push operations across multiple repositories
+- Conflict detection and resolution strategies
+- Branch synchronization with upstream remotes
+- Streaming progress output for large repository sets
+
+#### Backup and Archive
+```bash
+ghops backup --format tar.gz --include-lfs    # Create compressed backups
+ghops backup --format git-bundle              # Create git bundles
+ghops archive --to-storage s3://bucket/path   # Archive to cloud storage
+```
+
+**Features**:
+- Multiple backup formats (tar, zip, git bundle)
+- Git LFS support for large files
+- Incremental backup strategies
+- Cloud storage integration (S3, Google Cloud, Azure)
+- Restore operations with verification
+
+#### Health and Maintenance
+```bash
+ghops health --check-corruption     # Check repository integrity
+ghops clean --dry-run              # Show what would be cleaned
+ghops clean --cache --temp          # Clean caches and temporary files
+ghops optimize --gc --repack        # Optimize repository storage
+```
+
+**Features**:
+- Repository corruption detection using `git fsck`
+- Cleanup of temporary files, caches, and build artifacts
+- Git optimization (garbage collection, repacking)
+- Disk usage analysis and reporting
+- Broken symlink detection and cleanup
+
+#### Migration and Export
+```bash
+ghops migrate github-to-gitlab --input repos.jsonl    # Migrate between services
+ghops export --format json --include-history          # Export metadata
+ghops export --clone-bundle --mirror                  # Create mirror bundles
+```
+
+**Features**:
+- Service migration (GitHub ↔ GitLab ↔ Bitbucket)
+- Metadata preservation during migration
+- History preservation options
+- Authentication handling for different services
+- Progress tracking for large migrations
+
+### Export and Integration Operations
+
+#### Dashboard and Monitoring Export
+```bash
+ghops export dashboard --format prometheus    # Metrics for monitoring
+ghops export grafana --datasource json        # Grafana dashboard data
+ghops export json --schema v2                 # Structured data export
+```
+
+**Features**:
+- Prometheus metrics export for monitoring
+- JSON schema for external tool integration
+- Real-time monitoring data streams
+- Custom metric definitions
+- Alert threshold configurations
+
+#### Documentation Generation
+```bash
+ghops export readme --template detailed       # Generate README files
+ghops export inventory --format markdown      # Repository inventory
+ghops export changelog --since-tag v1.0       # Generate changelogs
+```
+
+**Features**:
+- Automated README generation from repository metadata
+- Repository inventory for documentation sites
+- Changelog generation from git history
+- Template-based documentation generation
+- Integration with static site generators
+
+### NOT in ghops Operations
+
+**These belong in separate tools to maintain focus**:
+
+- **Documentation Site Generation**: Use dedicated tools like `repodocs` or `gitdocs`
+- **GitHub API Data Mining**: Use specialized tools like `ghj` for comprehensive GitHub analysis
+- **Code Analysis**: Use language-specific tools (pylint, eslint, etc.)
+- **Deployment**: Use CI/CD tools and deployment platforms
+- **Issue/PR Management**: Use GitHub CLI or web interface
+
+### Plugin Architecture for Extensions
+
+```python
+# ghops/plugins/export/custom.py
+@ghops_plugin("export", "custom-format")
+def export_custom_format(repos: Iterator[dict], **options):
+    """Custom export plugin example."""
+    for repo in repos:
+        yield transform_repo_data(repo, options)
+```
+
+**Plugin Types**:
+- **Export plugins**: New output formats and destinations
+- **Health check plugins**: Custom repository health metrics
+- **Migration plugins**: Support for additional services
+- **Integration plugins**: Custom external tool integrations
+
+### Design Principles for Future Operations
+
+1. **Repository-Focused**: Operations should act on git repositories, not external services
+2. **Streaming First**: All operations should support streaming JSONL input/output
+3. **Composable**: Work well with Unix pipes and external tools
+4. **Safe by Default**: Destructive operations require explicit confirmation
+5. **Progressive**: Show progress for long-running operations
+6. **Configurable**: Support configuration files and environment variables
+
 ## Implementation Roadmap
 
 ### Phase 1: Core Usability (v0.7.0)

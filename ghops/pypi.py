@@ -3,12 +3,13 @@
 import os
 import json
 import requests
-import toml
+import tomllib
 from pathlib import Path
 from typing import Dict, Optional, Tuple, List
 import re
 
-from .config import logger, config
+from .config import logger
+from .config import load_config
 from .utils import run_command
 
 def find_packaging_files(repo_path: str) -> List[str]:
@@ -29,8 +30,8 @@ def find_packaging_files(repo_path: str) -> List[str]:
 def extract_package_name_from_pyproject(file_path: str) -> Optional[str]:
     """Extract package name from pyproject.toml."""
     try:
-        with open(file_path, 'r') as f:
-            data = toml.load(f)
+        with open(file_path, 'rb') as f:
+            data = tomllib.load(f)
         
         # Check [project] section first (PEP 621)
         if 'project' in data and 'name' in data['project']:
@@ -43,6 +44,26 @@ def extract_package_name_from_pyproject(file_path: str) -> Optional[str]:
         # Check [build-system] for some edge cases
         if 'build-system' in data and 'name' in data['build-system']:
             return data['build-system']['name']
+        
+    except Exception as e:
+        logger.debug(f"Error parsing {file_path}: {e}")
+    
+    return None
+
+
+def extract_package_version_from_pyproject(file_path: str) -> Optional[str]:
+    """Extract package version from pyproject.toml."""
+    try:
+        with open(file_path, 'rb') as f:
+            data = tomllib.load(f)
+        
+        # Check [project] section first (PEP 621)
+        if 'project' in data and 'version' in data['project']:
+            return data['project']['version']
+        
+        # Check [tool.setuptools] for older format
+        if 'tool' in data and 'setuptools' in data['tool'] and 'version' in data['tool']['setuptools']:
+            return data['tool']['setuptools']['version']
         
     except Exception as e:
         logger.debug(f"Error parsing {file_path}: {e}")
@@ -102,6 +123,7 @@ def extract_package_name(file_path: str) -> Optional[str]:
 def check_pypi_package(package_name: str) -> Optional[Dict]:
     """Check if a package exists on PyPI and get its info."""
     try:
+        config = load_config()
         timeout = config.get('pypi', {}).get('timeout_seconds', 10)
         
         # Check main PyPI
@@ -110,7 +132,7 @@ def check_pypi_package(package_name: str) -> Optional[Dict]:
         
         if response.status_code == 200:
             data = response.json()
-            return {
+            result = {
                 'exists': True,
                 'version': data['info']['version'],
                 'url': f"https://pypi.org/project/{package_name}/",
@@ -120,6 +142,7 @@ def check_pypi_package(package_name: str) -> Optional[Dict]:
                 'download_url': data['info']['download_url'] or '',
                 'last_updated': data['urls'][0]['upload_time'] if data['urls'] else ''
             }
+            return result
         elif response.status_code == 404:
             return {'exists': False}
         else:
@@ -139,6 +162,7 @@ def detect_pypi_package(repo_path: str) -> Dict:
         'has_packaging_files': False,
         'packaging_files': [],
         'package_name': None,
+        'local_version': None,
         'pypi_info': None,
         'is_published': False
     }
@@ -151,21 +175,20 @@ def detect_pypi_package(repo_path: str) -> Dict:
     if not packaging_files:
         return result
     
-    # Try to extract package name from the first packaging file found
+    # Try to extract package name and version from packaging files
     for file_path in packaging_files:
         package_name = extract_package_name(file_path)
         if package_name:
             result['package_name'] = package_name
+            # Also try to get version from the same file
+            if 'pyproject.toml' in file_path:
+                version = extract_package_version_from_pyproject(file_path)
+                if version:
+                    result['local_version'] = version
             break
     
-    # If no package name found, try using the repository directory name
-    if not result['package_name']:
-        repo_name = Path(repo_path).name
-        # Clean up common patterns
-        clean_name = repo_name.replace('-', '_').replace(' ', '_')
-        result['package_name'] = clean_name
-    
-    # Check PyPI if we have a package name
+    # Only check PyPI if we found a package name in the packaging files
+    # Don't use directory name as fallback for PyPI checks
     if result['package_name']:
         pypi_info = check_pypi_package(result['package_name'])
         if pypi_info:
@@ -181,8 +204,8 @@ def get_local_package_version(repo_path: str, package_name: str) -> Optional[str
     for file_path in packaging_files:
         if Path(file_path).name == 'pyproject.toml':
             try:
-                with open(file_path, 'r') as f:
-                    data = toml.load(f)
+                with open(file_path, 'rb') as f:
+                    data = tomllib.load(f)
                 
                 # Check [project] section
                 if 'project' in data and 'version' in data['project']:

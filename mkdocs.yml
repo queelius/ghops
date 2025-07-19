@@ -1,4 +1,8 @@
 site_name: ghops
+repo_url: https://github.com/queelius/ghops
+repo_name: queelius/ghops
+docs_dir: docs
+site_dir: site
 theme:
   name: material
   palette:
@@ -23,12 +27,17 @@ theme:
   language: en
   icon:
     repo: fontawesome/brands/github-alt
-repo_url: https://github.com/queelius/ghops
-repo_name: queelius/ghops
 
 nav:
   - Home: index.md
   - Usage: usage.md
-  - Future Plans: future-plans.md
+  - Commands:
+    - Organization & Discovery: catalog-query.md
+    - Repository Audit: audit-command.md
+    - Portfolio Export: export-command.md
+    - Documentation: docs-command.md
+    - List: list-command.md
+    - Query Cookbook: query-cookbook.md
+  - Architecture: architecture-vision.md
   - Contributing: contributing.md
-  - Changelog: changelog.md
+  - Future Plans: future-plans.md
