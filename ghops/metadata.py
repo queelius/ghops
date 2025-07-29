@@ -9,7 +9,7 @@ import json
 import os
 from pathlib import Path
 from typing import Dict, Any, Optional, List, Iterator
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 import mimetypes
 from collections import defaultdict
@@ -153,7 +153,12 @@ def detect_languages(repo_path: str, config: Optional[Dict[str, Any]] = None) ->
         for filename in files:
             # Skip binary files and configured extensions
             ext = os.path.splitext(filename)[1].lower()
-            if ext in binary_extensions or ext in skip_extensions:
+            if ext in binary_extensions:
+                continue
+            
+            # Check for multi-part extensions in skip list (e.g., .min.js)
+            filename_lower = filename.lower()
+            if any(filename_lower.endswith(skip_ext.lower()) for skip_ext in skip_extensions):
                 continue
                 
             filepath = os.path.join(root, filename)
@@ -282,7 +287,7 @@ class MetadataStore:
             metadata = existing
         
         # Add timestamp
-        metadata['_updated'] = datetime.utcnow().isoformat()
+        metadata['_updated'] = datetime.now(timezone.utc).isoformat()
         
         self._metadata[repo_path] = metadata
         self._save_metadata()
@@ -556,7 +561,7 @@ class MetadataStore:
                             yield {
                                 'path': repo_path,
                                 'error': f"Rate limited after {max_retries} retries",
-                                '_updated': datetime.utcnow().isoformat()
+                                '_updated': datetime.now(timezone.utc).isoformat()
                             }
                     else:
                         # Non-rate limit error, don't retry
@@ -564,7 +569,7 @@ class MetadataStore:
                         yield {
                             'path': repo_path,
                             'error': error_msg,
-                            '_updated': datetime.utcnow().isoformat()
+                            '_updated': datetime.now(timezone.utc).isoformat()
                         }
                         break
     
