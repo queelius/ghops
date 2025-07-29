@@ -220,6 +220,12 @@ def get_default_config():
             "max_concurrent_operations": 5,
             "progress_bar": True
         },
+        "language_detection": {
+            "skip_directories": [".git", "node_modules", "vendor", "venv", ".venv"],
+            "skip_hidden_directories": True,
+            "skip_file_extensions": [".min.js", ".min.css", ".map"],
+            "max_file_size_kb": 1024
+        },
         "pypi": {
             "check_by_default": True,
             "timeout_seconds": 10,

@@ -11,6 +11,8 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List, Iterator
 from datetime import datetime
 import logging
+import mimetypes
+from collections import defaultdict
 
 from .config import get_config_path
 from .utils import get_remote_url, parse_repo_url, run_command
@@ -32,15 +34,187 @@ def run_git_command(repo_path: str, args: List[str]) -> Optional[str]:
         return None
 
 
+def detect_languages(repo_path: str, config: Optional[Dict[str, Any]] = None) -> Dict[str, Dict[str, int]]:
+    """Detect programming languages in a repository.
+    
+    Returns a dictionary mapping language names to stats:
+    {
+        'Python': {'files': 10, 'bytes': 15000},
+        'JavaScript': {'files': 5, 'bytes': 8000}
+    }
+    """
+    languages = defaultdict(lambda: {'files': 0, 'bytes': 0})
+    
+    # Get config settings
+    if config is None:
+        from .config import load_config
+        config = load_config()
+    
+    lang_config = config.get('language_detection', {})
+    config_skip_dirs = set(lang_config.get('skip_directories', []))
+    skip_hidden = lang_config.get('skip_hidden_directories', True)
+    skip_extensions = set(lang_config.get('skip_file_extensions', []))
+    max_file_size = lang_config.get('max_file_size_kb', 1024) * 1024  # Convert to bytes
+    
+    # Extended mapping of file extensions to languages
+    lang_extensions = {
+        # Python
+        '.py': 'Python', '.pyw': 'Python', '.pyx': 'Python', '.pxd': 'Python',
+        '.pyi': 'Python', '.py3': 'Python',
+        # JavaScript/TypeScript
+        '.js': 'JavaScript', '.mjs': 'JavaScript', '.jsx': 'JavaScript',
+        '.ts': 'TypeScript', '.tsx': 'TypeScript',
+        # Web
+        '.html': 'HTML', '.htm': 'HTML', '.xhtml': 'HTML',
+        '.css': 'CSS', '.scss': 'CSS', '.sass': 'CSS', '.less': 'CSS',
+        '.vue': 'Vue', '.svelte': 'Svelte',
+        # Systems
+        '.c': 'C', '.h': 'C',
+        '.cpp': 'C++', '.cc': 'C++', '.cxx': 'C++', '.hpp': 'C++', '.hh': 'C++', '.hxx': 'C++',
+        '.rs': 'Rust', '.go': 'Go', '.zig': 'Zig',
+        # JVM
+        '.java': 'Java', '.kt': 'Kotlin', '.kts': 'Kotlin',
+        '.scala': 'Scala', '.sc': 'Scala', '.clj': 'Clojure', '.cljs': 'Clojure',
+        # .NET
+        '.cs': 'C#', '.fs': 'F#', '.vb': 'Visual Basic',
+        # Mobile
+        '.swift': 'Swift', '.m': 'Objective-C', '.mm': 'Objective-C',
+        '.dart': 'Dart',
+        # Scripting
+        '.rb': 'Ruby', '.php': 'PHP', '.pl': 'Perl', '.pm': 'Perl',
+        '.lua': 'Lua', '.tcl': 'Tcl',
+        # Shell
+        '.sh': 'Shell', '.bash': 'Shell', '.zsh': 'Shell', '.fish': 'Shell',
+        '.ps1': 'PowerShell', '.psm1': 'PowerShell', '.psd1': 'PowerShell',
+        '.bat': 'Batch', '.cmd': 'Batch',
+        # Data/Config
+        '.json': 'JSON', '.xml': 'XML', '.yaml': 'YAML', '.yml': 'YAML',
+        '.toml': 'TOML', '.ini': 'INI', '.cfg': 'INI',
+        '.sql': 'SQL',
+        # Documentation
+        '.md': 'Markdown', '.rst': 'reStructuredText', '.adoc': 'AsciiDoc',
+        '.tex': 'TeX', '.latex': 'LaTeX',
+        # Other
+        '.r': 'R', '.R': 'R', '.rmd': 'R', '.Rmd': 'R',
+        '.jl': 'Julia', '.nim': 'Nim', '.nims': 'Nim',
+        '.ex': 'Elixir', '.exs': 'Elixir', '.erl': 'Erlang', '.hrl': 'Erlang',
+        '.ml': 'OCaml', '.mli': 'OCaml', '.hs': 'Haskell', '.lhs': 'Haskell',
+        '.lisp': 'Lisp', '.cl': 'Common Lisp', '.el': 'Emacs Lisp',
+        '.vim': 'Vim script', '.vimrc': 'Vim script',
+    }
+    
+    # Filename-based detection for extensionless files
+    filename_languages = {
+        'Makefile': 'Makefile', 'makefile': 'Makefile', 'GNUmakefile': 'Makefile',
+        'Dockerfile': 'Dockerfile', 'dockerfile': 'Dockerfile',
+        'Jenkinsfile': 'Groovy', 'Vagrantfile': 'Ruby',
+        'Gemfile': 'Ruby', 'Rakefile': 'Ruby', 'Guardfile': 'Ruby',
+        'Pipfile': 'Python', 'requirements.txt': 'Python', 'setup.py': 'Python',
+        'package.json': 'JSON', 'composer.json': 'JSON', 'tsconfig.json': 'JSON',
+        'CMakeLists.txt': 'CMake', '.gitignore': 'Git', '.dockerignore': 'Docker',
+    }
+    
+    # Common binary/vendor directories to skip (combine defaults with config)
+    default_skip_dirs = {
+        '.git', 'node_modules', 'vendor', 'venv', '.venv', 'env',
+        '__pycache__', '.mypy_cache', '.pytest_cache', 'dist', 'build',
+        'target', 'bin', 'obj', '.idea', '.vscode', 'coverage',
+        '.tox', 'htmlcov', '.coverage', 'site-packages', '.env',
+        'virtualenv', '.virtualenv', 'site', '_site', 'public',
+        'docs/_build', 'docs/site'
+    }
+    skip_dirs = default_skip_dirs.union(config_skip_dirs)
+    
+    # Binary file extensions to skip
+    binary_extensions = {
+        '.pyc', '.pyo', '.so', '.dylib', '.dll', '.exe', '.o',
+        '.a', '.lib', '.jar', '.war', '.ear', '.class',
+        '.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg',
+        '.pdf', '.doc', '.docx', '.xls', '.xlsx',
+        '.zip', '.tar', '.gz', '.bz2', '.7z', '.rar',
+        '.db', '.sqlite', '.sqlite3'
+    }
+    
+    for root, dirs, files in os.walk(repo_path):
+        # Remove directories we want to skip
+        if skip_hidden:
+            dirs[:] = [d for d in dirs if d not in skip_dirs and not d.startswith('.')]
+        else:
+            dirs[:] = [d for d in dirs if d not in skip_dirs]
+        
+        # Skip if we're in a directory we should ignore
+        root_parts = root.split(os.sep)
+        should_skip = any(skip in root_parts for skip in skip_dirs)
+        if skip_hidden:
+            should_skip = should_skip or any(part.startswith('.') and part != '.' for part in root_parts)
+        if should_skip:
+            continue
+            
+        for filename in files:
+            # Skip binary files and configured extensions
+            ext = os.path.splitext(filename)[1].lower()
+            if ext in binary_extensions or ext in skip_extensions:
+                continue
+                
+            filepath = os.path.join(root, filename)
+            
+            # Skip if file is too large
+            try:
+                size = os.path.getsize(filepath)
+                if size > max_file_size:
+                    continue
+            except OSError:
+                continue
+            
+            # Detect language
+            language = None
+            
+            # Check filename-based detection first
+            if filename in filename_languages:
+                language = filename_languages[filename]
+            # Then extension-based
+            elif ext in lang_extensions:
+                language = lang_extensions[ext]
+            # Try to detect shebang for scripts
+            elif not ext or ext in {'.sh', ''}:
+                try:
+                    with open(filepath, 'rb') as f:
+                        first_line = f.readline()
+                        if first_line.startswith(b'#!'):
+                            shebang = first_line.decode('utf-8', errors='ignore').strip()
+                            if 'python' in shebang:
+                                language = 'Python'
+                            elif 'node' in shebang or 'js' in shebang:
+                                language = 'JavaScript'
+                            elif 'ruby' in shebang:
+                                language = 'Ruby'
+                            elif 'perl' in shebang:
+                                language = 'Perl'
+                            elif 'bash' in shebang or 'sh' in shebang:
+                                language = 'Shell'
+                except:
+                    pass
+            
+            if language:
+                languages[language]['files'] += 1
+                try:
+                    languages[language]['bytes'] += os.path.getsize(filepath)
+                except OSError:
+                    pass
+    
+    return dict(languages)
+
+
 class MetadataStore:
     """Local metadata store for repository information."""
     
-    def __init__(self, store_path: Optional[Path] = None):
+    def __init__(self, store_path: Optional[Path] = None, config: Optional[Dict[str, Any]] = None):
         """Initialize the metadata store.
         
         Args:
             store_path: Path to the metadata JSON file. 
                        Defaults to ~/.ghops/metadata.json
+            config: Configuration dictionary. If None, will be loaded.
         """
         if store_path is None:
             config_path = Path(get_config_path())
@@ -49,6 +223,12 @@ class MetadataStore:
         
         self.store_path = Path(store_path)
         self.store_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Load config if not provided
+        if config is None:
+            from .config import load_config
+            config = load_config()
+        self.config = config
         
         # Load existing metadata
         self._metadata = self._load_metadata()
@@ -189,45 +369,13 @@ class MetadataStore:
         except Exception as e:
             logger.warning(f"Failed to get git info for {repo_path}: {e}")
         
-        # Get language info (simplified for now)
-        # TODO: Implement proper language detection using linguist or similar
-        # For now, just try to detect from common file extensions
+        # Get language info with proper detection
         try:
-            languages = {}
-            lang_extensions = {
-                '.py': 'Python',
-                '.js': 'JavaScript',
-                '.ts': 'TypeScript',
-                '.go': 'Go',
-                '.rs': 'Rust',
-                '.java': 'Java',
-                '.cpp': 'C++',
-                '.c': 'C',
-                '.rb': 'Ruby',
-                '.php': 'PHP',
-                '.cs': 'C#',
-                '.swift': 'Swift',
-                '.kt': 'Kotlin',
-                '.scala': 'Scala',
-                '.r': 'R',
-                '.jl': 'Julia',
-                '.sh': 'Shell',
-                '.ps1': 'PowerShell'
-            }
-            
-            for root, dirs, files in os.walk(repo_path):
-                if '.git' in root:
-                    continue
-                for f in files:
-                    ext = os.path.splitext(f)[1].lower()
-                    if ext in lang_extensions:
-                        lang = lang_extensions[ext]
-                        languages[lang] = languages.get(lang, 0) + 1
-            
+            languages = detect_languages(repo_path, self.config)
             if languages:
                 metadata['languages'] = languages
-                # Primary language is the one with most files
-                primary = max(languages.items(), key=lambda x: x[1])
+                # Primary language is the one with most bytes
+                primary = max(languages.items(), key=lambda x: x[1]['bytes'])
                 metadata['language'] = primary[0]
         except Exception as e:
             logger.warning(f"Failed to get language info for {repo_path}: {e}")
