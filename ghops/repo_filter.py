@@ -12,7 +12,7 @@ from typing import List, Dict, Optional, Tuple
 
 from ghops.config import load_config
 from ghops.utils import find_git_repos, find_git_repos_from_config
-from ghops.simple_query import SimpleQuery
+from ghops.query import Query
 from ghops.metadata import MetadataStore
 from ghops.commands.catalog import get_repositories_by_tags, get_implicit_tags
 
@@ -54,7 +54,7 @@ def get_filtered_repos(
         # Query language takes precedence
         filter_desc = f"query: {query}"
         store = MetadataStore()
-        query_obj = SimpleQuery(query)
+        query_obj = Query(query)
         
         # Get all repos from config or dir
         if dir:

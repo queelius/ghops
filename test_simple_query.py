@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Test script for simple_query module."""
+"""Test script for query module."""
 
 import logging
-from ghops.simple_query import SimpleQuery
+from ghops.query import Query
 
 # Configure logging
 logging.basicConfig(
@@ -46,7 +46,7 @@ test_queries = [
     "python"
 ]
 
-print("Testing SimpleQuery with sample repository data\n")
+print("Testing Query with sample repository data\n")
 print(f"Test repository: {test_repo['name']}")
 print(f"Tags: {test_repo['tags']}")
 print(f"Language: {test_repo['language']}")
@@ -55,7 +55,7 @@ print("\n" + "="*60 + "\n")
 for query_str in test_queries:
     print(f"Query: {query_str}")
     try:
-        query = SimpleQuery(query_str)
+        query = Query(query_str)
         result = query.evaluate(test_repo)
         print(f"Result: {result}")
     except Exception as e:

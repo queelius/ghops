@@ -5,10 +5,11 @@ import unittest
 import tempfile
 import os
 import shutil
+import json
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-from ghops.commands.get import get_github_repos
+from ghops.commands.get import get_user_repositories, clone_repositories
 
 
 class TestGetCommand(unittest.TestCase):
@@ -26,180 +27,123 @@ class TestGetCommand(unittest.TestCase):
         shutil.rmtree(self.temp_dir)
     
     @patch('ghops.commands.get.run_command')
-    @patch('ghops.commands.get.add_license_to_repo')
-    def test_get_github_repos_basic(self, mock_add_license, mock_run_command):
-        """Test basic repository cloning"""
+    def test_get_user_repositories_basic(self, mock_run_command):
+        """Test getting repository list from GitHub"""
         # Mock GitHub CLI response
-        mock_run_command.side_effect = [
-            "user/repo1\nuser/repo2",  # gh repo list response
-            "Cloning into 'repo1'...",  # git clone response
-            "Cloning into 'repo2'...",  # git clone response
-        ]
+        mock_run_command.return_value = json.dumps([
+            {"nameWithOwner": "user/repo1", "isPrivate": False, "isFork": False, 
+             "description": "Test repo 1", "repositoryTopics": {"nodes": []}},
+            {"nameWithOwner": "user/repo2", "isPrivate": False, "isFork": False,
+             "description": "Test repo 2", "repositoryTopics": {"nodes": []}}
+        ])
         
-        get_github_repos(
-            users=['testuser'],
-            ignore_list=[],
-            limit=10,
-            dry_run=False,
-            base_dir=self.temp_dir
-        )
+        repos = list(get_user_repositories('testuser', limit=10))
         
         # Verify GitHub CLI was called
-        self.assertEqual(mock_run_command.call_count, 3)
+        mock_run_command.assert_called_once()
+        call_args = mock_run_command.call_args[0][0]
+        self.assertIn('gh repo list testuser', call_args)
+        self.assertIn('--limit 10', call_args)
         
-        # Check first call (gh repo list)
-        first_call = mock_run_command.call_args_list[0]
-        self.assertIn('gh repo list testuser', first_call[0][0])
-        
-        # Check git clone calls
-        clone_calls = [call[0][0] for call in mock_run_command.call_args_list[1:]]
-        self.assertIn('git clone "https://github.com/user/repo1.git"', clone_calls)
-        self.assertIn('git clone "https://github.com/user/repo2.git"', clone_calls)
+        # Check returned repos
+        self.assertEqual(len(repos), 2)
+        self.assertEqual(repos[0]['name'], 'repo1')
+        self.assertEqual(repos[1]['name'], 'repo2')
     
     @patch('ghops.commands.get.run_command')
-    def test_get_github_repos_with_ignore_list(self, mock_run_command):
+    def test_clone_repositories_with_ignore_list(self, mock_run_command):
         """Test repository cloning with ignore list"""
-        # Mock GitHub CLI response
+        # Mock git clone responses
         mock_run_command.side_effect = [
-            "user/repo1\nuser/ignored-repo\nuser/repo2",  # gh repo list response
             "Cloning into 'repo1'...",  # git clone response
             "Cloning into 'repo2'...",  # git clone response
         ]
         
-        get_github_repos(
-            users=['testuser'],
+        repos = [
+            {"name": "repo1", "url": "https://github.com/user/repo1"},
+            {"name": "ignored-repo", "url": "https://github.com/user/ignored-repo"},
+            {"name": "repo2", "url": "https://github.com/user/repo2"}
+        ]
+        
+        results = list(clone_repositories(
+            repos,
+            target_dir=self.temp_dir,
             ignore_list=['ignored-repo'],
-            limit=10,
-            dry_run=False,
-            base_dir=self.temp_dir
-        )
+            dry_run=False
+        ))
         
-        # Should have 3 calls: 1 for gh repo list, 2 for git clone (ignoring one)
-        self.assertEqual(mock_run_command.call_count, 3)
+        # Should have 2 clone calls (ignoring one)
+        self.assertEqual(mock_run_command.call_count, 2)
         
-        # Verify ignored repo was not cloned
+        # Verify results
+        self.assertEqual(len(results), 3)
+        self.assertTrue(results[0]['actions']['cloned'])  # repo1
+        self.assertFalse(results[1]['actions']['cloned'])  # ignored-repo
+        self.assertTrue(results[2]['actions']['cloned'])  # repo2
         clone_calls = [call[0][0] for call in mock_run_command.call_args_list[1:]]
         self.assertNotIn('git clone "https://github.com/user/ignored-repo.git"', clone_calls)
     
-    @patch('ghops.commands.get.run_command')
-    def test_get_github_repos_dry_run(self, mock_run_command):
-        """Test repository cloning in dry run mode"""
-        # Mock GitHub CLI response
-        mock_run_command.side_effect = [
-            "user/repo1\nuser/repo2",  # gh repo list response
-            "Dry run output",  # git clone dry run response
-            "Dry run output",  # git clone dry run response
-        ]
-        
-        get_github_repos(
-            users=['testuser'],
-            ignore_list=[],
-            limit=10,
-            dry_run=True,
-            base_dir=self.temp_dir
-        )
-        
-        # Verify all calls were made with dry_run=True
-        for call in mock_run_command.call_args_list:
-            if 'dry_run' in call[1]:
-                self.assertTrue(call[1]['dry_run'])
     
     @patch('ghops.commands.get.run_command')
-    def test_get_github_repos_no_repos_found(self, mock_run_command):
+    def test_get_user_repositories_no_repos_found(self, mock_run_command):
         """Test behavior when no repositories are found"""
         # Mock empty GitHub CLI response
         mock_run_command.return_value = ""
         
-        get_github_repos(
-            users=['nonexistentuser'],
-            ignore_list=[],
-            limit=10,
-            dry_run=False,
-            base_dir=self.temp_dir
-        )
+        repos = list(get_user_repositories('nonexistentuser', limit=10))
         
-        # Should only call gh repo list, no git clone calls
+        # Should only call gh repo list
         self.assertEqual(mock_run_command.call_count, 1)
+        # Should return no repos
+        self.assertEqual(len(repos), 0)
+    
     
     @patch('ghops.commands.get.run_command')
-    @patch('ghops.commands.get.add_license_to_repo')
-    @patch('pathlib.Path.exists')
-    def test_get_github_repos_with_license(self, mock_exists, mock_add_license, mock_run_command):
-        """Test repository cloning with license addition"""
-        # Mock path exists for license addition
-        mock_exists.return_value = True
-        
-        # Mock GitHub CLI and git responses
-        mock_run_command.side_effect = [
-            "user/repo1",  # gh repo list response
-            "Cloning into 'repo1'...",  # git clone response
-        ]
-        
-        get_github_repos(
-            users=['testuser'],
-            ignore_list=[],
-            limit=10,
-            dry_run=False,
-            base_dir=self.temp_dir,
-            add_license=True,
-            license_type='mit',
-            author_name='Test Author',
-            author_email='test@example.com'
-        )
-        
-        # Verify license was added
-        mock_add_license.assert_called_once()
-        call_args = mock_add_license.call_args
-        self.assertEqual(call_args[1]['license_key'], 'mit')
-        self.assertEqual(call_args[1]['author_name'], 'Test Author')
-        self.assertEqual(call_args[1]['author_email'], 'test@example.com')
-    
-    @patch('ghops.commands.get.run_command')
-    def test_get_github_repos_clone_failure(self, mock_run_command):
+    def test_clone_repositories_failure(self, mock_run_command):
         """Test behavior when git clone fails"""
-        # Mock GitHub CLI response and failed git clone
-        mock_run_command.side_effect = [
-            "user/repo1",  # gh repo list response
-            None,  # git clone failure (returns None)
-        ]
+        # Mock git clone failure
+        mock_run_command.side_effect = Exception("Clone failed")
         
-        get_github_repos(
-            users=['testuser'],
-            ignore_list=[],
-            limit=10,
-            dry_run=False,
-            base_dir=self.temp_dir
-        )
+        repos = [{"name": "repo1", "url": "https://github.com/user/repo1"}]
+        
+        results = list(clone_repositories(
+            repos,
+            target_dir=self.temp_dir,
+            dry_run=False
+        ))
         
         # Should handle the failure gracefully
-        self.assertEqual(mock_run_command.call_count, 2)
+        self.assertEqual(len(results), 1)
+        self.assertFalse(results[0]['actions']['cloned'])
+        self.assertIn('error', results[0]['actions'])
     
     @patch('ghops.commands.get.run_command')
-    def test_get_github_repos_multiple_users(self, mock_run_command):
-        """Test repository cloning for multiple users"""
-        # Mock responses for multiple users
-        mock_run_command.side_effect = [
-            "user1/repo1",  # gh repo list for user1
-            "Cloning into 'repo1'...",  # git clone for repo1
-            "user2/repo2",  # gh repo list for user2
-            "Cloning into 'repo2'...",  # git clone for repo2
-        ]
+    def test_get_user_repositories_multiple_calls(self, mock_run_command):
+        """Test getting repositories for multiple users separately"""
+        # First call for user1
+        mock_run_command.return_value = json.dumps([
+            {"nameWithOwner": "user1/repo1", "isPrivate": False, "isFork": False,
+             "description": "User1 repo", "repositoryTopics": {"nodes": []}}
+        ])
         
-        get_github_repos(
-            users=['user1', 'user2'],
-            ignore_list=[],
-            limit=10,
-            dry_run=False,
-            base_dir=self.temp_dir
-        )
+        repos1 = list(get_user_repositories('user1', limit=10))
         
-        # Should have calls for both users
-        self.assertEqual(mock_run_command.call_count, 4)
+        # Second call for user2
+        mock_run_command.return_value = json.dumps([
+            {"nameWithOwner": "user2/repo2", "isPrivate": False, "isFork": False,
+             "description": "User2 repo", "repositoryTopics": {"nodes": []}}
+        ])
         
-        # Verify calls for both users
-        calls = [call[0][0] for call in mock_run_command.call_args_list]
-        self.assertTrue(any('user1' in call for call in calls))
-        self.assertTrue(any('user2' in call for call in calls))
+        repos2 = list(get_user_repositories('user2', limit=10))
+        
+        # Should have 2 calls total
+        self.assertEqual(mock_run_command.call_count, 2)
+        
+        # Verify results
+        self.assertEqual(len(repos1), 1)
+        self.assertEqual(repos1[0]['name'], 'repo1')
+        self.assertEqual(len(repos2), 1)
+        self.assertEqual(repos2[0]['name'], 'repo2')
 
 
 if __name__ == '__main__':

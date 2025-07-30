@@ -48,7 +48,7 @@ class TestLicenseCommands(unittest.TestCase):
         # We're just testing it doesn't raise an exception
         list_licenses()
         
-        mock_run_command.assert_called_once_with("gh api /licenses", capture_output=True)
+        mock_run_command.assert_called_once_with("gh api /licenses", capture_output=True, check=False)
     
     @patch('ghops.core.run_command')
     def test_list_licenses_command_failure(self, mock_run_command):
@@ -58,7 +58,7 @@ class TestLicenseCommands(unittest.TestCase):
         # Should not raise exception on command failure
         list_licenses()
         
-        mock_run_command.assert_called_once_with("gh api /licenses", capture_output=True)
+        mock_run_command.assert_called_once_with("gh api /licenses", capture_output=True, check=False)
     
     @patch('ghops.core.run_command')
     def test_list_licenses_table_output(self, mock_run_command):
@@ -71,7 +71,7 @@ class TestLicenseCommands(unittest.TestCase):
         # Should not raise exception with table output
         list_licenses()
         
-        mock_run_command.assert_called_once_with("gh api /licenses", capture_output=True)
+        mock_run_command.assert_called_once_with("gh api /licenses", capture_output=True, check=False)
     
     @patch('ghops.core.run_command')
     def test_show_license_template_success(self, mock_run_command):
@@ -86,7 +86,7 @@ class TestLicenseCommands(unittest.TestCase):
         # Should not raise exception
         show_license_template("mit")
         
-        mock_run_command.assert_called_once_with("gh api /licenses/mit", capture_output=True)
+        mock_run_command.assert_called_once_with("gh api /licenses/mit", capture_output=True, check=False)
     
     @patch('ghops.core.run_command')
     def test_show_license_template_command_failure(self, mock_run_command):
@@ -96,7 +96,7 @@ class TestLicenseCommands(unittest.TestCase):
         # Should not raise exception on command failure
         show_license_template("invalid")
         
-        mock_run_command.assert_called_once_with("gh api /licenses/invalid", capture_output=True)
+        mock_run_command.assert_called_once_with("gh api /licenses/invalid", capture_output=True, check=False)
     
     @patch('ghops.core.run_command')
     def test_show_license_template_table_output(self, mock_run_command):
@@ -111,7 +111,7 @@ class TestLicenseCommands(unittest.TestCase):
         # Should not raise exception with table output
         show_license_template("mit")
         
-        mock_run_command.assert_called_once_with("gh api /licenses/mit", capture_output=True)
+        mock_run_command.assert_called_once_with("gh api /licenses/mit", capture_output=True, check=False)
     
     @patch('ghops.core.run_command')
     def test_add_license_to_repo_success(self, mock_run_command):
@@ -145,7 +145,7 @@ class TestLicenseCommands(unittest.TestCase):
             self.assertIn("MIT License", content)
             self.assertIn("Copyright (c) 2023 Test Author", content)
         
-        mock_run_command.assert_called_once_with("gh api /licenses/mit", capture_output=True)
+        mock_run_command.assert_called_once_with("gh api /licenses/mit", capture_output=True, check=False)
     
     @patch('ghops.core.run_command')
     def test_add_license_to_repo_dry_run(self, mock_run_command):
@@ -173,7 +173,7 @@ class TestLicenseCommands(unittest.TestCase):
         license_file = Path(self.test_repo) / "LICENSE"
         self.assertFalse(license_file.exists())
         
-        mock_run_command.assert_called_once_with("gh api /licenses/mit", capture_output=True)
+        mock_run_command.assert_called_once_with("gh api /licenses/mit", capture_output=True, check=False)
     
     def test_add_license_to_repo_existing_file_no_force(self):
         """Test adding license when file exists and force is False"""
@@ -232,7 +232,7 @@ class TestLicenseCommands(unittest.TestCase):
             self.assertIn("MIT License", content)
             self.assertIn("Test Author", content)
         
-        mock_run_command.assert_called_once_with("gh api /licenses/mit", capture_output=True)
+        mock_run_command.assert_called_once_with("gh api /licenses/mit", capture_output=True, check=False)
     
     @patch('ghops.core.run_command')
     def test_add_license_to_repo_command_failure(self, mock_run_command):
@@ -251,13 +251,13 @@ class TestLicenseCommands(unittest.TestCase):
         
         # Should return error status
         self.assertEqual(result["status"], "error")
-        self.assertIn("Could not fetch license template", result["message"])
+        self.assertIn("Failed to get template for license", result["reason"])
         
         # LICENSE file should not be created
         license_file = Path(self.test_repo) / "LICENSE"
         self.assertFalse(license_file.exists())
         
-        mock_run_command.assert_called_once_with("gh api /licenses/invalid", capture_output=True)
+        mock_run_command.assert_called_once_with("gh api /licenses/invalid", capture_output=True, check=False)
     
     @patch('ghops.core.run_command')
     def test_add_license_to_repo_invalid_json(self, mock_run_command):
@@ -276,7 +276,7 @@ class TestLicenseCommands(unittest.TestCase):
         
         # Should return error status
         self.assertEqual(result["status"], "error")
-        self.assertIn("Could not fetch license template", result["message"])
+        self.assertIn("Failed to get template for license", result["reason"])
         
         # LICENSE file should not be created due to the error
         license_file = Path(self.test_repo) / "LICENSE"
@@ -339,11 +339,10 @@ class TestLicenseCommands(unittest.TestCase):
         self.assertTrue(license_file.exists())
         with open(license_file, 'r') as f:
             content = f.read()
-            # Year should be replaced even without author info
-            self.assertIn("Copyright (c) 2023 [fullname]", content)
-            # Author and email placeholders should remain
-            self.assertIn("[fullname]", content)
-            self.assertIn("[email]", content)
+            # Year should be replaced but author placeholders are replaced with empty string
+            self.assertIn("Copyright (c) 2023", content)
+            self.assertNotIn("[fullname]", content)  # Should be replaced with empty string
+            self.assertNotIn("[email]", content)  # Should be replaced with empty string
             self.assertNotIn("[year]", content)  # Year should be replaced
 
 

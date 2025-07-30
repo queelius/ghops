@@ -108,7 +108,11 @@ class TestGetGitStatus(unittest.TestCase):
     @patch('ghops.utils.run_command')
     def test_get_git_status_clean_repo(self, mock_run_command):
         """Test get_git_status with clean repository"""
-        mock_run_command.side_effect = ["main", ""]  # branch, then empty status
+        mock_run_command.side_effect = [
+            "main",              # git rev-parse --abbrev-ref HEAD
+            "",                  # git status --porcelain
+            "fatal: no upstream" # git rev-parse --abbrev-ref @{u}
+        ]
         
         result = get_git_status(self.temp_dir)
         
@@ -119,8 +123,9 @@ class TestGetGitStatus(unittest.TestCase):
     def test_get_git_status_modified_files(self, mock_run_command):
         """Test get_git_status with modified files"""
         mock_run_command.side_effect = [
-            "main", 
-            " M file1.py\nM  file2.py\n?? new_file.py"
+            "main",                                      # git rev-parse --abbrev-ref HEAD
+            " M file1.py\nM  file2.py\n?? new_file.py", # git status --porcelain
+            "fatal: no upstream"                         # git rev-parse --abbrev-ref @{u}
         ]
         
         result = get_git_status(self.temp_dir)
@@ -143,8 +148,9 @@ class TestGetGitStatus(unittest.TestCase):
     def test_get_git_status_various_changes(self, mock_run_command):
         """Test get_git_status with various types of changes"""
         mock_run_command.side_effect = [
-            "feature-branch",
-            "A  added.py\n D deleted.py\nM  modified.py\n?? untracked.py"
+            "feature-branch",                                               # git rev-parse --abbrev-ref HEAD
+            "A  added.py\n D deleted.py\nM  modified.py\n?? untracked.py", # git status --porcelain
+            "fatal: no upstream"                                            # git rev-parse --abbrev-ref @{u}
         ]
         
         result = get_git_status(self.temp_dir)

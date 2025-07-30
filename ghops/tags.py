@@ -153,6 +153,87 @@ def has_tag(tags: List[str], key: str, value: Optional[str] = None) -> bool:
     return True
 
 
+def is_hierarchical_tag(tag_value: str) -> bool:
+    """
+    Check if a tag value represents a hierarchy.
+    
+    Args:
+        tag_value: The tag value to check
+        
+    Returns:
+        True if the value contains hierarchy separators
+    """
+    return '/' in tag_value if tag_value else False
+
+
+def parse_hierarchical_tag(tag: str) -> Tuple[str, List[str]]:
+    """
+    Parse a hierarchical tag into key and hierarchy levels.
+    
+    Args:
+        tag: Tag string (e.g., "topic:scientific/engineering/ai")
+        
+    Returns:
+        Tuple of (key, hierarchy_levels)
+    """
+    key, value = parse_tag(tag)
+    if value and '/' in value:
+        levels = value.split('/')
+        return (key, levels)
+    return (key, [value] if value else [])
+
+
+def match_hierarchical_tag(tag: str, pattern: str) -> bool:
+    """
+    Check if a hierarchical tag matches a pattern.
+    
+    Args:
+        tag: Tag to check (e.g., "topic:scientific/engineering/ai")
+        pattern: Pattern to match (e.g., "topic:scientific/*" or "topic:scientific")
+        
+    Returns:
+        True if tag matches the pattern
+    """
+    tag_key, tag_levels = parse_hierarchical_tag(tag)
+    pattern_key, pattern_levels = parse_hierarchical_tag(pattern)
+    
+    # Keys must match
+    if tag_key != pattern_key:
+        return False
+    
+    # If pattern has no value, it matches any value with that key
+    if not pattern_levels or pattern_levels == [None]:
+        return True
+    
+    # Check each level
+    for i, pattern_level in enumerate(pattern_levels):
+        if pattern_level == '*':
+            # Wildcard matches rest of hierarchy
+            return True
+        if i >= len(tag_levels):
+            # Pattern has more levels than tag
+            return False
+        if pattern_level != tag_levels[i]:
+            return False
+    
+    # Exact match if pattern has same or fewer levels
+    return True
+
+
+def filter_hierarchical_tags(tags: List[str], pattern: str) -> List[str]:
+    """
+    Filter tags by hierarchical pattern.
+    
+    Args:
+        tags: List of tags
+        pattern: Pattern to match (e.g., "topic:scientific/*", "topic:scientific")
+        
+    Returns:
+        Filtered list of tags
+    """
+    return [tag for tag in tags if match_hierarchical_tag(tag, pattern)]
+
+
 def github_metadata_to_tags(repo_data: Dict[str, Any]) -> List[str]:
     """
     Convert GitHub repository metadata to tags.

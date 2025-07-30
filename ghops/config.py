@@ -47,7 +47,7 @@ def get_config_path():
 
     # Check ~/.ghops/ directory
     ghops_dir = Path.home() / '.ghops'
-    for filename in ['config.json', 'config.yaml', 'config.yml']:
+    for filename in ['config.json', 'config.toml', 'config.yaml', 'config.yml']:
         path = ghops_dir / filename
         if path.exists():
             return path

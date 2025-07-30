@@ -63,7 +63,7 @@ description = "A test package"
     
     def test_status_command_json_output(self):
         """Test status command with JSONL output"""
-        result = self.run_ghops_command("status", "--no-pypi-check", "--no-pages-check")
+        result = self.run_ghops_command("status", "--no-pypi", "--no-pages")
         
         self.assertEqual(result.returncode, 0)
         
@@ -170,7 +170,7 @@ description = "A test package"
     
     def test_status_with_performance_flags(self):
         """Test status command with performance optimization flags"""
-        result = self.run_ghops_command("status", "--no-pypi-check", "--no-pages-check")
+        result = self.run_ghops_command("status", "--no-pypi", "--no-pages")
         
         self.assertEqual(result.returncode, 0)
         # Should complete faster without external API calls
@@ -208,7 +208,7 @@ class TestCLIErrorHandling(unittest.TestCase):
     
     def test_status_no_repositories(self):
         """Test status command when no repositories are found"""
-        result = self.run_ghops_command("status", "--no-pypi-check", "--no-pages-check")
+        result = self.run_ghops_command("status", "--no-pypi", "--no-pages")
         
         self.assertEqual(result.returncode, 0)
         # With JSONL format, empty result means no output lines

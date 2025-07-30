@@ -96,3 +96,146 @@ def post(dir, recursive, tag_filters, all_tags, query, dry_run, sample_size, pre
     # Execute posts
     execute_social_media_posts(posts, dry_run)
     sys.exit(0)
+
+
+@social_cmd.command("configure")
+@click.argument("platform", type=click.Choice(['twitter', 'linkedin', 'mastodon']))
+@click.option("--pretty", is_flag=True, help="Display configuration in formatted output")
+def configure(platform, pretty):
+    """Configure social media platform credentials."""
+    config = load_config()
+    
+    # Get or create social media configuration
+    if 'social_media' not in config:
+        config['social_media'] = {'platforms': {}}
+    if 'platforms' not in config['social_media']:
+        config['social_media']['platforms'] = {}
+    
+    platforms = config['social_media']['platforms']
+    
+    if platform == 'twitter':
+        click.echo("Configuring Twitter/X credentials...")
+        click.echo("\nTo get Twitter API credentials:")
+        click.echo("1. Go to https://developer.twitter.com/")
+        click.echo("2. Create a developer account and app")
+        click.echo("3. Generate API keys and access tokens\n")
+        
+        api_key = click.prompt("API Key (Consumer Key)", hide_input=True, type=str)
+        api_secret = click.prompt("API Secret (Consumer Secret)", hide_input=True, type=str)
+        access_token = click.prompt("Access Token", hide_input=True, type=str)
+        access_token_secret = click.prompt("Access Token Secret", hide_input=True, type=str)
+        
+        platforms['twitter'] = {
+            'enabled': True,
+            'api_key': api_key,
+            'api_secret': api_secret,
+            'access_token': access_token,
+            'access_token_secret': access_token_secret
+        }
+        
+    elif platform == 'linkedin':
+        click.echo("Configuring LinkedIn credentials...")
+        click.echo("\nTo get LinkedIn API credentials:")
+        click.echo("1. Go to https://www.linkedin.com/developers/")
+        click.echo("2. Create an app")
+        click.echo("3. Get your access token")
+        click.echo("4. Find your person URN (from your LinkedIn profile)\n")
+        
+        access_token = click.prompt("Access Token", hide_input=True, type=str)
+        person_urn = click.prompt("Person URN (e.g., ABC123XYZ)", type=str)
+        
+        platforms['linkedin'] = {
+            'enabled': True,
+            'access_token': access_token,
+            'person_urn': person_urn
+        }
+        
+    elif platform == 'mastodon':
+        click.echo("Configuring Mastodon credentials...")
+        click.echo("\nTo get Mastodon API credentials:")
+        click.echo("1. Go to your Mastodon instance settings")
+        click.echo("2. Navigate to Development > Your applications")
+        click.echo("3. Create a new application")
+        click.echo("4. Copy the access token\n")
+        
+        instance_url = click.prompt("Instance URL", default="https://mastodon.social", type=str)
+        access_token = click.prompt("Access Token", hide_input=True, type=str)
+        visibility = click.prompt("Default visibility", 
+                                type=click.Choice(['public', 'unlisted', 'private']), 
+                                default='public')
+        
+        platforms['mastodon'] = {
+            'enabled': True,
+            'instance_url': instance_url,
+            'access_token': access_token,
+            'visibility': visibility
+        }
+    
+    # Save configuration
+    from ..config import save_config
+    save_config(config)
+    
+    if pretty:
+        click.echo(f"\n✅ {platform.title()} configuration saved successfully!")
+        click.echo("\nYou can now use 'ghops social post' to share your repositories.")
+    else:
+        result = {
+            'status': 'success',
+            'platform': platform,
+            'configured': True
+        }
+        print(json.dumps(result, ensure_ascii=False), flush=True)
+
+
+@social_cmd.command("status")
+@click.option("--pretty", is_flag=True, help="Display status in formatted output")
+def status(pretty):
+    """Show social media configuration status."""
+    config = load_config()
+    platforms = config.get('social_media', {}).get('platforms', {})
+    
+    if pretty:
+        from ..render import render_table
+        
+        headers = ["Platform", "Enabled", "Configured", "Missing"]
+        rows = []
+        
+        for platform in ['twitter', 'linkedin', 'mastodon']:
+            platform_config = platforms.get(platform, {})
+            enabled = platform_config.get('enabled', False)
+            
+            # Check required fields
+            missing = []
+            if platform == 'twitter':
+                required = ['api_key', 'api_secret', 'access_token', 'access_token_secret']
+            elif platform == 'linkedin':
+                required = ['access_token', 'person_urn']
+            elif platform == 'mastodon':
+                required = ['access_token']
+            else:
+                required = []
+            
+            for field in required:
+                if not platform_config.get(field):
+                    missing.append(field)
+            
+            configured = len(missing) == 0 and platform in platforms
+            
+            rows.append([
+                platform.title(),
+                "✓" if enabled else "✗",
+                "✓" if configured else "✗",
+                ", ".join(missing) if missing else "-"
+            ])
+        
+        render_table(headers, rows, title="Social Media Platform Status")
+    else:
+        # JSONL output
+        for platform in ['twitter', 'linkedin', 'mastodon']:
+            platform_config = platforms.get(platform, {})
+            result = {
+                'platform': platform,
+                'enabled': platform_config.get('enabled', False),
+                'configured': platform in platforms and bool(platform_config)
+            }
+            print(json.dumps(result, ensure_ascii=False), flush=True)

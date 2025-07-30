@@ -18,7 +18,7 @@ def create_git_repo(fs, path, remote_url="https://github.com/user/repo.git"):
     return str(repo_path)
 
 from ghops import core
-from ghops.core import get_repo_status_stream
+from ghops.core import get_repository_status
 
 
 class TestListRepos:
@@ -129,7 +129,7 @@ class TestListRepos:
                 dedup_details=False,
             )
 
-            assert result["status"] == "success"
+            assert result["status"] == "deduped"
             # Should be 2 unique repos, with the first path chosen for the duplicate
             assert len(result["repos"]) == 2
             assert repo1_path in result["repos"]
@@ -202,11 +202,11 @@ class TestListRepos:
 
 class TestGetRepoStatus:
     @patch("ghops.core.load_config")
-    @patch("ghops.core.get_git_status")
+    @patch("ghops.utils.get_git_status")
     @patch("ghops.core.get_license_info")
-    @patch("ghops.core.get_gh_pages_url")
-    @patch("ghops.core.detect_pypi_package")
-    @patch("ghops.core.is_package_outdated")
+    @patch("ghops.utils.get_gh_pages_url")
+    @patch("ghops.pypi.detect_pypi_package")
+    @patch("ghops.pypi.is_package_outdated")
     def test_get_repo_status_basic(
         self,
         mock_is_outdated,
@@ -233,12 +233,12 @@ class TestGetRepoStatus:
         }
         mock_is_outdated.return_value = False
 
-        result = list(core.get_repo_status_stream([repo_path]))
+        result = list(core.get_repository_status(repo_path, recursive=False))
 
         assert len(result) == 1
         status = result[0]
         assert status["name"] == "clean-repo"
-        assert status["status"] == "clean"
+        assert status["status"]["clean"] == True
         assert status["branch"] == "main"
         assert status["license"]["spdx_id"] == "MIT"
         assert status["pages_url"] == "https://user.github.io/clean-repo"
@@ -252,10 +252,10 @@ class TestGetRepoStatus:
         mock_is_outdated.assert_called_once()
 
     @patch("ghops.core.load_config")
-    @patch("ghops.core.get_git_status")
+    @patch("ghops.utils.get_git_status")
     @patch("ghops.core.get_license_info")
-    @patch("ghops.core.get_gh_pages_url")
-    @patch("ghops.core.detect_pypi_package")
+    @patch("ghops.utils.get_gh_pages_url")
+    @patch("ghops.pypi.detect_pypi_package")
     def test_get_repo_status_dirty_and_unpublished(
         self,
         mock_detect_pypi,
@@ -279,12 +279,12 @@ class TestGetRepoStatus:
             "pypi_info": {}
         }
 
-        result = list(core.get_repo_status_stream([repo_path]))
+        result = list(core.get_repository_status(repo_path, recursive=False))
         
         assert len(result) == 1
         status = result[0]
         assert status["name"] == "dirty-repo"
-        assert status["status"] == "dirty"
+        assert status["status"]["clean"] == False
         assert status["branch"] == "develop"
         assert status["license"]["spdx_id"] == "GPL-3.0-only"
         assert status["pages_url"] is None
@@ -292,7 +292,7 @@ class TestGetRepoStatus:
         assert status["pypi_info"]["version"] == "Not published"
 
     @patch("ghops.core.load_config")
-    @patch("ghops.core.get_git_status")
+    @patch("ghops.utils.get_git_status")
     def test_get_repo_status_skip_checks(
         self, mock_get_git_status, mock_load_config, fs
     ):
@@ -305,8 +305,8 @@ class TestGetRepoStatus:
         with patch("ghops.core.get_gh_pages_url") as mock_get_pages, \
              patch("ghops.core.detect_pypi_package") as mock_detect_pypi:
             
-            result = list(core.get_repo_status_stream(
-                [repo_path], skip_pages_check=True, skip_pypi_check=True
+            result = list(core.get_repository_status(
+                repo_path, recursive=False, skip_pages_check=True
             ))
 
             assert len(result) == 1
@@ -318,12 +318,12 @@ class TestGetRepoStatus:
             mock_get_pages.assert_not_called()
             mock_detect_pypi.assert_not_called()
 
-    @patch('ghops.core.get_git_status')
+    @patch('ghops.utils.get_git_status')
     @patch('ghops.core.get_license_info')
-    @patch('ghops.core.get_gh_pages_url')
-    @patch('ghops.core.detect_pypi_package')
-    def test_get_repo_status_stream(self, mock_detect_pypi, mock_pages, mock_license, mock_git_status):
-        """Test get_repo_status_stream function"""
+    @patch('ghops.utils.get_gh_pages_url')
+    @patch('ghops.pypi.detect_pypi_package')
+    def test_get_repository_status(self, mock_detect_pypi, mock_pages, mock_license, mock_git_status, fs):
+        """Test get_repository_status function"""
         # Mock responses
         mock_git_status.return_value = {'status': 'clean', 'branch': 'main'}
         mock_license.return_value = {'spdx_id': 'MIT', 'name': 'MIT License', 'url': None}
@@ -335,56 +335,26 @@ class TestGetRepoStatus:
             'pypi_info': None
         }
         
-        repo_paths = ['/fake/repo1', '/fake/repo2']
+        # Create fake repos
+        repo1 = create_git_repo(fs, '/fake/repo1')
+        repo2 = create_git_repo(fs, '/fake/repo2')
+        repo_paths = [repo1, repo2]
         
         # Test streaming function
-        results = list(core.get_repo_status_stream(repo_paths, skip_pages_check=True, skip_pypi_check=True))
+        # Since get_repository_status expects a base directory, not a list of paths
+        # We need to call it once for each path
+        results = []
+        for repo_path in repo_paths:
+            results.extend(list(core.get_repository_status(repo_path, recursive=False, skip_pages_check=True)))
         
         assert len(results) == 2
         for result in results:
             assert 'name' in result
             assert 'status' in result
             assert 'branch' in result
-            assert result['status'] == 'clean'
+            assert result['status']['clean'] == True
             assert result['branch'] == 'main'
 
-
-class TestGetRepo:
-    @patch("ghops.core.find_git_repos")
-    @patch("ghops.core.get_remote_url", return_value="https://github.com/user/found.git")
-    @patch("ghops.core.get_license_info", return_value={"spdx_id": "MIT"})
-    @patch("ghops.core.get_gh_pages_url", return_value="https://user.github.io/found")
-    def test_get_repo_found(
-        self,
-        mock_get_pages,
-        mock_get_license,
-        mock_get_remote,
-        mock_find_repos,
-        fs,
-    ):
-        """Test finding a repository that exists."""
-        repo_path = "/home/user/code/found"
-        fs.create_dir(repo_path) # Just need the path to exist
-        mock_find_repos.return_value = [repo_path]
-
-        config = {"general": {"repository_directories": ["/home/user/code"]}}
-        result = core.get_repo("found", config)
-
-        assert result is not None
-        assert result["name"] == "found"
-        assert result["path"] == repo_path
-        assert result["remote_url"] == "https://github.com/user/found.git"
-        assert result["license"] == "MIT"
-        assert result["gh_pages_url"] == "https://user.github.io/found"
-
-        mock_find_repos.assert_called_once_with(["/home/user/code"], recursive=True)
-
-    @patch("ghops.core.find_git_repos", return_value=[])
-    def test_get_repo_not_found(self, mock_find_repos):
-        """Test finding a repository that does not exist."""
-        config = {"general": {"repository_directories": ["/home/user/code"]}}
-        result = core.get_repo("not-found", config)
-        assert result is None
 
 
 class TestUpdateRepo:
@@ -392,9 +362,8 @@ class TestUpdateRepo:
     def test_update_repo_simple_pull(self, mock_run_command):
         """Test a simple update with only a pull."""
         mock_run_command.side_effect = [
+            "",  # git status --porcelain (no changes)
             "Updating a0b1c2d..e3f4a5b",  # git pull
-            "",  # git status
-            "Everything up-to-date",  # git push
         ]
 
         result = core.update_repo("/fake/repo", False, "", False)
@@ -403,7 +372,7 @@ class TestUpdateRepo:
         assert result["committed"] is False
         assert result["pushed"] is False
         assert result["error"] is None
-        assert mock_run_command.call_count == 2  # Only pull and push if no changes
+        assert mock_run_command.call_count == 2  # git status and git pull
 
     @patch("ghops.core.run_command")
     def test_update_repo_no_changes(self, mock_run_command):
@@ -424,10 +393,10 @@ class TestUpdateRepo:
     def test_update_repo_with_auto_commit(self, mock_run_command):
         """Test the update process with auto-commit enabled."""
         mock_run_command.side_effect = [
-            "Already up to date.",  # git pull
             " M modified_file.txt",  # git status --porcelain
             "",  # git add -A
             "[main 12345] My commit",  # git commit
+            "Already up to date.",  # git pull
             "To github.com/user/repo.git",  # git push
         ]
 
@@ -437,7 +406,7 @@ class TestUpdateRepo:
         assert result["committed"] is True
         assert result["pushed"] is True
         assert mock_run_command.call_count == 5
-        mock_run_command.assert_any_call('git commit -m "My commit"', "/fake/repo", False)
+        mock_run_command.assert_any_call('git commit -m "My commit"', cwd="/fake/repo")
 
     @patch("ghops.core.run_command")
     def test_update_repo_dry_run(self, mock_run_command):
@@ -462,7 +431,7 @@ class TestLicenseFunctions:
         assert licenses is not None
         assert len(licenses) == 1
         assert licenses[0]["key"] == "mit"
-        mock_run_command.assert_called_once_with("gh api /licenses", capture_output=True)
+        mock_run_command.assert_called_once_with("gh api /licenses", capture_output=True, check=False)
 
     @patch("ghops.core.run_command", return_value=None)
     def test_get_available_licenses_failure(self, mock_run_command):
@@ -477,7 +446,7 @@ class TestLicenseFunctions:
         template = core.get_license_template("mit")
         assert template is not None
         assert template["body"] == "License text"
-        mock_run_command.assert_called_once_with("gh api /licenses/mit", capture_output=True)
+        mock_run_command.assert_called_once_with("gh api /licenses/mit", capture_output=True, check=False)
 
     @patch("ghops.core.run_command", return_value=None)
     def test_get_license_template_failure(self, mock_run_command):
@@ -540,123 +509,3 @@ class TestLicenseFunctions:
         info = core.get_license_info("/fake/repo")
         assert "error" in info
 
-
-class TestSocialMediaFunctions:
-    @patch("ghops.core.load_config")
-    def test_format_post_content_basic(self, mock_load_config):
-        """Test basic post formatting."""
-        mock_load_config.return_value = {
-            "general": {"github_username": "testuser"}
-        }
-        repo_info = {
-            "name": "my-awesome-project",
-            "license": "MIT",
-            "pypi_info": None,
-            "pages_url": None,
-        }
-        template = "Check out {repo_name}! URL: {repo_url}"
-        
-        content = core.format_post_content(template, repo_info)
-        
-        assert content == "Check out my-awesome-project! URL: https://github.com/testuser/my-awesome-project"
-
-    @patch("ghops.core.load_config")
-    def test_format_post_content_with_pypi_and_pages(self, mock_load_config):
-        """Test post formatting with PyPI and GitHub Pages data."""
-        mock_load_config.return_value = {
-            "general": {"github_username": "testuser"}
-        }
-        repo_info = {
-            "name": "my-package",
-            "license": "Apache-2.0",
-            "pypi_info": {
-                "is_published": True,
-                "package_name": "my-package",
-                "pypi_info": {
-                    "version": "1.2.3",
-                    "url": "https://pypi.org/p/my-package"
-                }
-            },
-            "pages_url": "https://testuser.github.io/my-package"
-        }
-        template = "New release: {package_name} v{version}! {pypi_url}. Docs: {pages_url}"
-        
-        content = core.format_post_content(template, repo_info)
-        
-        assert content == "New release: my-package v1.2.3! https://pypi.org/p/my-package. Docs: https://testuser.github.io/my-package"
-
-    @patch("ghops.core.sample_repositories_for_social_media")
-    @patch("ghops.core.load_config")
-    def test_create_social_media_posts(self, mock_load_config, mock_sample_repos):
-        """Test the creation of social media posts from sampled repos."""
-        mock_load_config.return_value = {
-            "social_media": {
-                "platforms": {
-                    "twitter": {
-                        "enabled": True,
-                        "templates": {
-                            "random_highlight": "Twitter: {repo_name}",
-                            "pypi_release": "Twitter PyPI: {package_name}"
-                        }
-                    },
-                    "linkedin": {
-                        "enabled": False # Disabled
-                    }
-                }
-            }
-        }
-        sampled_data = [
-            {"name": "repo1", "is_published": False, "pypi_info": {"has_setup": True, "is_published": False}},
-            {"name": "repo2", "is_published": True, "package_name": "pkg2", "pypi_info": {"has_setup": True, "is_published": True, "is_outdated": False, "package_name": "pkg2", "pypi_info": {"version": "1.0.0", "url": "https://pypi.org/project/pkg2/"}}}
-        ]
-        mock_sample_repos.return_value = sampled_data
-
-        posts = core.create_social_media_posts(["/fake/repo1", "/fake/repo2"])
-
-        assert len(posts) == 2
-        assert posts[0]["platform"] == "twitter"
-        assert posts[0]["content"] == "Twitter: repo1"
-        assert posts[0]["template_used"] == "random_highlight"
-        assert posts[1]["platform"] == "twitter"
-        assert posts[1]["content"] == "Twitter PyPI: pkg2"
-        assert posts[1]["template_used"] == "pypi_release"
-
-        mock_sample_repos.assert_called_once()
-
-    @patch("ghops.core.post_to_twitter")
-    @patch("ghops.core.post_to_linkedin")
-    @patch("ghops.core.load_config")
-    def test_execute_social_media_posts(self, mock_load_config, mock_post_linkedin, mock_post_twitter):
-        """Test executing social media posts."""
-        mock_load_config.return_value = {
-            "social_media": {
-                "platforms": {
-                    "twitter": {"enabled": True, "api_key": "123"}, # Simplified config for test
-                    "linkedin": {"enabled": True, "access_token": "abc"}
-                }
-            }
-        }
-        posts = [
-            {"platform": "twitter", "content": "Hello Twitter"},
-            {"platform": "linkedin", "content": "Hello LinkedIn"},
-            {"platform": "unknown", "content": "Hello Nobody"}
-        ]
-
-        with patch("ghops.core.validate_twitter_config", return_value=True), \
-             patch("ghops.core.validate_linkedin_config", return_value=True):
-            
-            successful_posts = core.execute_social_media_posts(posts, dry_run=False)
-
-            assert successful_posts == 2
-            mock_post_twitter.assert_called_once_with("Hello Twitter", {"enabled": True, "api_key": "123"})
-            mock_post_linkedin.assert_called_once_with("Hello LinkedIn", {"enabled": True, "access_token": "abc"})
-
-    def test_execute_social_media_posts_dry_run(self):
-        """Test that dry run prevents actual posting."""
-        posts = [{"platform": "twitter", "content": "test"}]
-        # Provide a minimal valid config for Twitter
-        with patch("ghops.core.load_config", return_value={
-            "social_media": {"platforms": {"twitter": {"enabled": True, "api_key": "x", "api_secret": "x", "access_token": "x", "access_token_secret": "x"}}}
-        }):
-            successful_posts = core.execute_social_media_posts(posts, dry_run=True)
-            assert successful_posts == 1

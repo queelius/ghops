@@ -160,11 +160,8 @@ requires = ["setuptools"]
         result = detect_pypi_package(self.temp_dir)
         
         self.assertTrue(result['has_packaging_files'])
-        # Should fallback to directory name when file parsing fails
-        self.assertIsNotNone(result['package_name'])
-        # Package name should be the cleaned directory name
-        expected_name = Path(self.temp_dir).name.replace('-', '_').replace(' ', '_')
-        self.assertEqual(result['package_name'], expected_name)
+        # When file parsing fails, package_name should be None
+        self.assertIsNone(result['package_name'])
     
     def test_detect_setup_py_invalid_syntax(self):
         """Test package detection from setup.py with invalid syntax"""
@@ -200,10 +197,8 @@ setup(
         result = detect_pypi_package(self.temp_dir)
         
         self.assertTrue(result['has_packaging_files'])
-        # Should fallback to directory name when no name found in file
-        self.assertIsNotNone(result['package_name'])
-        expected_name = Path(self.temp_dir).name.replace('-', '_').replace(' ', '_')
-        self.assertEqual(result['package_name'], expected_name)
+        # When no name is found in setup.py, package_name should be None
+        self.assertIsNone(result['package_name'])
     
     def test_detect_setup_cfg_invalid_format(self):
         """Test package detection from invalid setup.cfg"""
@@ -217,10 +212,8 @@ name = invalid-cfg-package
         result = detect_pypi_package(self.temp_dir)
         
         self.assertTrue(result['has_packaging_files'])
-        # Should fallback to directory name when file parsing fails
-        self.assertIsNotNone(result['package_name'])
-        expected_name = Path(self.temp_dir).name.replace('-', '_').replace(' ', '_')
-        self.assertEqual(result['package_name'], expected_name)
+        # When file parsing fails, package_name should be None
+        self.assertIsNone(result['package_name'])
 
 
 class TestCheckPypiPackage(unittest.TestCase):

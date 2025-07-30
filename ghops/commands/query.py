@@ -10,7 +10,7 @@ import json
 from typing import Optional
 
 from ..config import load_config
-from ..simple_query import SimpleQuery
+from ..query import Query
 from ..utils import find_git_repos_from_config
 from ..core import _get_repository_status_for_path
 from ..metadata import get_metadata_store
@@ -63,7 +63,7 @@ def query_handler(query_string: str, threshold: int, pretty: bool, full: bool,
         )
     
     config = load_config()
-    query = SimpleQuery(query_string)
+    query = Query(query_string)
     
     # Get all repositories
     repo_dirs = config.get("general", {}).get("repository_directories", [])

@@ -71,7 +71,10 @@ class TestConfigManagement(unittest.TestCase):
             'logging': {'level': 'DEBUG'}
         }
         
-        config_path = Path(self.temp_dir) / '.ghopsrc'
+        # Create .ghops directory
+        ghops_dir = Path(self.temp_dir) / '.ghops'
+        ghops_dir.mkdir(exist_ok=True)
+        config_path = ghops_dir / 'config.json'
         with open(config_path, 'w') as f:
             json.dump(config_data, f)
         
@@ -90,7 +93,10 @@ check_by_default = false
 level = "DEBUG"
 """
         
-        config_path = Path(self.temp_dir) / '.ghopsrc.toml'
+        # Create .ghops directory
+        ghops_dir = Path(self.temp_dir) / '.ghops'
+        ghops_dir.mkdir(exist_ok=True)
+        config_path = ghops_dir / 'config.toml'
         config_path.write_text(config_content)
         
         config = load_config()
@@ -123,7 +129,8 @@ level = "DEBUG"
         
         save_config(config_data)
         
-        config_path = Path(self.temp_dir) / '.ghopsrc'
+        # Check in .ghops directory
+        config_path = Path(self.temp_dir) / '.ghops' / 'config.json'
         self.assertTrue(config_path.exists())
         
         with open(config_path, 'r') as f:

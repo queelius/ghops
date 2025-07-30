@@ -14,7 +14,7 @@ import os
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Generator
 from datetime import datetime
-import yaml
+# yaml import moved to hugo_exporter.py
 
 from ..config import logger, load_config
 from ..repo_filter import get_filtered_repos, add_common_repo_options
@@ -70,7 +70,8 @@ def export_repositories(repos: List[str], format: str, template: str = None,
     if format == "markdown":
         yield from export_markdown(grouped, output_dir, single_file, template)
     elif format == "hugo":
-        yield from export_hugo(grouped, output_dir, template)
+        from ..hugo_exporter import export_hugo_with_templates
+        yield from export_hugo_with_templates(grouped, output_dir, template)
     elif format == "html":
         yield from export_html(grouped, output_dir, single_file, template)
     elif format == "json":
@@ -199,150 +200,7 @@ def generate_markdown_content(grouped: Dict[str, List[Dict]], template: str = No
     return "\n".join(lines)
 
 
-def export_hugo(grouped: Dict[str, List[Dict]], output_dir: str, 
-                template: str = None) -> Generator[Dict[str, Any], None, None]:
-    """Export repositories as Hugo content."""
-    output_path = Path(output_dir) if output_dir else Path("content/repositories")
-    output_path.mkdir(parents=True, exist_ok=True)
-    
-    # Create _index.md for the section
-    index_content = generate_hugo_index(grouped)
-    (output_path / "_index.md").write_text(index_content)
-    
-    # Create individual pages for each repository
-    for group_name, repos in grouped.items():
-        group_path = output_path / group_name.lower().replace(' ', '-')
-        group_path.mkdir(exist_ok=True)
-        
-        # Group index
-        group_index = generate_hugo_group_index(group_name, repos)
-        (group_path / "_index.md").write_text(group_index)
-        
-        # Individual repo pages
-        for repo in repos:
-            repo_slug = repo.get('name', 'unknown').lower().replace(' ', '-')
-            repo_file = group_path / f"{repo_slug}.md"
-            
-            content = generate_hugo_repo_page(repo, group_name)
-            repo_file.write_text(content)
-            
-            yield {
-                "status": "success",
-                "format": "hugo",
-                "file": str(repo_file),
-                "repository": repo.get('name'),
-                "group": group_name
-            }
-
-
-def generate_hugo_index(grouped: Dict[str, List[Dict]]) -> str:
-    """Generate Hugo section index page."""
-    total_repos = sum(len(repos) for repos in grouped.values())
-    
-    front_matter = {
-        "title": "Repository Portfolio",
-        "date": datetime.now().isoformat(),
-        "type": "repositories",
-        "layout": "list",
-        "summary": f"Portfolio of {total_repos} repositories",
-        "menu": {
-            "main": {
-                "name": "Repositories",
-                "weight": 10
-            }
-        }
-    }
-    
-    content = f"---\n{yaml.dump(front_matter, default_flow_style=False)}---\n\n"
-    content += "# Repository Portfolio\n\n"
-    content += f"This portfolio contains {total_repos} repositories organized by category.\n\n"
-    
-    # Statistics
-    content += "## Statistics\n\n"
-    
-    # Language distribution
-    lang_counts = {}
-    for repos in grouped.values():
-        for repo in repos:
-            lang = repo.get('language', 'Unknown')
-            lang_counts[lang] = lang_counts.get(lang, 0) + 1
-    
-    content += "### Languages\n\n"
-    for lang, count in sorted(lang_counts.items(), key=lambda x: x[1], reverse=True):
-        content += f"- {lang}: {count} repositories\n"
-    
-    return content
-
-
-def generate_hugo_group_index(group_name: str, repos: List[Dict]) -> str:
-    """Generate Hugo group index page."""
-    front_matter = {
-        "title": group_name.title(),
-        "date": datetime.now().isoformat(),
-        "type": "repositories",
-        "layout": "list",
-        "summary": f"{len(repos)} repositories in {group_name}"
-    }
-    
-    content = f"---\n{yaml.dump(front_matter, default_flow_style=False)}---\n\n"
-    content += f"# {group_name.title()}\n\n"
-    content += f"This section contains {len(repos)} repositories.\n\n"
-    
-    return content
-
-
-def generate_hugo_repo_page(repo: Dict, group_name: str) -> str:
-    """Generate Hugo page for individual repository."""
-    front_matter = {
-        "title": repo.get('name', 'Unknown'),
-        "date": repo.get('created_at', datetime.now().isoformat()),
-        "lastmod": repo.get('updated_at', datetime.now().isoformat()),
-        "type": "repository",
-        "layout": "single",
-        "summary": repo.get('description', 'No description available'),
-        "tags": repo.get('topics', []),
-        "categories": [group_name],
-        "params": {
-            "language": repo.get('language', 'Unknown'),
-            "stars": repo.get('stargazers_count', 0),
-            "forks": repo.get('forks_count', 0),
-            "license": repo.get('license', {}).get('key', 'none'),
-            "homepage": repo.get('homepage', ''),
-            "repository_url": repo.get('html_url', ''),
-            "owner": repo.get('owner', '')
-        }
-    }
-    
-    content = f"---\n{yaml.dump(front_matter, default_flow_style=False)}---\n\n"
-    
-    # Main content
-    content += f"# {repo.get('name', 'Unknown')}\n\n"
-    content += f"{repo.get('description', 'No description available')}\n\n"
-    
-    # Repository details
-    content += "## Details\n\n"
-    content += f"- **Language:** {repo.get('language', 'Unknown')}\n"
-    content += f"- **Stars:** {repo.get('stargazers_count', 0)}\n"
-    content += f"- **Forks:** {repo.get('forks_count', 0)}\n"
-    content += f"- **License:** {repo.get('license', {}).get('name', 'No license')}\n"
-    content += f"- **Created:** {repo.get('created_at', 'Unknown')}\n"
-    content += f"- **Last Updated:** {repo.get('updated_at', 'Unknown')}\n"
-    
-    # Links
-    content += "\n## Links\n\n"
-    if repo.get('homepage'):
-        content += f"- [Project Homepage]({repo['homepage']})\n"
-    if repo.get('html_url'):
-        content += f"- [GitHub Repository]({repo['html_url']})\n"
-    
-    # Topics
-    topics = repo.get('topics', [])
-    if topics:
-        content += "\n## Topics\n\n"
-        content += ", ".join(f"`{topic}`" for topic in topics)
-        content += "\n"
-    
-    return content
+# Old Hugo functions removed - now using template-based hugo_exporter.py
 
 
 def export_html(grouped: Dict[str, List[Dict]], output_dir: str,
@@ -898,18 +756,48 @@ def generate_latex_content(grouped: Dict[str, List[Dict]], template: str = None)
     return tex
 
 
-def apply_template(grouped: Dict[str, List[Dict]], template_path: str, format: str) -> str:
+def apply_template(grouped: Dict[str, List[Dict]], template_name_or_path: str, format: str) -> str:
     """Apply a custom template to the data."""
-    # TODO: Implement template engine (Jinja2, etc.)
-    # For now, return default content
-    if format == "markdown":
-        return generate_markdown_content(grouped)
-    elif format == "html":
-        return generate_html_content(grouped)
-    elif format == "latex":
-        return generate_latex_content(grouped)
-    else:
-        return ""
+    from ..templates import load_template, render_template
+    from datetime import datetime
+    
+    # Load the template
+    template_content = load_template(template_name_or_path, format)
+    if not template_content:
+        logger.warning(f"Template '{template_name_or_path}' not found, using default")
+        # Fall back to default
+        if format == "markdown":
+            return generate_markdown_content(grouped)
+        elif format == "html":
+            return generate_html_content(grouped)
+        elif format == "latex":
+            return generate_latex_content(grouped)
+        else:
+            return ""
+    
+    # Prepare data for template
+    data = {
+        "groups": grouped,
+        "generated_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "total_repos": sum(len(repos) for repos in grouped.values()),
+        "group_count": len(grouped),
+        "format": format
+    }
+    
+    # Render the template
+    try:
+        return render_template(template_content, data)
+    except Exception as e:
+        logger.error(f"Template rendering failed: {e}")
+        # Fall back to default
+        if format == "markdown":
+            return generate_markdown_content(grouped)
+        elif format == "html":
+            return generate_html_content(grouped)
+        elif format == "latex":
+            return generate_latex_content(grouped)
+        else:
+            return ""
 
 
 @click.group("export")
@@ -998,24 +886,81 @@ def templates(list_templates, show, create):
     template_dir.mkdir(exist_ok=True)
     
     if list_templates:
-        templates = list(template_dir.glob("*.template"))
+        from ..templates import list_templates as get_templates
+        templates = get_templates()
         if templates:
             print("Available templates:")
-            for template in templates:
-                print(f"  - {template.stem}")
+            print("\nBuilt-in templates:")
+            for t in templates:
+                if t["type"] == "builtin":
+                    print(f"  - {t['name']} ({t['description']})")
+            
+            saved = [t for t in templates if t["type"] == "saved"]
+            if saved:
+                print("\nSaved templates:")
+                for t in saved:
+                    print(f"  - {t['name']} ({t['description']})")
         else:
             print("No templates found.")
     
     elif show:
-        template_path = template_dir / f"{show}.template"
-        if template_path.exists():
-            print(template_path.read_text())
+        from ..templates import load_template
+        template_content = load_template(show, "")
+        if template_content:
+            print(template_content)
         else:
             print(f"Template '{show}' not found.")
     
     elif create:
-        # TODO: Implement template creation wizard
-        print(f"Template creation not yet implemented.")
+        # Template creation wizard
+        from ..templates import save_template, get_builtin_templates
+        
+        print(f"Creating new template: {create}")
+        print("\nChoose a format:")
+        formats = list(get_builtin_templates().keys())
+        for i, fmt in enumerate(formats, 1):
+            print(f"  {i}. {fmt}")
+        
+        choice = input("\nSelect format (number): ").strip()
+        try:
+            format_idx = int(choice) - 1
+            if 0 <= format_idx < len(formats):
+                selected_format = formats[format_idx]
+                
+                # Get the built-in template as a starting point
+                template_content = get_builtin_templates()[selected_format]
+                
+                print(f"\nStarting with {selected_format} template.")
+                print("Edit the template below (press Ctrl+D when done):\n")
+                print("-" * 60)
+                print(template_content)
+                print("-" * 60)
+                
+                print("\nWould you like to:")
+                print("  1. Use this template as-is")
+                print("  2. Create an empty template")
+                print("  3. Cancel")
+                
+                action = input("\nSelect action (1-3): ").strip()
+                
+                if action == "1":
+                    # Save the built-in template
+                    save_template(create, template_content)
+                    print(f"\nTemplate '{create}' saved successfully!")
+                elif action == "2":
+                    # Create empty template
+                    empty_template = """# {{ title }}\n\n{% for group_name, repos in groups.items() %}\n## {{ group_name }}\n{% endfor %}"""
+                    save_template(create, empty_template)
+                    print(f"\nEmpty template '{create}' saved successfully!")
+                    print("Edit the template file to customize it.")
+                else:
+                    print("Template creation cancelled.")
+            else:
+                print("Invalid selection.")
+        except ValueError:
+            print("Invalid input.")
+        except KeyboardInterrupt:
+            print("\nTemplate creation cancelled.")
     
     else:
         click.echo("Specify --list, --show, or --create")

@@ -15,10 +15,36 @@ from collections import defaultdict
 from ..config import load_config, save_config
 from ..render import render_catalog_table, render_catalog_list_table
 from ..utils import find_git_repos_from_config, is_git_repo
+from ..pypi import extract_pypi_tags
 from rich.console import Console
 from rich import box
 
 console = Console()
+
+
+def get_repository_tags(repo_path: str, repo_info: Dict[str, Any] = None) -> List[str]:
+    """
+    Get all tags for a repository (explicit and implicit).
+    
+    Args:
+        repo_path: Path to the repository
+        repo_info: Optional repository metadata (from status command)
+        
+    Returns:
+        Combined list of explicit and implicit tags
+    """
+    config = load_config()
+    
+    # Get explicit tags from config
+    explicit_tags = config.get("repository_tags", {}).get(repo_path, [])
+    
+    # Get implicit tags
+    implicit_tags = get_implicit_tags(repo_path, repo_info)
+    
+    # Combine and deduplicate
+    all_tags = list(set(explicit_tags + implicit_tags))
+    
+    return sorted(all_tags)
 
 
 def get_implicit_tags(repo_path: str, repo_info: Dict[str, Any] = None) -> List[str]:
@@ -95,6 +121,12 @@ def get_implicit_tags(repo_path: str, repo_info: Dict[str, Any] = None) -> List[
             docs_tool = repo_info.get("docs_tool")
             if docs_tool:
                 implicit_tags.append(f"tool:{docs_tool}")
+    
+    # Extract PyPI classifier tags if this is a Python package
+    if repo_info and repo_info.get("package"):
+        # Only extract if we have packaging files
+        pypi_tags = extract_pypi_tags(repo_path)
+        implicit_tags.extend(pypi_tags)
     
     return implicit_tags
 
@@ -530,9 +562,10 @@ def catalog_import_github(tag_filters, match_all, dry_run, pretty):
 @click.option("-d", "--dir", "directory", help="Tag all repos in this directory")
 @click.option("-f", "--filter", "tag_filters", multiple=True, help="Only tag repos matching these filters")
 @click.option("--all", "match_all", is_flag=True, help="Match all filters (default: match any)")
+@click.option("--sync-pypi", is_flag=True, help="Sync applicable tags to PyPI metadata")
 @click.option("--dry-run", is_flag=True, help="Preview changes without saving")
 @click.option("--pretty", is_flag=True, help="Display results in formatted output")
-def catalog_tag(new_tags, remove_tags, directory, tag_filters, match_all, dry_run, pretty):
+def catalog_tag(new_tags, remove_tags, directory, tag_filters, match_all, sync_pypi, dry_run, pretty):
     """
     Add or remove tags from repositories.
     
@@ -634,7 +667,8 @@ def catalog_tag(new_tags, remove_tags, directory, tag_filters, match_all, dry_ru
                 "new_tags": new_tag_list,
                 "added": list(set(new_tag_list) - set(current_tags)),
                 "removed": list(set(current_tags) - set(new_tag_list)),
-                "updated": True
+                "updated": True,
+                "pypi_sync": {}
             }
             
             if not dry_run:
@@ -646,6 +680,16 @@ def catalog_tag(new_tags, remove_tags, directory, tag_filters, match_all, dry_ru
                 # Update catalogs
                 from ..commands.get import update_catalogs
                 update_catalogs(config, repo_path, new_tag_list)
+                
+                # Sync to PyPI if requested
+                if sync_pypi:
+                    from ..pypi import sync_pypi_tags, find_packaging_files
+                    # Only sync if this is a Python package
+                    if find_packaging_files(repo_path):
+                        # Sync added tags to PyPI
+                        tags_to_sync = result["added"]
+                        sync_results = sync_pypi_tags(repo_path, tags_to_sync)
+                        result["pypi_sync"] = sync_results
             
             updated_count += 1
         else:
@@ -690,6 +734,21 @@ def catalog_tag(new_tags, remove_tags, directory, tag_filters, match_all, dry_ru
         # Show updated repos
         updated_results = [r for r in results if r.get("updated")]
         if updated_results and len(updated_results) <= 10:
+            console.print("\n[bold]Updated repositories:[/bold]")
+            for result in updated_results:
+                console.print(f"\n  {result['name']}:")
+                if result.get("added"):
+                    console.print(f"    [green]Added:[/green] {', '.join(result['added'])}")
+                if result.get("removed"):
+                    console.print(f"    [red]Removed:[/red] {', '.join(result['removed'])}")
+                if sync_pypi and result.get("pypi_sync"):
+                    synced = [tag for tag, success in result["pypi_sync"].items() if success]
+                    failed = [tag for tag, success in result["pypi_sync"].items() if not success]
+                    if synced:
+                        console.print(f"    [blue]Synced to PyPI:[/blue] {', '.join(synced)}")
+                    if failed:
+                        console.print(f"    [yellow]Failed to sync:[/yellow] {', '.join(failed)}")
+        elif updated_results:
             console.print("\n[bold]Updated repositories:[/bold]")
             for result in updated_results:
                 console.print(f"\n  {result['name']}:")

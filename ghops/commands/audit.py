@@ -94,7 +94,66 @@ def audit_license(repo_path: str, fix: bool = False, license_type: str = None,
             result["details"]["has_license"] = True
             result["details"]["license_files"] = [str(f.relative_to(repo_path_obj)) for f in license_files]
             
-            # TODO: Could check license content, year, etc.
+            # Check license content validity
+            license_path = license_files[0]
+            try:
+                content = license_path.read_text()
+                content_lower = content.lower()
+                
+                # Check for placeholder text
+                placeholders = ["[year]", "[fullname]", "[name]", "[email]", "[your name]", "[copyright holder]"]
+                found_placeholders = [p for p in placeholders if p in content_lower]
+                if found_placeholders:
+                    result["status"] = "fail"
+                    result["issues"].append(f"License contains unfilled placeholders: {', '.join(found_placeholders)}")
+                    result["details"]["placeholders"] = found_placeholders
+                
+                # Check copyright year
+                import re
+                current_year = datetime.now().year
+                year_pattern = r'copyright\s+(?:\(c\)\s+)?(\d{4})'
+                year_matches = re.findall(year_pattern, content_lower)
+                
+                if year_matches:
+                    years = [int(y) for y in year_matches]
+                    max_year = max(years)
+                    if max_year < current_year - 2:  # More than 2 years old
+                        result["issues"].append(f"License copyright year outdated ({max_year})")
+                        if result["status"] == "pass":
+                            result["status"] = "fail"
+                        result["details"]["copyright_year"] = max_year
+                        
+                        if fix:
+                            # Update copyright year
+                            if not dry_run:
+                                updated_content = re.sub(
+                                    r'(copyright\s+(?:\(c\)\s+)?)(\d{4})',
+                                    rf'\g<1>{current_year}',
+                                    content,
+                                    flags=re.IGNORECASE
+                                )
+                                license_path.write_text(updated_content)
+                                result["status"] = "fixed"
+                                result["fixes"].append(f"Updated copyright year to {current_year}")
+                            else:
+                                result["status"] = "fixed"
+                                result["fixes"].append(f"[DRY RUN] Would update copyright year to {current_year}")
+                else:
+                    # No copyright year found
+                    result["issues"].append("No copyright year found in license")
+                    if result["status"] == "pass":
+                        result["status"] = "fail"
+                
+                # Check license is recognized
+                known_licenses = ["mit", "apache", "gpl", "bsd", "isc", "mpl", "unlicense"]
+                if not any(lic in content_lower for lic in known_licenses):
+                    result["issues"].append("License type not recognized")
+                    if result["status"] == "pass":
+                        result["status"] = "fail"
+                
+            except Exception as e:
+                # If we can't read the license, don't fail the audit
+                pass
             
     except Exception as e:
         result["status"] = "error"
@@ -167,7 +226,49 @@ See LICENSE file for details.
             result["details"]["has_readme"] = True
             result["details"]["readme_files"] = [str(f.relative_to(repo_path_obj)) for f in readme_files]
             
-            # TODO: Could check README content quality
+            # Check README content quality
+            readme_path = readme_files[0]
+            try:
+                content = readme_path.read_text()
+                content_lower = content.lower()
+                
+                # Check for essential sections
+                essential_sections = {
+                    "description": ["## description", "## about", "## overview"],
+                    "installation": ["## installation", "## install", "## setup"],
+                    "usage": ["## usage", "## getting started", "## quick start"],
+                    "license": ["## license", "license"]
+                }
+                
+                missing_sections = []
+                for section, patterns in essential_sections.items():
+                    if not any(pattern in content_lower for pattern in patterns):
+                        missing_sections.append(section)
+                
+                if missing_sections:
+                    result["status"] = "fail"
+                    result["issues"].append(f"README missing sections: {', '.join(missing_sections)}")
+                    result["details"]["missing_sections"] = missing_sections
+                
+                # Check README length
+                lines = content.strip().split('\n')
+                non_empty_lines = [line for line in lines if line.strip()]
+                if len(non_empty_lines) < 10:
+                    result["status"] = "fail"
+                    result["issues"].append("README too short (less than 10 non-empty lines)")
+                    result["details"]["readme_lines"] = len(non_empty_lines)
+                
+                # Check for TODOs
+                if "todo" in content_lower:
+                    todo_count = content_lower.count("todo")
+                    result["issues"].append(f"README contains {todo_count} TODO(s)")
+                    if result["status"] == "pass":
+                        result["status"] = "fail"
+                    result["details"]["todos"] = todo_count
+                
+            except Exception as e:
+                # If we can't read the README, don't fail the audit
+                pass
             
     except Exception as e:
         result["status"] = "error"
@@ -322,8 +423,48 @@ def audit_deps(repo_path: str, fix: bool = False, dry_run: bool = False) -> Dict
                 result["status"] = "fail"
                 result["issues"].append("No lock file (package-lock.json or yarn.lock)")
         
-        # TODO: Actually check for outdated dependencies
-        # This would require running pip-compile, npm audit, etc.
+        # Check for dependency pinning in Python projects
+        if has_deps and result["details"].get("dependency_files"):
+            # Check requirements.txt for unpinned dependencies
+            req_txt = repo_path_obj / "requirements.txt"
+            if req_txt.exists():
+                try:
+                    content = req_txt.read_text()
+                    lines = [line.strip() for line in content.split('\n') if line.strip() and not line.startswith('#')]
+                    unpinned = []
+                    for line in lines:
+                        # Simple check for unpinned deps (no ==, >=, etc.)
+                        if not any(op in line for op in ['==', '>=', '<=', '>', '<', '~=']):
+                            if line and not line.startswith('-'):  # Not a pip option
+                                unpinned.append(line)
+                    
+                    if unpinned:
+                        result["issues"].append(f"Unpinned dependencies: {', '.join(unpinned[:3])}{' ...' if len(unpinned) > 3 else ''}")
+                        if result["status"] == "pass":
+                            result["status"] = "fail"
+                        result["details"]["unpinned_deps"] = unpinned
+                except Exception:
+                    pass
+            
+            # Check for security/dependency scanning files
+            security_files = [
+                ".github/dependabot.yml",
+                ".github/dependabot.yaml", 
+                "renovate.json",
+                ".snyk"
+            ]
+            
+            has_dep_scanning = False
+            for sec_file in security_files:
+                if (repo_path_obj / sec_file).exists():
+                    has_dep_scanning = True
+                    result["details"]["dependency_scanning"] = sec_file
+                    break
+            
+            if not has_dep_scanning and len(result["details"].get("dependency_files", [])) > 0:
+                result["issues"].append("No dependency vulnerability scanning configured")
+                if result["status"] == "pass":
+                    result["status"] = "fail"
         
         if not has_deps:
             # Check if this is a code project that should have deps
@@ -460,51 +601,205 @@ def audit_gitignore(repo_path: str, fix: bool = False, dry_run: bool = False) ->
             result["details"]["has_gitignore"] = False
             
             if fix:
-                # TODO: Detect language and add appropriate .gitignore
+                # Generate language-appropriate .gitignore
                 if not dry_run:
-                    # Basic .gitignore
-                    gitignore_content = """# OS files
-.DS_Store
-Thumbs.db
-
-# Editor files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# Dependencies
-node_modules/
-venv/
-env/
-__pycache__/
-*.pyc
-
-# Build artifacts
-dist/
-build/
-*.egg-info/
-
-# Logs
-*.log
-
-# Environment files
-.env
-.env.local
-"""
-                    gitignore_path.write_text(gitignore_content)
+                    from ..metadata import detect_languages
+                    from ..gitignore import generate_gitignore_content
                     
-                    result["status"] = "fixed"
-                    result["fixes"].append("Added basic .gitignore")
+                    # Detect languages in the repository
+                    try:
+                        languages = detect_languages(repo_path)
+                        gitignore_content = generate_gitignore_content(languages, repo_path)
+                        gitignore_path.write_text(gitignore_content)
+                        
+                        detected_langs = ", ".join(languages.keys()) if languages else "none"
+                        result["status"] = "fixed"
+                        result["fixes"].append(f"Added language-specific .gitignore (detected: {detected_langs})")
+                    except Exception as e:
+                        # Fallback to basic .gitignore if language detection fails
+                        from ..gitignore import generate_gitignore_content
+                        gitignore_content = generate_gitignore_content({}, repo_path)
+                        gitignore_path.write_text(gitignore_content)
+                        
+                        result["status"] = "fixed"
+                        result["fixes"].append("Added basic .gitignore (language detection failed)")
                 else:
-                    result["status"] = "fixed"
-                    result["fixes"].append("[DRY RUN] Would add basic .gitignore")
+                    # Dry run - show what languages would be detected
+                    try:
+                        from ..metadata import detect_languages
+                        languages = detect_languages(repo_path)
+                        detected_langs = ", ".join(languages.keys()) if languages else "none"
+                        result["status"] = "fixed"
+                        result["fixes"].append(f"[DRY RUN] Would add language-specific .gitignore (detected: {detected_langs})")
+                    except Exception:
+                        result["status"] = "fixed"
+                        result["fixes"].append("[DRY RUN] Would add basic .gitignore")
         else:
             result["details"]["has_gitignore"] = True
             
             # TODO: Could check .gitignore quality
             
+    except Exception as e:
+        result["status"] = "error"
+        result["error"] = str(e)
+        result["details"]["error_type"] = type(e).__name__
+        
+    return result
+
+
+def audit_ci(repo_path: str, fix: bool = False, dry_run: bool = False) -> Dict[str, Any]:
+    """
+    Audit a repository's CI/CD configuration.
+    """
+    repo_name = os.path.basename(repo_path)
+    result = {
+        "path": os.path.abspath(repo_path),
+        "name": repo_name,
+        "check": "ci",
+        "status": "pass",
+        "issues": [],
+        "fixes": [],
+        "details": {}
+    }
+    
+    try:
+        repo_path_obj = Path(repo_path)
+        
+        # Check for CI configuration files
+        ci_configs = {
+            "github_actions": [".github/workflows/*.yml", ".github/workflows/*.yaml"],
+            "travis": [".travis.yml"],
+            "circleci": [".circleci/config.yml"],
+            "gitlab": [".gitlab-ci.yml"],
+            "jenkins": ["Jenkinsfile"],
+            "azure": ["azure-pipelines.yml"],
+        }
+        
+        found_ci = []
+        for ci_type, patterns in ci_configs.items():
+            for pattern in patterns:
+                if "*" in pattern:
+                    # Handle glob patterns
+                    parts = pattern.split("/")
+                    if len(parts) > 1:
+                        dir_path = repo_path_obj
+                        for part in parts[:-1]:
+                            dir_path = dir_path / part
+                        if dir_path.exists():
+                            matches = list(dir_path.glob(parts[-1]))
+                            if matches:
+                                found_ci.append(ci_type)
+                                break
+                else:
+                    # Direct file check
+                    if (repo_path_obj / pattern).exists():
+                        found_ci.append(ci_type)
+                        break
+        
+        if found_ci:
+            result["details"]["ci_systems"] = found_ci
+            result["details"]["has_ci"] = True
+            
+            # Check GitHub Actions specifically
+            if "github_actions" in found_ci:
+                workflows_dir = repo_path_obj / ".github" / "workflows"
+                if workflows_dir.exists():
+                    workflow_files = list(workflows_dir.glob("*.yml")) + list(workflows_dir.glob("*.yaml"))
+                    result["details"]["workflow_count"] = len(workflow_files)
+                    
+                    # Check for common workflows
+                    workflow_names = [f.stem.lower() for f in workflow_files]
+                    if "test" not in str(workflow_names) and "ci" not in str(workflow_names):
+                        result["issues"].append("No test/CI workflow found")
+                        if result["status"] == "pass":
+                            result["status"] = "fail"
+        else:
+            # No CI found - check if it's needed
+            code_files = list(repo_path_obj.glob("**/*.py")) + list(repo_path_obj.glob("**/*.js"))
+            test_files = list(repo_path_obj.glob("**/test_*.py")) + list(repo_path_obj.glob("**/*.test.js"))
+            
+            if len(code_files) > 5 or len(test_files) > 0:
+                result["status"] = "fail"
+                result["issues"].append("No CI/CD configuration found")
+                result["details"]["has_ci"] = False
+                
+                if fix and len(test_files) > 0:
+                    # Create basic GitHub Actions workflow
+                    if not dry_run:
+                        workflow_dir = repo_path_obj / ".github" / "workflows"
+                        workflow_dir.mkdir(parents=True, exist_ok=True)
+                        
+                        # Detect language
+                        if list(repo_path_obj.glob("**/*.py")):
+                            workflow_content = """name: Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+    
+    - name: Run tests
+      run: |
+        python -m pytest
+"""
+                        elif list(repo_path_obj.glob("**/*.js")):
+                            workflow_content = """name: Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run tests
+      run: npm test
+"""
+                        else:
+                            workflow_content = None
+                        
+                        if workflow_content:
+                            workflow_path = workflow_dir / "tests.yml"
+                            workflow_path.write_text(workflow_content)
+                            result["status"] = "fixed"
+                            result["fixes"].append("Added basic GitHub Actions test workflow")
+                    else:
+                        result["status"] = "fixed"
+                        result["fixes"].append("[DRY RUN] Would add basic GitHub Actions test workflow")
+        
     except Exception as e:
         result["status"] = "error"
         result["error"] = str(e)
@@ -535,7 +830,8 @@ def audit_all(repo_path: str, fix: bool = False, license_type: str = None,
         "gitignore": audit_gitignore(repo_path, fix, dry_run),
         "security": audit_security(repo_path, fix, dry_run),
         "dependencies": audit_deps(repo_path, fix, dry_run),
-        "documentation": audit_docs(repo_path, fix, dry_run)
+        "documentation": audit_docs(repo_path, fix, dry_run),
+        "ci": audit_ci(repo_path, fix, dry_run)
     }
     
     # Aggregate status
@@ -586,6 +882,8 @@ def audit_repositories(check_type: str = "all", repos: List[str] = None,
             yield audit_deps(repo_path, fix, dry_run)
         elif check_type == "documentation":
             yield audit_docs(repo_path, fix, dry_run)
+        elif check_type == "ci":
+            yield audit_ci(repo_path, fix, dry_run)
 
 
 @click.group("audit")
@@ -816,7 +1114,7 @@ def all(ctx, dir, recursive, tag_filters, all_tags, query,
         print(f"   ⚠️  Errors: {total_errors}")
         
         # Detailed table
-        headers = ["Repository", "License", "README", "Gitignore", "Security", "Deps", "Docs", "Overall"]
+        headers = ["Repository", "License", "README", "Gitignore", "Security", "Deps", "Docs", "CI", "Overall"]
         rows = []
         
         for result in results:
@@ -838,6 +1136,7 @@ def all(ctx, dir, recursive, tag_filters, all_tags, query,
                 format_status(checks.get("security", {}).get("status", "-")),
                 format_status(checks.get("dependencies", {}).get("status", "-")),
                 format_status(checks.get("documentation", {}).get("status", "-")),
+                format_status(checks.get("ci", {}).get("status", "-")),
                 format_status(result["status"])
             ])
         
@@ -978,6 +1277,74 @@ def audit_deps_handler(dir, recursive, tag_filters, all_tags, query,
             ])
         
         render_table(headers, rows, title="Dependency Audit Results")
+    else:
+        # Stream JSONL output
+        for audit in audits:
+            print(json.dumps(audit, ensure_ascii=False), flush=True)
+
+
+@audit_cmd.command("ci")
+@add_common_repo_options
+@click.option("--fix", is_flag=True, help="Fix issues found")
+@click.option("--dry-run", is_flag=True, help="Show what would be done")
+@click.option("--pretty", is_flag=True, help="Display as formatted table")
+def audit_ci_handler(dir, recursive, tag_filters, all_tags, query,
+                    fix, dry_run, pretty):
+    """Audit repository CI/CD configuration."""
+    config = load_config()
+    
+    # Get filtered repositories
+    repos, filter_desc = get_filtered_repos(
+        dir=dir,
+        recursive=recursive,
+        tag_filters=tag_filters,
+        all_tags=all_tags,
+        query=query,
+        config=config
+    )
+    
+    if not repos:
+        error_msg = f"No repositories found"
+        if filter_desc:
+            error_msg += f" matching {filter_desc}"
+        logger.error(error_msg)
+        return
+    
+    # Run audits
+    audits = audit_repositories(
+        check_type="ci",
+        repos=repos,
+        fix=fix,
+        dry_run=dry_run
+    )
+    
+    if pretty:
+        # Collect and render as table
+        results = list(audits)
+        
+        # Prepare table data
+        headers = ["Repository", "Status", "Issues", "CI Systems"]
+        rows = []
+        
+        for result in results:
+            status_icon = {
+                "pass": "✓",
+                "fail": "✗",
+                "fixed": "🔧",
+                "error": "⚠️"
+            }.get(result["status"], "?")
+            
+            issues = ", ".join(result.get("issues", []))
+            ci_systems = ", ".join(result.get("details", {}).get("ci_systems", []))
+            
+            rows.append([
+                result["name"],
+                f"{status_icon} {result['status']}",
+                issues or "-",
+                ci_systems or "-"
+            ])
+        
+        render_table(headers, rows, title="CI/CD Audit Results")
     else:
         # Stream JSONL output
         for audit in audits:

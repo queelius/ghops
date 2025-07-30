@@ -297,6 +297,14 @@ def _get_repository_status_for_path(repo_path: str, skip_pages_check: bool = Fal
             if github_info:
                 repo_status["github"] = github_info
         
+        # Add tags (both explicit and implicit)
+        from .commands.catalog import get_implicit_tags, get_repository_tags
+        
+        # Get all tags for this repository
+        all_tags = get_repository_tags(repo_path, repo_info=repo_status)
+        if all_tags:
+            repo_status["tags"] = all_tags
+        
         yield repo_status
         
     except Exception as e:
@@ -590,6 +598,32 @@ def get_license_template(license_key):
     return None
 
 
+def get_license_info(repo_path):
+    """
+    Get license info from GitHub API for a repository.
+    
+    Args:
+        repo_path: Path to the repository
+        
+    Returns:
+        Dictionary with license info or error
+    """
+    try:
+        output = run_command("gh repo view --json licenseInfo", cwd=repo_path, capture_output=True)
+        if output:
+            import json
+            data = json.loads(output)
+            license_info = data.get("licenseInfo", {})
+            if license_info:
+                return {
+                    "spdx_id": license_info.get("spdxId"),
+                    "name": license_info.get("name")
+                }
+        return {"error": "No license information found"}
+    except Exception as e:
+        return {"error": str(e)}
+
+
 def add_license_to_repo(repo_path, license_key, author_name=None, author_email=None, 
                        year=None, force=False, dry_run=False):
     """
@@ -839,16 +873,23 @@ def execute_social_media_posts(posts, dry_run=False):
                 continue
                 
             try:
-                if platform_name == 'twitter':
-                    # TODO: Implement actual Twitter posting
-                    logger.info(f"Posted to Twitter: {content[:50]}...")
-                    successful_posts += 1
-                elif platform_name == 'linkedin':
-                    # TODO: Implement actual LinkedIn posting
-                    logger.info(f"Posted to LinkedIn: {content[:50]}...")
-                    successful_posts += 1
+                # Import posting functions from social module
+                from .social import PLATFORM_POSTERS
+                
+                # Get the appropriate posting function
+                poster_func = PLATFORM_POSTERS.get(platform_name)
+                
+                if poster_func:
+                    # Call the platform-specific posting function
+                    result = poster_func(content, platform_config, dry_run=False)
+                    
+                    if result['status'] == 'success':
+                        logger.info(f"Successfully posted to {platform_name}")
+                        successful_posts += 1
+                    else:
+                        logger.error(f"Failed to post to {platform_name}: {result.get('error', 'Unknown error')}")
                 else:
-                    logger.warning(f"Unknown platform: {platform_name}")
+                    logger.warning(f"No posting function available for {platform_name}")
             except Exception as e:
                 logger.error(f"Failed to post to {platform_name}: {e}")
     
