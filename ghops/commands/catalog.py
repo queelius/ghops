@@ -16,6 +16,7 @@ from ..config import load_config, save_config
 from ..render import render_catalog_table, render_catalog_list_table
 from ..utils import find_git_repos_from_config, is_git_repo
 from ..pypi import extract_pypi_tags
+from ..cli_utils import standard_command, add_common_options
 from rich.console import Console
 from rich import box
 
@@ -380,13 +381,15 @@ def catalog_cmd():
 @catalog_cmd.command("import-github")
 @click.option("-t", "--tag", "tag_filters", multiple=True, help="Only import for repos matching these tags")
 @click.option("--all", "match_all", is_flag=True, help="Match all tags (default: match any)")
-@click.option("--dry-run", is_flag=True, help="Preview changes without saving")
-@click.option("--pretty", is_flag=True, help="Display progress and results")
-def catalog_import_github(tag_filters, match_all, dry_run, pretty):
+@add_common_options('verbose', 'quiet', 'dry_run')
+@standard_command(streaming=True)
+def catalog_import_github(tag_filters, match_all, dry_run, quiet, progress, **kwargs):
     """
     Import GitHub metadata as tags for repositories.
     
     Fetches repository information from GitHub and adds tags like:
+    
+    \b
     - github:topic:security (from GitHub topics)
     - github:lang:python (primary language)
     - github:stars:100+ (star count buckets)
@@ -394,166 +397,174 @@ def catalog_import_github(tag_filters, match_all, dry_run, pretty):
     - github:archived:true (if archived)
     
     Examples:
+    
+    \b
         ghops catalog import-github  # Import for all repos
         ghops catalog import-github -t org:torvalds  # Only for specific org
         ghops catalog import-github --dry-run  # Preview changes
+        ghops catalog import-github -q  # Progress only, no JSON output
     """
     from ..tags import github_metadata_to_tags, merge_tags
     from ..utils import get_github_repo_info
-    # Cache imports removed
+    from ..exit_codes import NoReposFoundError, APIError, PartialSuccessError
     import time
     
     config = load_config()
     
     # Get repositories to process
+    progress("Discovering repositories...")
     repos = list(get_repositories_by_tags(tag_filters, config, match_all))
     
     if not repos:
-        if pretty:
-            console.print("[yellow]No repositories found to import GitHub metadata.[/yellow]")
-        else:
-            print(json.dumps({"error": "No repositories found"}), flush=True)
-        return
+        raise NoReposFoundError("No repositories found to import GitHub metadata")
     
     # Track changes
     updated_count = 0
     error_count = 0
-    results = []
+    skipped_count = 0
     
-    if pretty:
-        console.print(f"[bold]Importing GitHub metadata for {len(repos)} repositories...[/bold]\n")
+    progress(f"Found {len(repos)} repositories to process")
     
-    for repo in repos:
-        repo_path = repo["path"]
-        repo_name = repo["name"]
-        existing_tags = repo["tags"]
-        
-        result = {
-            "path": repo_path,
-            "name": repo_name,
-            "status": "pending"
-        }
-        
-        try:
-            # Get GitHub info from remote URL
-            remote_url = None
-            from ..utils import get_remote_url
-            remote_url = get_remote_url(repo_path)
+    # Use progress bar for processing
+    with progress.task(f"Importing GitHub metadata", total=len(repos)) as update:
+        for i, repo in enumerate(repos, 1):
+            repo_path = repo["path"]
+            repo_name = repo["name"]
+            existing_tags = repo["tags"]
             
-            if not remote_url or "github.com" not in remote_url:
-                result["status"] = "skipped"
-                result["reason"] = "Not a GitHub repository"
-                results.append(result)
-                continue
+            # Update progress
+            update(i, repo_name)
             
-            # Extract owner and repo name from URL
-            import re
-            match = re.search(r'github.com[:/]([^/]+)/([^/\.]+)', remote_url)
-            if not match:
-                result["status"] = "error"
-                result["error"] = "Could not parse GitHub URL"
-                error_count += 1
-                results.append(result)
-                continue
+            result = {
+                "path": repo_path,
+                "name": repo_name,
+                "status": "pending"
+            }
             
-            owner, repo = match.groups()
-            
-            # Fetch from GitHub API directly (cache removed)
-            if pretty:
-                console.print(f"Fetching metadata for {owner}/{repo}...")
-            
-            repo_data = get_github_repo_info(owner, repo)
-            
-            if not repo_data:
-                result["status"] = "error"
-                result["error"] = "Failed to fetch from GitHub API"
-                error_count += 1
-                results.append(result)
-                continue
-            
-            # Convert to tags with github: prefix
-            github_tags = []
-            for tag in github_metadata_to_tags(repo_data):
-                # Add github: prefix to distinguish from user tags
-                if ":" in tag:
-                    key, value = tag.split(":", 1)
-                    github_tags.append(f"github:{key}:{value}")
-                else:
-                    github_tags.append(f"github:{tag}")
-            
-            # Debug output
-            if dry_run and pretty:
-                console.print(f"[dim]Existing tags: {existing_tags}[/dim]")
-                console.print(f"[dim]GitHub tags: {github_tags}[/dim]")
-            
-            # Remove old github: tags and add new ones
-            # Keep only non-github tags from existing
-            non_github_tags = [t for t in existing_tags if not t.startswith("github:")]
-            
-            # Combine non-github tags with new github tags
-            new_tags = non_github_tags + github_tags
-            
-            # Check if anything changed
-            if set(new_tags) != set(existing_tags):
-                result["status"] = "updated"
-                result["old_tags"] = existing_tags
-                result["new_tags"] = new_tags
-                result["added_tags"] = list(set(new_tags) - set(existing_tags))
+            try:
+                # Get GitHub info from remote URL
+                remote_url = None
+                from ..utils import get_remote_url
+                remote_url = get_remote_url(repo_path)
                 
-                if not dry_run:
-                    # Update repository tags in config
-                    if "repository_tags" not in config:
-                        config["repository_tags"] = {}
-                    config["repository_tags"][repo_path] = new_tags
+                if not remote_url or "github.com" not in remote_url:
+                    result["status"] = "skipped"
+                    result["reason"] = "Not a GitHub repository"
+                    skipped_count += 1
+                    if not quiet:
+                        yield result
+                    continue
+                
+                # Extract owner and repo name from URL
+                import re
+                match = re.search(r'github.com[:/]([^/]+)/([^/\.]+)', remote_url)
+                if not match:
+                    result["status"] = "error"
+                    result["error"] = "Could not parse GitHub URL"
+                    error_count += 1
+                    if not quiet:
+                        yield result
+                    continue
+                
+                owner, repo = match.groups()
+                
+                # Fetch from GitHub API
+                repo_data = get_github_repo_info(owner, repo)
+                
+                if not repo_data:
+                    result["status"] = "error"
+                    result["error"] = "Failed to fetch from GitHub API"
+                    error_count += 1
+                    if not quiet:
+                        yield result
+                    continue
+                
+                # Convert to tags with github: prefix
+                github_tags = []
+                for tag in github_metadata_to_tags(repo_data):
+                    # Add github: prefix to distinguish from user tags
+                    if ":" in tag:
+                        key, value = tag.split(":", 1)
+                        github_tags.append(f"github:{key}:{value}")
+                    else:
+                        github_tags.append(f"github:{tag}")
+                
+                # Remove old github: tags and add new ones
+                # Keep only non-github tags from existing
+                non_github_tags = [t for t in existing_tags if not t.startswith("github:")]
+                
+                # Combine non-github tags with new github tags
+                new_tags = non_github_tags + github_tags
+                
+                # Check if anything changed
+                if set(new_tags) != set(existing_tags):
+                    result["status"] = "updated"
+                    result["old_tags"] = existing_tags
+                    result["new_tags"] = new_tags
+                    result["added_tags"] = list(set(new_tags) - set(existing_tags))
                     
-                    # Also update catalogs
-                    from ..commands.get import update_catalogs
-                    update_catalogs(config, repo_path, new_tags)
-                    
-                updated_count += 1
-            else:
-                result["status"] = "unchanged"
-            
-            results.append(result)
-            
-            # Be nice to GitHub API
-            time.sleep(0.1)
-            
-        except Exception as e:
-            result["status"] = "error"
-            result["error"] = str(e)
-            error_count += 1
-            results.append(result)
+                    if not dry_run:
+                        # Update repository tags in config
+                        if "repository_tags" not in config:
+                            config["repository_tags"] = {}
+                        config["repository_tags"][repo_path] = new_tags
+                        
+                        # Also update catalogs
+                        from ..commands.get import update_catalogs
+                        update_catalogs(config, repo_path, new_tags)
+                        
+                    updated_count += 1
+                else:
+                    result["status"] = "unchanged"
+                
+                # Yield result immediately for streaming
+                if not quiet:
+                    yield result
+                
+                # Be nice to GitHub API
+                time.sleep(0.1)
+                
+            except Exception as e:
+                result["status"] = "error"
+                result["error"] = str(e)
+                error_count += 1
+                if not quiet:
+                    yield result
+                progress.error(f"Error processing {repo_name}: {e}")
     
     # Save config if not dry run
     if not dry_run and updated_count > 0:
         save_config(config)
+        progress.success(f"Configuration saved with {updated_count} updates")
     
-    # Output results
-    if pretty:
-        # Show summary
-        console.print(f"\n[bold]Summary:[/bold]")
-        console.print(f"  Total repositories: {len(repos)}")
-        console.print(f"  [green]Updated: {updated_count}[/green]")
-        console.print(f"  Unchanged: {sum(1 for r in results if r['status'] == 'unchanged')}")
-        console.print(f"  Skipped: {sum(1 for r in results if r['status'] == 'skipped')}")
-        if error_count:
-            console.print(f"  [red]Errors: {error_count}[/red]")
-        
-        if dry_run:
-            console.print("\n[yellow]DRY RUN - no changes were saved[/yellow]")
-        
-        # Show updates
-        updated_results = [r for r in results if r["status"] == "updated"]
-        if updated_results:
-            console.print("\n[bold]Updated repositories:[/bold]")
-            for result in updated_results:
-                console.print(f"\n  {result['name']}:")
-                console.print(f"    [green]Added tags:[/green] {', '.join(result['added_tags'])}")
-    else:
-        # Output as JSONL
-        for result in results:
-            print(json.dumps(result, ensure_ascii=False), flush=True)
+    # Show summary
+    unchanged_count = len(repos) - updated_count - error_count - skipped_count
+    progress("")  # Empty line
+    progress("Summary:")
+    progress(f"  Total repositories: {len(repos)}")
+    if updated_count > 0:
+        progress.success(f"  Updated: {updated_count}")
+    if unchanged_count > 0:
+        progress(f"  Unchanged: {unchanged_count}")
+    if skipped_count > 0:
+        progress(f"  Skipped: {skipped_count}")
+    if error_count > 0:
+        progress.error(f"  Errors: {error_count}")
+    
+    if dry_run:
+        progress.warning("DRY RUN - no changes were saved")
+    
+    # Raise appropriate error if there were failures
+    if error_count > 0 and updated_count == 0:
+        # Complete failure
+        raise APIError(f"Failed to import GitHub metadata for all {error_count} repositories")
+    elif error_count > 0:
+        # Partial success
+        raise PartialSuccessError(
+            f"Imported metadata for {updated_count} repos, but {error_count} failed",
+            succeeded=updated_count,
+            failed=error_count
+        )
 
 
 @catalog_cmd.command("tag")
