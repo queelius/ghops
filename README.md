@@ -89,7 +89,8 @@ A powerful, local-first git project management system that helps developers mana
 - **Interactive HTML**: Generated HTML includes live search, filtering, and sorting
 - **Hugo Integration**: Create complete Hugo site structure with taxonomies
 - **Grouping & Organization**: Group exports by language, directory, or custom tags
-- **Template Support**: Customizable export templates for all formats
+- **Component-Based System**: Modular export components with customization hooks
+- **Format Flexibility**: Support for CSV, TSV, YAML output with field projection
 
 ### 📚 **Documentation Management**
 
@@ -166,6 +167,8 @@ ghops export generate -f hugo --group-by lang        # Export for Hugo site
 ghops export generate -f html -o ./portfolio         # Interactive HTML portfolio
 ghops export generate -q "stars > 5" -f pdf          # Export popular repos to PDF
 ghops export generate -t "dir:work" -f markdown      # Work portfolio in Markdown
+ghops export generate -f csv --fields name,language,stars  # CSV with specific fields
+ghops export generate -f yaml --include-readme       # YAML with README content
 
 # Metadata Management
 ghops metadata refresh --github                       # Update from GitHub
@@ -175,9 +178,12 @@ ghops metadata stats                                 # Repository statistics
 
 ### JSONL Output & Unix Pipelines
 
-All ghops commands output newline-delimited JSON (JSONL) by default, making them perfect for Unix pipelines:
+All ghops commands output newline-delimited JSON (JSONL) by default, making them perfect for Unix pipelines. You can also set the output format globally with the `GHOPS_FORMAT` environment variable:
 
 ```bash
+# Set default output format
+export GHOPS_FORMAT=csv  # or json, yaml, tsv
+
 # Find repositories with uncommitted changes
 ghops status | jq 'select(.status.uncommitted_changes == true)'
 

@@ -4,14 +4,14 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ghops"
-version = "0.6.1"
+version = "0.7.0"
 description = "A CLI tool for managing GitHub repos"
 readme = "README.md"
 license-files = [ "LICEN[CS]E.*",]
 requires-python = ">=3.7"
 keywords = [ "git", "github", "automation", "cli", "devops",]
 classifiers = [ "Development Status :: 4 - Beta", "Topic :: Software Development :: Version Control :: Git", "Operating System :: OS Independent", "Programming Language :: Python :: 3",]
-dependencies = [ "pathlib", "toml", "requests>=2.25.0", "packaging>=21.0", "click>=8.0.0", "rich>=13.0.0", "tweepy", "rapidfuzz", "jinja2>=3.0.0",]
+dependencies = [ "pathlib", "toml", "requests>=2.25.0", "packaging>=21.0", "click>=8.0.0", "rich>=13.0.0", "tweepy", "rapidfuzz", "pyyaml>=5.0.0",]
 [[project.authors]]
 name = "Alex Towell"
 email = "lex@metafunctor.com"
@@ -23,7 +23,7 @@ text = "MIT"
 test = [ "pytest>=6.0", "pytest-cov>=2.0", "coverage>=5.0",]
 dev = [ "pytest>=6.0", "pytest-cov>=2.0", "coverage>=5.0", "black>=21.0", "flake8>=3.9", "mypy>=0.812",]
 docs = [ "mkdocs>=1.4.0", "mkdocs-material>=9.0.0", "ghp-import>=2.1.0",]
-export = [ "jinja2>=3.0.0", "weasyprint>=54.0",]
+export = [ "weasyprint>=54.0",]
 
 [project.scripts]
 ghops = "ghops.cli:main"

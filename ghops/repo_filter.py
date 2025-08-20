@@ -111,12 +111,12 @@ def add_common_repo_options(func):
     - -r/--recursive: Recursive search
     - -t/--tag: Tag filters
     - --all-tags: Match all tags
-    - -q/--query: Query language
+    - --query: Query language
     """
     import click
     
     # Add options in reverse order (they get applied bottom-up)
-    func = click.option("-q", "--query", help="Filter with query language (e.g., 'lang:python and stars > 10')")(func)
+    func = click.option("--query", help="Filter with query language (e.g., 'lang:python and stars > 10')")(func)
     func = click.option("--all-tags", is_flag=True, help="Match all tags (default: match any)")(func)
     func = click.option("-t", "--tag", "tag_filters", multiple=True, help="Filter by tags (e.g., lang:python, dir:projects)")(func)
     func = click.option("-r", "--recursive", is_flag=True, help="Search recursively")(func)

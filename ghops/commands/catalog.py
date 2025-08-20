@@ -1165,3 +1165,162 @@ def catalog_purge(dry_run, yes, tag_filters, older_than, pretty):
             "removed": removed_count,
             "skipped": skipped_count
         }), flush=True)
+
+
+@catalog_cmd.command("explain")
+@click.argument('namespace', required=False)
+def catalog_explain(namespace):
+    """
+    Explain how tags are generated and used.
+    
+    Without arguments, shows general tag documentation.
+    With a namespace argument, shows details for that namespace.
+    
+    Examples:
+        ghops catalog explain
+        ghops catalog explain lang
+        ghops catalog explain status
+    """
+    TAG_NAMESPACE_DOCS = {
+        "lang": "Programming language detected in the repository",
+        "dir": "Parent directory of the repository", 
+        "repo": "Repository name",
+        "owner": "Repository owner (from remote URL)",
+        "host": "Git hosting platform (github, gitlab, etc.)",
+        "license": "License type of the repository",
+        "topic": "GitHub topics or similar platform topics",
+        "status": "Development status (from PyPI classifiers)",
+        "audience": "Intended audience (from PyPI classifiers)",
+        "environment": "Environment (from PyPI classifiers)",
+        "framework": "Framework used (from PyPI classifiers)",
+        "natural-language": "Natural language of documentation",
+        "os": "Operating system support",
+        "programming-language": "Programming language (from PyPI classifiers)",
+        "year": "Year of last update or creation",
+        "has": "Binary flags (readme, tests, docs, ci, etc.)",
+        "package": "Package manager or registry (pypi, npm, etc.)",
+        "org": "Organization tag (user-defined)",
+        "category": "Category tag (user-defined)",
+        "project": "Project grouping (user-defined)",
+        "client": "Client association (user-defined)",
+        "priority": "Priority level (user-defined)",
+        "github": "GitHub-specific metadata",
+    }
+    
+    if namespace:
+        # Show specific namespace documentation
+        if namespace in TAG_NAMESPACE_DOCS:
+            console.print(f"\n[bold]Namespace: {namespace}[/bold]")
+            console.print("=" * 50)
+            console.print(TAG_NAMESPACE_DOCS[namespace])
+            console.print("")
+            
+            # Add specific examples based on namespace
+            if namespace == "lang":
+                console.print("[bold]Common values:[/bold]")
+                console.print("  - lang:python")
+                console.print("  - lang:javascript") 
+                console.print("  - lang:rust")
+                console.print("  - lang:go")
+                console.print("\n[dim]Generated from: Primary language detection in repository files[/dim]")
+                
+            elif namespace == "status":
+                console.print("[bold]Possible values (from PyPI classifiers):[/bold]")
+                console.print("  - status:planning")
+                console.print("  - status:pre-alpha")
+                console.print("  - status:alpha")
+                console.print("  - status:beta")
+                console.print("  - status:production-stable")
+                console.print("  - status:mature")
+                console.print("  - status:inactive")
+                console.print("\n[dim]Generated from: setup.py or pyproject.toml classifiers[/dim]")
+                
+            elif namespace == "license":
+                console.print("[bold]Common values:[/bold]")
+                console.print("  - license:mit")
+                console.print("  - license:apache-2.0")
+                console.print("  - license:gpl-3.0")
+                console.print("  - license:bsd-3-clause")
+                console.print("\n[dim]Generated from: LICENSE file in repository[/dim]")
+                
+            elif namespace == "has":
+                console.print("[bold]Binary flags:[/bold]")
+                console.print("  - has:readme - Repository has a README file")
+                console.print("  - has:tests - Repository has a tests directory")
+                console.print("  - has:docs - Repository has documentation")
+                console.print("  - has:ci - Repository has CI configuration")
+                console.print("  - has:package - Repository is a package")
+                console.print("  - has:license - Repository has a license")
+                console.print("\n[dim]Generated from: File and directory detection[/dim]")
+                
+            elif namespace == "github":
+                console.print("[bold]GitHub metadata tags:[/bold]")
+                console.print("  - github:has:issues - Issues are enabled")
+                console.print("  - github:has:wiki - Wiki is enabled")
+                console.print("  - github:has:pages - GitHub Pages is enabled")
+                console.print("  - github:archived:true - Repository is archived")
+                console.print("  - github:fork:true - Repository is a fork")
+                console.print("  - github:language:* - Primary language from GitHub")
+                console.print("  - github:visibility:* - public/private visibility")
+                console.print("\n[dim]Generated from: GitHub API via 'catalog import-github'[/dim]")
+                
+        else:
+            console.print(f"\n[yellow]Namespace '{namespace}' not documented.[/yellow]")
+            console.print("\nThis might be a user-defined namespace.")
+            console.print("\n[bold]Known namespaces:[/bold]")
+            for ns in sorted(TAG_NAMESPACE_DOCS.keys()):
+                console.print(f"  - {ns}")
+    else:
+        # Show general documentation
+        console.print("\n[bold]Ghops Tag System[/bold]")
+        console.print("=" * 50)
+        console.print("""
+Tags are generated from multiple sources:
+
+[bold]1. Automatic Tags[/bold] (generated from repository analysis):
+   - [cyan]lang:*[/cyan] - Primary programming language
+   - [cyan]dir:*[/cyan] - Parent directory name
+   - [cyan]repo:*[/cyan] - Repository name
+   - [cyan]owner:*[/cyan] - Repository owner from git remote
+   - [cyan]host:*[/cyan] - Git hosting platform
+   - [cyan]year:*[/cyan] - Year of last modification
+   - [cyan]has:readme[/cyan], [cyan]has:tests[/cyan], [cyan]has:docs[/cyan] - Feature detection
+
+[bold]2. License Tags[/bold] (from LICENSE file):
+   - [cyan]license:mit[/cyan], [cyan]license:apache-2.0[/cyan], etc.
+
+[bold]3. PyPI Classifier Tags[/bold] (from setup.py/pyproject.toml):
+   - [cyan]status:*[/cyan] - Development status
+   - [cyan]audience:*[/cyan] - Intended audience  
+   - [cyan]environment:*[/cyan] - Environment
+   - [cyan]framework:*[/cyan] - Framework
+   - [cyan]natural-language:*[/cyan] - Natural language
+   - [cyan]os:*[/cyan] - Operating system
+   - [cyan]programming-language:*[/cyan] - Language version
+
+[bold]4. Platform Tags[/bold] (from GitHub/GitLab API):
+   - [cyan]topic:*[/cyan] - Topics/labels from the platform
+   - [cyan]github:*[/cyan] - GitHub-specific metadata
+
+[bold]5. User-Defined Tags[/bold] (from config or catalog):
+   - Custom tags without namespaces
+   - [cyan]org:*[/cyan], [cyan]category:*[/cyan], [cyan]project:*[/cyan] - Organization tags
+   - [cyan]client:*[/cyan], [cyan]priority:*[/cyan] - Custom namespaces
+""")
+        
+        console.print("\n[bold]Available Namespaces:[/bold]")
+        console.print("-" * 50)
+        for ns, doc in sorted(TAG_NAMESPACE_DOCS.items()):
+            console.print(f"  [cyan]{ns:20}[/cyan] - {doc}")
+        
+        console.print("\n[bold]Using Tags:[/bold]")
+        console.print("-" * 50)
+        console.print("  Filter by tags:     [dim]ghops list --tag lang:python[/dim]")
+        console.print("  Multiple tags:      [dim]ghops list --tag lang:python --tag license:mit[/dim]")
+        console.print("  Exclude tags:       [dim]ghops list --tag '!status:inactive'[/dim]")
+        console.print("  Wildcard matching:  [dim]ghops list --tag 'topic:web*'[/dim]")
+        console.print("  Query language:     [dim]ghops list --query \"'python' in tags\"[/dim]")
+        console.print("  Catalog commands:   [dim]ghops catalog show -t lang:python[/dim]")
+        
+        console.print("\n[dim]For details on a specific namespace:[/dim]")
+        console.print("  ghops catalog explain <namespace>")

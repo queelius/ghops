@@ -12,6 +12,7 @@ from .exit_codes import (
     SUCCESS, GENERAL_ERROR, USAGE_ERROR, INTERRUPTED,
     get_exit_code_for_exception, CommandError
 )
+from .format_utils import format_output, get_format_from_env
 
 
 def standard_command(streaming: bool = False):
@@ -34,6 +35,13 @@ def standard_command(streaming: bool = False):
             # Extract flags
             verbose = kwargs.get('verbose', False)
             quiet = kwargs.get('quiet', False)
+            output_format = kwargs.get('format', None)
+            fields_str = kwargs.get('fields', None)
+            fields = fields_str.split(',') if fields_str else None
+            
+            # Get format from env if not specified
+            if output_format is None:
+                output_format = get_format_from_env('jsonl')
             
             # Initialize progress reporter
             progress = get_progress(enabled=verbose or None)
@@ -54,17 +62,33 @@ def standard_command(streaming: bool = False):
                 elif result is None:
                     # Command handles its own output
                     pass
+                elif output_format == 'table':
+                    # Let the command handle table output itself
+                    # This is for backwards compatibility
+                    pass
+                elif output_format in ('hugo', 'pdf', 'latex'):
+                    # File generation formats - pass through status messages as-is
+                    if isinstance(result, Generator):
+                        for item in result:
+                            if isinstance(item, dict):
+                                print(json.dumps(item, ensure_ascii=False), flush=True)
+                    elif result is not None:
+                        print(json.dumps(result, ensure_ascii=False), flush=True)
                 elif isinstance(result, Generator):
-                    # Stream results as JSONL
-                    for item in result:
-                        print(json.dumps(item, ensure_ascii=False), flush=True)
+                    # Format and stream results
+                    formatted = format_output(result, output_format, fields)
+                    for line in formatted:
+                        print(line, flush=True)
                 elif isinstance(result, (list, tuple)):
-                    # Output each item as JSONL
-                    for item in result:
-                        print(json.dumps(item, ensure_ascii=False), flush=True)
+                    # Convert to generator and format
+                    formatted = format_output(iter(result), output_format, fields)
+                    for line in formatted:
+                        print(line, flush=True)
                 elif isinstance(result, dict):
-                    # Single JSON object
-                    print(json.dumps(result, ensure_ascii=False), flush=True)
+                    # Single item - wrap in list for formatting
+                    formatted = format_output([result], output_format, fields)
+                    for line in formatted:
+                        print(line, flush=True)
                 else:
                     # Raw output (for backwards compatibility)
                     print(result, flush=True)
@@ -154,8 +178,11 @@ common_options = {
                            help='Preview changes without saving'),
     'limit': click.option('--limit', type=int, 
                          help='Limit number of items to process'),
-    'output_format': click.option('--format', type=click.Choice(['json', 'jsonl', 'csv']),
-                                 default='jsonl', help='Output format'),
+    'format': click.option('-f', '--format', 
+                         type=click.Choice(['json', 'jsonl', 'csv', 'tsv', 'yaml']),
+                         help='Output format (default: jsonl, or from GHOPS_FORMAT env)'),
+    'fields': click.option('--fields',
+                         help='Comma-separated list of fields to include (for CSV/TSV)'),
 }
 
 

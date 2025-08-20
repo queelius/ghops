@@ -4,7 +4,7 @@ Export command for generating structured content from repositories.
 This command follows our design principles:
 - Default output is JSONL streaming
 - Multiple export formats supported
-- Template-based for customization
+- Component-based for customization
 - Tag-aware for hierarchical exports
 """
 
@@ -14,29 +14,34 @@ import os
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Generator
 from datetime import datetime
-# yaml import moved to hugo_exporter.py
+# yaml import for Hugo export
 
 from ..config import logger, load_config
 from ..repo_filter import get_filtered_repos, add_common_repo_options
 from ..metadata import get_metadata_store
 from ..render import render_table
 from ..commands.catalog import get_repositories_by_tags
+from ..cli_utils import standard_command, add_common_options
+from ..exit_codes import NoReposFoundError
 
 
-def export_repositories(repos: List[str], format: str, template: str = None,
+def export_repositories(repos: List[str], format: str,
                        output_dir: str = None, single_file: bool = False,
-                       include_metadata: bool = True, group_by: str = None) -> Generator[Dict[str, Any], None, None]:
+                       include_metadata: bool = True, group_by: str = None,
+                       include_readme: bool = False, readme_length: int = 500,
+                       components: str = None, sort_by: str = 'stars',
+                       progress_callback=None) -> Generator[Dict[str, Any], None, None]:
     """
     Export repositories in various formats.
     
     Args:
         repos: List of repository paths
         format: Output format (markdown, hugo, html, json, csv, pdf, latex)
-        template: Template name or path
         output_dir: Output directory
         single_file: Export to single file vs multiple files
         include_metadata: Include full metadata in export
         group_by: Group repositories by tag prefix (e.g., "dir", "lang")
+        progress_callback: Optional callback for progress updates
         
     Yields:
         Export status dictionaries
@@ -44,44 +49,80 @@ def export_repositories(repos: List[str], format: str, template: str = None,
     store = get_metadata_store()
     config = load_config()
     
-    # Collect metadata for all repos
+    # Collect metadata for all repos with progress
     repo_data = []
-    for repo_path in repos:
+    if progress_callback:
+        progress_callback("Collecting repository metadata...")
+    
+    # Get all catalog repos once and create a lookup
+    catalog_lookup = {}
+    try:
+        if progress_callback:
+            progress_callback("Loading repository tags...")
+        catalog_repos = list(get_repositories_by_tags(["repo:*"], config))
+        for catalog_repo in catalog_repos:
+            catalog_lookup[catalog_repo['path']] = catalog_repo.get('tags', [])
+    except Exception:
+        # If catalog fails, just continue without tags
+        pass
+    
+    if progress_callback:
+        progress_callback(f"Processing {len(repos)} repositories...")
+    
+    for i, repo_path in enumerate(repos, 1):
         metadata = store.get(repo_path)
-        if metadata:
-            # Get tags for this repo
-            repo_tags = []
-            catalog_repos = list(get_repositories_by_tags(["repo:*"], config))
-            for catalog_repo in catalog_repos:
-                if catalog_repo['path'] == repo_path:
-                    repo_tags = catalog_repo.get('tags', [])
-                    break
-            
-            metadata['_tags'] = repo_tags
-            repo_data.append(metadata)
+        if not metadata:
+            # If no metadata in store, create basic metadata
+            import os
+            metadata = {
+                'path': repo_path,
+                'name': os.path.basename(repo_path),
+                'description': '',
+                'language': 'Unknown',
+                'stargazers_count': 0,
+                'license': None,
+                'topics': [],
+                'homepage': '',
+                'html_url': ''
+            }
+        
+        # Look up tags from pre-built lookup
+        repo_tags = catalog_lookup.get(repo_path, [])
+        metadata['_tags'] = repo_tags
+        repo_data.append(metadata)
+        
+        # Show progress every 10 repos for large collections
+        if progress_callback and i % 10 == 0:
+            progress_callback(f"Processed {i}/{len(repos)} repositories...")
     
     # Group repositories if requested
     if group_by:
+        if progress_callback:
+            progress_callback(f"Grouping repositories by {group_by}...")
         grouped = group_repositories_by_tag(repo_data, group_by)
+        if progress_callback:
+            progress_callback(f"Created {len(grouped)} groups")
     else:
         grouped = {"all": repo_data}
     
     # Export based on format
     if format == "markdown":
-        yield from export_markdown(grouped, output_dir, single_file, template)
+        yield from export_markdown(grouped, output_dir, single_file, 
+                                  include_readme, readme_length, components, sort_by,
+                                  progress_callback)
     elif format == "hugo":
-        from ..hugo_exporter import export_hugo_with_templates
-        yield from export_hugo_with_templates(grouped, output_dir, template)
+        from ..hugo_export import export_hugo
+        yield from export_hugo(grouped, output_dir, single_file, include_readme, progress_callback)
     elif format == "html":
-        yield from export_html(grouped, output_dir, single_file, template)
+        yield from export_html(grouped, output_dir, single_file, progress_callback)
     elif format == "json":
-        yield from export_json(grouped, output_dir, single_file)
+        yield from export_json(grouped, output_dir, single_file, progress_callback)
     elif format == "csv":
-        yield from export_csv(grouped, output_dir, single_file)
+        yield from export_csv(grouped, output_dir, single_file, progress_callback)
     elif format == "pdf":
-        yield from export_pdf(grouped, output_dir, single_file, template)
+        yield from export_pdf(grouped, output_dir, single_file, progress_callback)
     elif format == "latex":
-        yield from export_latex(grouped, output_dir, single_file, template)
+        yield from export_latex(grouped, output_dir, single_file, progress_callback)
     else:
         yield {
             "status": "error",
@@ -111,7 +152,10 @@ def group_repositories_by_tag(repos: List[Dict], tag_prefix: str) -> Dict[str, L
 
 
 def export_markdown(grouped: Dict[str, List[Dict]], output_dir: str, 
-                   single_file: bool, template: str = None) -> Generator[Dict[str, Any], None, None]:
+                   single_file: bool, 
+                   include_readme: bool = False, readme_length: int = 500,
+                   components: str = None, sort_by: str = 'stars',
+                   progress_callback=None) -> Generator[Dict[str, Any], None, None]:
     """Export repositories as Markdown files."""
     output_path = Path(output_dir) if output_dir else Path(".")
     output_path.mkdir(exist_ok=True)
@@ -119,7 +163,7 @@ def export_markdown(grouped: Dict[str, List[Dict]], output_dir: str,
     if single_file:
         # Single markdown file
         output_file = output_path / "repositories.md"
-        content = generate_markdown_content(grouped, template)
+        content = generate_markdown_content(grouped, include_readme, readme_length, components, sort_by)
         
         output_file.write_text(content)
         yield {
@@ -132,7 +176,7 @@ def export_markdown(grouped: Dict[str, List[Dict]], output_dir: str,
         # Multiple files (one per group)
         for group_name, repos in grouped.items():
             output_file = output_path / f"{group_name}.md"
-            content = generate_markdown_content({group_name: repos}, template)
+            content = generate_markdown_content({group_name: repos}, include_readme, readme_length, components, sort_by)
             
             output_file.write_text(content)
             yield {
@@ -144,74 +188,70 @@ def export_markdown(grouped: Dict[str, List[Dict]], output_dir: str,
             }
 
 
-def generate_markdown_content(grouped: Dict[str, List[Dict]], template: str = None) -> str:
+def generate_markdown_content(grouped: Dict[str, List[Dict]],
+                            include_readme: bool = False, readme_length: int = 500,
+                            components: str = None, sort_by: str = 'stars') -> str:
     """Generate Markdown content for repositories."""
-    if template:
-        # Load custom template
-        return apply_template(grouped, template, "markdown")
     
-    # Default markdown template
-    lines = ["# Repository Portfolio", ""]
-    lines.append(f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    lines.append("")
+    from ..export_components import ExportContext, ExportFormat, ExportComposer, default_registry
+    # Import components to register them - must be done after export_components is loaded
+    from ..export_components_impl import (
+        HeaderComponent, SummaryStatisticsComponent, 
+        TagCloudComponent, RepositoryCardsComponent,
+        ReadmeContentComponent
+    )
     
-    # Table of contents
-    if len(grouped) > 1:
-        lines.append("## Table of Contents")
-        lines.append("")
-        for group_name in sorted(grouped.keys()):
-            lines.append(f"- [{group_name}](#{group_name.lower().replace(' ', '-')})")
-        lines.append("")
+    # Flatten grouped repos for component system
+    all_repos = []
+    for repos in grouped.values():
+        all_repos.extend(repos)
     
-    # Repository sections
-    for group_name, repos in sorted(grouped.items()):
-        if len(grouped) > 1:
-            lines.append(f"## {group_name}")
-            lines.append("")
-        
-        for repo in sorted(repos, key=lambda r: r.get('name', '')):
-            lines.append(f"### {repo.get('name', 'Unknown')}")
-            lines.append("")
-            
-            # Description
-            desc = repo.get('description', 'No description available')
-            lines.append(f"*{desc}*")
-            lines.append("")
-            
-            # Key info
-            lines.append("**Details:**")
-            lines.append(f"- Language: {repo.get('language', 'Unknown')}")
-            lines.append(f"- Stars: {repo.get('stargazers_count', 0)}")
-            lines.append(f"- License: {repo.get('license', {}).get('name', 'No license')}")
-            
-            # Links
-            if repo.get('homepage'):
-                lines.append(f"- Homepage: [{repo['homepage']}]({repo['homepage']})")
-            if repo.get('html_url'):
-                lines.append(f"- Repository: [{repo['html_url']}]({repo['html_url']})")
-            
-            # Topics/Tags
-            topics = repo.get('topics', [])
-            if topics:
-                lines.append(f"- Topics: {', '.join(topics)}")
-            
-            lines.append("")
+    # Create context
+    context = ExportContext(
+        format=ExportFormat.MARKDOWN,
+        repositories=all_repos,
+        config={
+            'title': 'Repository Portfolio',
+            'group_by': None if len(grouped) == 1 else 'group',
+            'show_details': True,
+            'sort_by': sort_by,
+            'include_readme': include_readme,
+            'readme_length': readme_length
+        }
+    )
     
-    return "\n".join(lines)
+    # Create composer with default or specified components
+    composer = ExportComposer(default_registry)
+    
+    if components:
+        # Use specified components
+        component_list = [c.strip() for c in components.split(',')]
+        for i, comp_name in enumerate(component_list):
+            composer.add_component(comp_name, priority=(i + 1) * 10)
+    else:
+        # Use default components
+        composer.add_component('header', priority=10)
+        composer.add_component('summary_stats', priority=20)
+        composer.add_component('tag_cloud', priority=30)
+        composer.add_component('repository_cards', priority=40)
+        if include_readme:
+            composer.add_component('readme_content', priority=50)
+    
+    return composer.compose(context)
 
 
-# Old Hugo functions removed - now using template-based hugo_exporter.py
+# Hugo export needs to be reimplemented with components
 
 
 def export_html(grouped: Dict[str, List[Dict]], output_dir: str,
-                single_file: bool, template: str = None) -> Generator[Dict[str, Any], None, None]:
+                single_file: bool, progress_callback=None) -> Generator[Dict[str, Any], None, None]:
     """Export repositories as HTML files."""
     output_path = Path(output_dir) if output_dir else Path(".")
     output_path.mkdir(exist_ok=True)
     
     if single_file:
         output_file = output_path / "repositories.html"
-        content = generate_html_content(grouped, template)
+        content = generate_html_content(grouped)
         
         output_file.write_text(content)
         yield {
@@ -236,7 +276,7 @@ def export_html(grouped: Dict[str, List[Dict]], output_dir: str,
         # Create group pages
         for group_name, repos in grouped.items():
             group_file = output_path / f"{group_name.lower().replace(' ', '-')}.html"
-            content = generate_html_content({group_name: repos}, template)
+            content = generate_html_content({group_name: repos})
             
             group_file.write_text(content)
             yield {
@@ -248,12 +288,60 @@ def export_html(grouped: Dict[str, List[Dict]], output_dir: str,
             }
 
 
-def generate_html_content(grouped: Dict[str, List[Dict]], template: str = None) -> str:
+def generate_html_content(grouped: Dict[str, List[Dict]],
+                         include_readme: bool = False, readme_length: int = 500,
+                         components: str = None, sort_by: str = 'stars') -> str:
     """Generate HTML content for repositories."""
-    if template:
-        return apply_template(grouped, template, "html")
     
-    # Default HTML template with interactive features
+    from ..export_components import ExportContext, ExportFormat, ExportComposer, default_registry
+    # Import components to register them - must be done after export_components is loaded
+    from ..export_components_impl import (
+        HeaderComponent, SummaryStatisticsComponent, 
+        TagCloudComponent, RepositoryCardsComponent,
+        ReadmeContentComponent
+    )
+    
+    # Flatten grouped repos for component system
+    all_repos = []
+    for repos in grouped.values():
+        all_repos.extend(repos)
+    
+    # Create context
+    context = ExportContext(
+        format=ExportFormat.HTML,
+        repositories=all_repos,
+        config={
+            'title': 'Repository Portfolio',
+            'group_by': None if len(grouped) == 1 else 'group',
+            'show_details': True,
+            'sort_by': sort_by,
+            'include_readme': include_readme,
+            'readme_length': readme_length
+        }
+    )
+    
+    # Create composer with default or specified components
+    composer = ExportComposer(default_registry)
+    
+    if components:
+        # Use specified components
+        component_list = [c.strip() for c in components.split(',')]
+        for i, comp_name in enumerate(component_list):
+            composer.add_component(comp_name, priority=(i + 1) * 10)
+    else:
+        # Use default components
+        composer.add_component('header', priority=10)
+        composer.add_component('summary_stats', priority=20)
+        composer.add_component('tag_cloud', priority=30)
+        composer.add_component('repository_cards', priority=40)
+        if include_readme:
+            composer.add_component('readme_content', priority=50)
+    
+    # Generate component HTML
+    component_html = composer.compose(context)
+    
+    # Wrap in HTML document with styling
+    # Default HTML with interactive features
     html = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -390,7 +478,7 @@ def generate_html_content(grouped: Dict[str, List[Dict]], template: str = None) 
                     <span>⭐</span> {repo.get('stargazers_count', 0)}
                 </div>
                 <div class="repo-meta-item">
-                    <span>📄</span> {repo.get('license', {}).get('spdx_id', 'No license')}
+                    <span>📄</span> {(repo.get('license') or {}).get('spdx_id', 'No license')}
                 </div>
             </div>
             <div style="margin-top: 10px;">
@@ -525,7 +613,7 @@ def generate_html_index(grouped: Dict[str, List[Dict]]) -> str:
 
 
 def export_json(grouped: Dict[str, List[Dict]], output_dir: str,
-                single_file: bool) -> Generator[Dict[str, Any], None, None]:
+                single_file: bool, progress_callback=None) -> Generator[Dict[str, Any], None, None]:
     """Export repositories as JSON."""
     output_path = Path(output_dir) if output_dir else Path(".")
     output_path.mkdir(exist_ok=True)
@@ -571,7 +659,7 @@ def export_json(grouped: Dict[str, List[Dict]], output_dir: str,
 
 
 def export_csv(grouped: Dict[str, List[Dict]], output_dir: str,
-               single_file: bool) -> Generator[Dict[str, Any], None, None]:
+               single_file: bool, progress_callback=None) -> Generator[Dict[str, Any], None, None]:
     """Export repositories as CSV."""
     import csv
     
@@ -597,7 +685,7 @@ def export_csv(grouped: Dict[str, List[Dict]], output_dir: str,
                         'language': repo.get('language', ''),
                         'stars': repo.get('stargazers_count', 0),
                         'forks': repo.get('forks_count', 0),
-                        'license': repo.get('license', {}).get('name', ''),
+                        'license': (repo.get('license') or {}).get('name', ''),
                         'created_at': repo.get('created_at', ''),
                         'updated_at': repo.get('updated_at', ''),
                         'homepage': repo.get('homepage', ''),
@@ -628,7 +716,7 @@ def export_csv(grouped: Dict[str, List[Dict]], output_dir: str,
                         'language': repo.get('language', ''),
                         'stars': repo.get('stargazers_count', 0),
                         'forks': repo.get('forks_count', 0),
-                        'license': repo.get('license', {}).get('name', ''),
+                        'license': (repo.get('license') or {}).get('name', ''),
                         'created_at': repo.get('created_at', ''),
                         'updated_at': repo.get('updated_at', ''),
                         'homepage': repo.get('homepage', ''),
@@ -647,10 +735,10 @@ def export_csv(grouped: Dict[str, List[Dict]], output_dir: str,
 
 
 def export_pdf(grouped: Dict[str, List[Dict]], output_dir: str,
-               single_file: bool, template: str = None) -> Generator[Dict[str, Any], None, None]:
+               single_file: bool, progress_callback=None) -> Generator[Dict[str, Any], None, None]:
     """Export repositories as PDF (requires additional dependencies)."""
     # For now, generate LaTeX and note that it needs to be compiled
-    yield from export_latex(grouped, output_dir, single_file, template)
+    yield from export_latex(grouped, output_dir, single_file, progress_callback)
     
     yield {
         "status": "info",
@@ -659,14 +747,14 @@ def export_pdf(grouped: Dict[str, List[Dict]], output_dir: str,
 
 
 def export_latex(grouped: Dict[str, List[Dict]], output_dir: str,
-                 single_file: bool, template: str = None) -> Generator[Dict[str, Any], None, None]:
+                 single_file: bool, progress_callback=None) -> Generator[Dict[str, Any], None, None]:
     """Export repositories as LaTeX documents."""
     output_path = Path(output_dir) if output_dir else Path(".")
     output_path.mkdir(exist_ok=True)
     
     if single_file:
         output_file = output_path / "repositories.tex"
-        content = generate_latex_content(grouped, template)
+        content = generate_latex_content(grouped)
         
         output_file.write_text(content)
         yield {
@@ -678,7 +766,7 @@ def export_latex(grouped: Dict[str, List[Dict]], output_dir: str,
     else:
         for group_name, repos in grouped.items():
             output_file = output_path / f"{group_name.lower().replace(' ', '-')}.tex"
-            content = generate_latex_content({group_name: repos}, template)
+            content = generate_latex_content({group_name: repos})
             
             output_file.write_text(content)
             yield {
@@ -690,12 +778,9 @@ def export_latex(grouped: Dict[str, List[Dict]], output_dir: str,
             }
 
 
-def generate_latex_content(grouped: Dict[str, List[Dict]], template: str = None) -> str:
+def generate_latex_content(grouped: Dict[str, List[Dict]]) -> str:
     """Generate LaTeX content for repositories."""
-    if template:
-        return apply_template(grouped, template, "latex")
-    
-    # Default LaTeX template
+    # Default LaTeX content
     tex = r"""\documentclass[11pt,a4paper]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[margin=1in]{geometry}
@@ -738,7 +823,7 @@ def generate_latex_content(grouped: Dict[str, List[Dict]], template: str = None)
             tex += r"\begin{itemize}" + "\n"
             tex += f"\\item \\textbf{{Language:}} {repo.get('language', 'Unknown')}\n"
             tex += f"\\item \\textbf{{Stars:}} {repo.get('stargazers_count', 0)}\n"
-            tex += f"\\item \\textbf{{License:}} {repo.get('license', {}).get('name', 'No license')}\n"
+            tex += f"\\item \\textbf{{License:}} {(repo.get('license') or {}).get('name', 'No license')}\n"
             
             if repo.get('homepage'):
                 tex += f"\\item \\textbf{{Homepage:}} \\url{{{repo['homepage']}}}\n"
@@ -756,48 +841,6 @@ def generate_latex_content(grouped: Dict[str, List[Dict]], template: str = None)
     return tex
 
 
-def apply_template(grouped: Dict[str, List[Dict]], template_name_or_path: str, format: str) -> str:
-    """Apply a custom template to the data."""
-    from ..templates import load_template, render_template
-    from datetime import datetime
-    
-    # Load the template
-    template_content = load_template(template_name_or_path, format)
-    if not template_content:
-        logger.warning(f"Template '{template_name_or_path}' not found, using default")
-        # Fall back to default
-        if format == "markdown":
-            return generate_markdown_content(grouped)
-        elif format == "html":
-            return generate_html_content(grouped)
-        elif format == "latex":
-            return generate_latex_content(grouped)
-        else:
-            return ""
-    
-    # Prepare data for template
-    data = {
-        "groups": grouped,
-        "generated_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "total_repos": sum(len(repos) for repos in grouped.values()),
-        "group_count": len(grouped),
-        "format": format
-    }
-    
-    # Render the template
-    try:
-        return render_template(template_content, data)
-    except Exception as e:
-        logger.error(f"Template rendering failed: {e}")
-        # Fall back to default
-        if format == "markdown":
-            return generate_markdown_content(grouped)
-        elif format == "html":
-            return generate_html_content(grouped)
-        elif format == "latex":
-            return generate_latex_content(grouped)
-        else:
-            return ""
 
 
 @click.group("export")
@@ -812,14 +855,35 @@ def export_cmd():
               default='markdown', help='Export format')
 @click.option('-o', '--output', 'output_dir', help='Output directory')
 @click.option('--single-file', is_flag=True, help='Export to single file instead of multiple')
-@click.option('--template', help='Template name or path')
-@click.option('--group-by', help='Group repositories by tag prefix (e.g., "dir", "lang")')
+@click.option('--group-by', help='Group repositories by tag prefix (e.g., "dir", "lang") or attribute (language, license, year)')
 @click.option('--include-metadata', is_flag=True, default=True, help='Include full metadata')
-@click.option('--pretty', is_flag=True, help='Display export progress')
+@click.option('--include-readme', is_flag=True, help='Include README content in export')
+@click.option('--readme-length', type=int, default=500, help='Maximum README length to include (0 for full)')
+@click.option('--components', help='Comma-separated list of components to include (e.g., header,summary_stats,tag_cloud,repository_cards,readme_content)')
+@click.option('--sort-by', type=click.Choice(['stars', 'name', 'updated', 'created']), default='stars', help='Sort repositories by')
+@add_common_options('verbose', 'quiet')
+@standard_command(streaming=True)
 def generate(dir, recursive, tag_filters, all_tags, query,
-            format, output_dir, single_file, template, group_by, include_metadata, pretty):
-    """Generate portfolio exports from repositories."""
+            format, output_dir, single_file, group_by, include_metadata, 
+            include_readme, readme_length, components, sort_by,
+            progress, quiet, **kwargs):
+    """Generate portfolio exports from repositories.
+    
+    \b
+    Export repositories in various formats using components.
+    Supports Hugo static sites, Markdown, HTML, PDF, and more.
+    
+    Examples:
+    
+    \b
+        ghops export generate --format markdown -o docs/
+        ghops export generate --format html --single-file  
+        ghops export generate --group-by lang --format hugo
+        ghops export generate --include-readme --components header,summary_stats
+    """
     config = load_config()
+    
+    progress(f"Discovering repositories...")
     
     # Get filtered repositories
     repos, filter_desc = get_filtered_repos(
@@ -835,132 +899,92 @@ def generate(dir, recursive, tag_filters, all_tags, query,
         error_msg = f"No repositories found"
         if filter_desc:
             error_msg += f" matching {filter_desc}"
-        logger.error(error_msg)
-        return
+        raise NoReposFoundError(error_msg)
     
-    # Export repositories
-    exports = export_repositories(
+    progress(f"Found {len(repos)} repositories to export")
+    
+    
+    progress(f"Export format: {format}")
+    if output_dir:
+        progress(f"Output directory: {output_dir}")
+    
+    # Track stats
+    files_created = []
+    total_repos_exported = 0
+    
+    # Export repositories with progress
+    progress(f"Starting {format} export...")
+    
+    # Create export generator with progress callback
+    export_gen = export_repositories(
         repos=repos,
         format=format,
-        template=template,
         output_dir=output_dir,
         single_file=single_file,
         include_metadata=include_metadata,
-        group_by=group_by
+        group_by=group_by,
+        include_readme=include_readme,
+        readme_length=readme_length if readme_length != 0 else None,
+        components=components,
+        sort_by=sort_by,
+        progress_callback=progress
     )
     
-    if pretty:
-        # Collect results for summary
-        results = list(exports)
-        
-        # Summary
-        success_count = sum(1 for r in results if r.get('status') == 'success')
-        total_repos = sum(r.get('repositories', 0) for r in results if r.get('repositories'))
-        
-        print(f"\n✨ Export completed!")
-        print(f"   Format: {format}")
-        print(f"   Files created: {success_count}")
-        print(f"   Repositories exported: {total_repos}")
-        
-        if output_dir:
-            print(f"   Output directory: {output_dir}")
-        
-        # Show files created
-        print("\nFiles created:")
-        for result in results:
-            if result.get('status') == 'success' and result.get('file'):
-                print(f"   - {result['file']}")
-    else:
-        # Stream JSONL output
-        for export in exports:
-            print(json.dumps(export, ensure_ascii=False), flush=True)
-
-
-@export_cmd.command("templates")
-@click.option('--list', 'list_templates', is_flag=True, help='List available templates')
-@click.option('--show', help='Show template content')
-@click.option('--create', help='Create new template')
-def templates(list_templates, show, create):
-    """Manage export templates."""
-    template_dir = Path.home() / ".ghops" / "templates"
-    template_dir.mkdir(exist_ok=True)
-    
-    if list_templates:
-        from ..templates import list_templates as get_templates
-        templates = get_templates()
-        if templates:
-            print("Available templates:")
-            print("\nBuilt-in templates:")
-            for t in templates:
-                if t["type"] == "builtin":
-                    print(f"  - {t['name']} ({t['description']})")
+    # Process exports with progress tracking  
+    export_count = 0
+    with progress.task(f"Creating {format} files", total=None) as update:
+        for export_result in export_gen:
+            export_count += 1
             
-            saved = [t for t in templates if t["type"] == "saved"]
-            if saved:
-                print("\nSaved templates:")
-                for t in saved:
-                    print(f"  - {t['name']} ({t['description']})")
-        else:
-            print("No templates found.")
+            # Update progress based on export result
+            if export_result.get('status') == 'success':
+                file_path = export_result.get('file')
+                if file_path:
+                    files_created.append(file_path)
+                    filename = Path(file_path).name
+                    update(export_count, filename)
+                    
+                repos_in_file = export_result.get('repositories', 0)
+                if repos_in_file:
+                    total_repos_exported += repos_in_file
+                    
+            elif export_result.get('status') == 'error':
+                error_msg = export_result.get('message', export_result.get('error', 'Unknown error'))
+                progress.error(f"Failed: {error_msg}")
+                update(export_count, "error")
+            elif export_result.get('status') == 'info':
+                info_msg = export_result.get('message', '')
+                if info_msg:
+                    progress(info_msg)
+                update(export_count, "info")
+            
+            # Stream result if not quiet
+            if not quiet:
+                yield export_result
     
-    elif show:
-        from ..templates import load_template
-        template_content = load_template(show, "")
-        if template_content:
-            print(template_content)
-        else:
-            print(f"Template '{show}' not found.")
+    # Summary
+    progress("")
+    progress("Export Summary:")
+    progress(f"  Format: {format}")
+    progress(f"  Files created: {len(files_created)}")
+    progress(f"  Repositories exported: {total_repos_exported}")
     
-    elif create:
-        # Template creation wizard
-        from ..templates import save_template, get_builtin_templates
+    if output_dir:
+        progress(f"  Output directory: {output_dir}")
+    
         
-        print(f"Creating new template: {create}")
-        print("\nChoose a format:")
-        formats = list(get_builtin_templates().keys())
-        for i, fmt in enumerate(formats, 1):
-            print(f"  {i}. {fmt}")
-        
-        choice = input("\nSelect format (number): ").strip()
-        try:
-            format_idx = int(choice) - 1
-            if 0 <= format_idx < len(formats):
-                selected_format = formats[format_idx]
-                
-                # Get the built-in template as a starting point
-                template_content = get_builtin_templates()[selected_format]
-                
-                print(f"\nStarting with {selected_format} template.")
-                print("Edit the template below (press Ctrl+D when done):\n")
-                print("-" * 60)
-                print(template_content)
-                print("-" * 60)
-                
-                print("\nWould you like to:")
-                print("  1. Use this template as-is")
-                print("  2. Create an empty template")
-                print("  3. Cancel")
-                
-                action = input("\nSelect action (1-3): ").strip()
-                
-                if action == "1":
-                    # Save the built-in template
-                    save_template(create, template_content)
-                    print(f"\nTemplate '{create}' saved successfully!")
-                elif action == "2":
-                    # Create empty template
-                    empty_template = """# {{ title }}\n\n{% for group_name, repos in groups.items() %}\n## {{ group_name }}\n{% endfor %}"""
-                    save_template(create, empty_template)
-                    print(f"\nEmpty template '{create}' saved successfully!")
-                    print("Edit the template file to customize it.")
-                else:
-                    print("Template creation cancelled.")
-            else:
-                print("Invalid selection.")
-        except ValueError:
-            print("Invalid input.")
-        except KeyboardInterrupt:
-            print("\nTemplate creation cancelled.")
+    if files_created and len(files_created) <= 10:
+        progress("")
+        progress("Files created:")
+        for file_path in files_created:
+            progress(f"  - {file_path}")
+    elif files_created:
+        progress(f"  Created {len(files_created)} files in {output_dir or '.'}")
     
-    else:
-        click.echo("Specify --list, --show, or --create")
+    progress.success("Export completed successfully!")
+
+
+
+# Add customize subcommand to export group
+from .customize import customize
+export_cmd.add_command(customize)

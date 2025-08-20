@@ -2,8 +2,9 @@
 Handles the 'update' command for updating Git repositories.
 
 This command follows our design principles:
-- Default output is JSONL streaming
-- --pretty flag for human-readable table output
+- Default output is JSONL streaming or table based on TTY
+- --verbose/-v for progress output
+- --quiet/-q to suppress data output
 - Core logic returns generators for streaming
 - No side effects in core functions
 """
@@ -16,8 +17,10 @@ from typing import Generator, Dict, Any
 
 from ..core import get_repositories_from_path
 from ..render import render_update_table
-from ..utils import run_command, get_git_status, get_remote_url, parse_repo_url
-from ..config import logger
+from ..utils import run_command, get_git_status, get_remote_url, parse_repo_url, find_git_repos_from_config, is_git_repo
+from ..config import logger, load_config
+from ..cli_utils import standard_command, add_common_options
+from ..exit_codes import NoReposFoundError
 
 
 def update_repository(repo_path: str, auto_commit: bool = False, 
@@ -152,37 +155,138 @@ def update_repositories(base_dir: str = None, recursive: bool = False,
 
 
 @click.command("update")
-@click.option("-d", "--dir", default=".", help="Directory to search for repositories")
+@click.option("-d", "--dir", default=None, help="Directory to search for repositories (overrides config)")
 @click.option("-r", "--recursive", is_flag=True, help="Search recursively for repositories")
 @click.option("--auto-commit", is_flag=True, help="Automatically commit changes before pulling")
 @click.option("--commit-message", default="Auto commit", help="Commit message for auto-commits")
 @click.option("--dry-run", is_flag=True, help="Simulate actions without making changes")
 @click.option("-t", "--tag", "tag_filters", multiple=True, help="Filter by tags (e.g., org:torvalds, lang:python)")
 @click.option("--all-tags", is_flag=True, help="Match all tags (default: match any)")
-@click.option("--pretty", is_flag=True, help="Display as formatted table instead of JSONL")
-def update_repos_handler(dir, recursive, auto_commit, commit_message, dry_run, tag_filters, all_tags, pretty):
+@click.option("--table/--no-table", default=None, help="Display as formatted table (auto-detected by default)")
+@add_common_options('verbose', 'quiet')
+@standard_command(streaming=True)
+def update_repos_handler(dir, recursive, auto_commit, commit_message, dry_run, tag_filters, all_tags, table, progress, quiet, **kwargs):
     """
     Update Git repositories by pulling latest changes.
     
-    By default, outputs JSONL (one JSON object per line) for each repository.
-    Use --pretty for a human-readable table format.
-    """
-    # Get repository updates as a generator
-    updates_generator = update_repositories(
-        base_dir=dir,
-        recursive=recursive,
-        auto_commit=auto_commit,
-        commit_message=commit_message,
-        dry_run=dry_run,
-        tag_filters=tag_filters,
-        all_tags=all_tags
-    )
+    \b
+    Output format:
+    - Interactive terminal: Table format by default
+    - Piped/redirected: JSONL streaming by default
+    - Use --table to force table output
+    - Use --no-table to force JSONL output
     
-    if pretty:
-        # Collect all updates and render as table
-        updates = list(updates_generator)
+    Examples:
+    
+    \b
+        ghops update                    # Update all repos from config
+        ghops update -d .               # Update current repo only
+        ghops update -d . -r            # Update all repos under current
+        ghops update --auto-commit      # Commit changes before pulling
+        ghops update --dry-run          # Preview changes without applying
+        ghops update -t type:work       # Update only work repos
+    """
+    # Auto-detect table mode if not specified
+    if table is None:
+        import sys
+        table = sys.stdout.isatty()
+    
+    config = load_config()
+    
+    progress("Discovering repositories...")
+    
+    # Get repository paths (same logic as status/list)
+    repos = []
+    if dir is not None:
+        # Use specified directory
+        expanded_dir = os.path.expanduser(dir)
+        expanded_dir = os.path.abspath(expanded_dir)
+        
+        if is_git_repo(expanded_dir) and not recursive:
+            repos = [expanded_dir]
+        else:
+            from ..utils import find_git_repos
+            repos = find_git_repos(expanded_dir, recursive)
+    else:
+        # Use config
+        repo_dirs = config.get("general", {}).get("repository_directories", [])
+        repos = list(find_git_repos_from_config(repo_dirs, recursive))
+    
+    if not repos:
+        raise NoReposFoundError("No repositories found to update")
+    
+    progress(f"Found {len(repos)} repositories")
+    
+    # Apply tag filtering if specified
+    if tag_filters:
+        from ..commands.catalog import get_repositories_by_tags
+        
+        progress("Applying tag filters...")
+        filtered_repos = list(get_repositories_by_tags(tag_filters, config, all_tags))
+        filtered_paths = {r["path"] for r in filtered_repos}
+        repos = [r for r in repos if os.path.abspath(r) in filtered_paths]
+        
+        if not repos:
+            filter_desc = " AND ".join(tag_filters) if all_tags else " OR ".join(tag_filters)
+            raise NoReposFoundError(f"No repositories found matching: {filter_desc}")
+        
+        progress(f"Filtered to {len(repos)} repositories")
+    
+    if dry_run:
+        progress.warning("DRY RUN - no changes will be made")
+    
+    # Process updates
+    updated_count = 0
+    error_count = 0
+    
+    if table:
+        # Collect all updates for table display
+        updates = []
+        with progress.task("Updating repositories", total=len(repos)) as update_progress:
+            for i, repo_path in enumerate(repos, 1):
+                update_progress(i, os.path.basename(repo_path))
+                result = update_repository(repo_path, auto_commit, commit_message, dry_run)
+                updates.append(result)
+                
+                if result.get("actions", {}).get("error"):
+                    error_count += 1
+                elif any(result.get("actions", {}).values()):
+                    updated_count += 1
+        
+        # Show table
         render_update_table(updates)
     else:
-        # Stream JSONL output (default)
-        for update in updates_generator:
-            print(json.dumps(update, ensure_ascii=False), flush=True)
+        # Stream updates as JSONL
+        with progress.task("Updating repositories", total=len(repos)) as update_progress:
+            for i, repo_path in enumerate(repos, 1):
+                update_progress(i, os.path.basename(repo_path))
+                result = update_repository(repo_path, auto_commit, commit_message, dry_run)
+                
+                if result.get("actions", {}).get("error"):
+                    error_count += 1
+                    progress.error(f"Failed to update {result['name']}: {result['actions']['error']}")
+                elif any([result.get("actions", {}).get(k) for k in ["committed", "pulled", "pushed"]]):
+                    updated_count += 1
+                    actions = []
+                    if result["actions"].get("committed"):
+                        actions.append("committed")
+                    if result["actions"].get("pulled"):
+                        actions.append("pulled")
+                    if result["actions"].get("pushed"):
+                        actions.append("pushed")
+                    progress.success(f"Updated {result['name']}: {', '.join(actions)}")
+                
+                if not quiet:
+                    yield result
+    
+    # Summary
+    progress("")
+    progress("Summary:")
+    progress(f"  Total repositories: {len(repos)}")
+    if updated_count > 0:
+        progress.success(f"  Updated: {updated_count}")
+    unchanged_count = len(repos) - updated_count - error_count
+    if unchanged_count > 0:
+        progress(f"  Unchanged: {unchanged_count}")
+    if error_count > 0:
+        progress.error(f"  Errors: {error_count}")

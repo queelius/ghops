@@ -3,6 +3,8 @@ from ghops.config import load_config
 from ghops.utils import find_git_repos, find_git_repos_from_config, get_remote_url, run_command, get_license_info, parse_repo_url
 from ghops.pypi import detect_pypi_package
 from ghops.render import render_list_table
+from ghops.cli_utils import standard_command, add_common_options
+from ghops.exit_codes import NoReposFoundError
 import json
 import os
 import sys
@@ -114,30 +116,66 @@ def get_repo_metadata(repo_path, remote_url, skip_github_info=False, skip_pages_
 
 
 @click.command("list")
-@click.option("--dir", help="Directory to search (overrides config)")
+@click.option("-d", "--dir", help="Directory to search (overrides config)")
 @click.option("--recursive", is_flag=True, help="Search subdirectories for git repos")
 @click.option("--no-dedup", is_flag=True, help="Show all instances including duplicates and soft links")
 @click.option("--no-github", is_flag=True, help="Skip GitHub API calls for faster listing")
 @click.option("--no-pages", is_flag=True, help="Skip GitHub Pages check for faster results")
 @click.option("-t", "--tag", "tag_filters", multiple=True, help="Filter by tags (e.g., org:torvalds, lang:python)")
 @click.option("--all-tags", is_flag=True, help="Match all tags (default: match any)")
-@click.option("--pretty", is_flag=True, help="Display as formatted table instead of JSONL")
-def list_repos_handler(dir, recursive, no_dedup, no_github, no_pages, tag_filters, all_tags, pretty):
+@click.option("--table/--no-table", default=None, help="Display as formatted table (auto-detected by default)")
+@add_common_options('verbose', 'quiet', 'format', 'fields')
+@standard_command(streaming=True)
+def list_repos_handler(dir, recursive, no_dedup, no_github, no_pages, tag_filters, all_tags, table, format, fields, progress, quiet, **kwargs):
     """
     List available repositories with deduplication by default.
     
+    \b
     Automatically detects and marks soft links vs true duplicates.
-    Outputs JSONL (one JSON object per line) for immediate feedback.
-    Use 'jq -s .' to convert to JSON array if needed.
+    
+    Output format:
+    - Interactive terminal: Table format by default
+    - Piped/redirected: JSONL streaming by default
+    - Use --table to force table output
+    - Use --no-table to force JSONL output
+    - Use -v/--verbose to show progress
+    - Use -q/--quiet to suppress JSON output
+    
+    Examples:
+    
+    \b
+        ghops list                      # Table format (if terminal)
+        ghops list | jq .               # JSONL format (piped)
+        ghops list --no-table           # Force JSONL output
+        ghops list -d ~/projects        # List repos in ~/projects
+        ghops list -r                   # Recursive search
+        ghops list -t org:torvalds      # Filter by tag
     """
     config = load_config()
+    
+    # Auto-detect table mode if not specified
+    if table is None:
+        import sys
+        table = sys.stdout.isatty()  # Use table format for interactive terminals
+    
+    progress("Discovering repositories...")
     
     # Get repository paths
     repo_paths = []
     if dir:
-        search_path = os.path.expanduser(dir)
-        repo_paths = find_git_repos(search_path, recursive)
+        # Use specified directory (same logic as status command)
+        from ..utils import is_git_repo
+        expanded_dir = os.path.expanduser(dir)
+        expanded_dir = os.path.abspath(expanded_dir)
+        
+        if is_git_repo(expanded_dir) and not recursive:
+            # Directory itself is a repo
+            repo_paths = [expanded_dir]
+        else:
+            # Search in directory
+            repo_paths = find_git_repos(expanded_dir, recursive)
     else:
+        # Use config
         config_dirs = config.get("general", {}).get("repository_directories", ["~/github"])
         repo_paths = find_git_repos_from_config(config_dirs, recursive)
 
@@ -145,13 +183,16 @@ def list_repos_handler(dir, recursive, no_dedup, no_github, no_pages, tag_filter
     repos = sorted(list(set(repo_paths)))
 
     if not repos:
-        print(json.dumps({"status": "no_repos_found", "path": None, "remote_url": None}), flush=True)
-        return
+        raise NoReposFoundError("No repositories found in specified directories")
+    
+    progress(f"Found {len(repos)} repositories")
     
     # Apply tag filtering if specified
     if tag_filters:
         from ..tags import filter_tags
         from ..commands.catalog import get_repositories_by_tags
+        
+        progress("Applying tag filters...")
         
         # Get filtered repos
         filtered_repos = list(get_repositories_by_tags(tag_filters, config, all_tags))
@@ -161,46 +202,51 @@ def list_repos_handler(dir, recursive, no_dedup, no_github, no_pages, tag_filter
         repos = [r for r in repos if str(Path(r).resolve()) in filtered_paths]
         
         if not repos:
-            error_msg = {
-                "status": "no_matching_repos",
-                "filters": tag_filters,
-                "match_all": all_tags
-            }
-            if pretty:
-                from rich.console import Console
-                console = Console()
-                filter_desc = " AND ".join(tag_filters) if all_tags else " OR ".join(tag_filters)
-                console.print(f"[yellow]No repositories found matching: {filter_desc}[/yellow]")
-            else:
-                print(json.dumps(error_msg), flush=True)
-            return
+            filter_desc = " AND ".join(tag_filters) if all_tags else " OR ".join(tag_filters)
+            raise NoReposFoundError(f"No repositories found matching: {filter_desc}")
+        
+        progress(f"Filtered to {len(repos)} repositories")
 
-    if pretty:
+    # Handle table format (either explicit --table or --format table)
+    if table or format == 'table':
         # Collect all repos and render as table
         all_repos = []
-        if no_dedup:
-            # Show all instances without deduplication
-            for repo_path in repos:
-                remote_url = get_remote_url(repo_path)
-                metadata = get_repo_metadata(repo_path, remote_url, skip_github_info=no_github, skip_pages_check=no_pages, preserve_symlinks=True)
-                all_repos.append(metadata)
-        else:
-            # Default: Collect deduplicated repos with detail
-            all_repos = list(_collect_deduplicated_repos(repos, include_details=True, skip_github_info=no_github, skip_pages_check=no_pages))
+        with progress.task("Gathering repository information", total=len(repos)) as update:
+            if no_dedup:
+                # Show all instances without deduplication
+                for i, repo_path in enumerate(repos, 1):
+                    update(i, os.path.basename(repo_path))
+                    remote_url = get_remote_url(repo_path)
+                    metadata = get_repo_metadata(repo_path, remote_url, skip_github_info=no_github, skip_pages_check=no_pages, preserve_symlinks=True)
+                    all_repos.append(metadata)
+            else:
+                # Default: Collect deduplicated repos with detail
+                for i, repo_data in enumerate(_collect_deduplicated_repos(repos, include_details=True, skip_github_info=no_github, skip_pages_check=no_pages), 1):
+                    update(i, repo_data.get('name', ''))
+                    all_repos.append(repo_data)
         
-        # Render as table
+        # Render as table (not suppressed by quiet)
         render_list_table(all_repos)
     else:
         # Stream JSONL output (default)
-        if no_dedup:
-            # Stream all instances without deduplication
-            for repo_path in repos:
-                remote_url = get_remote_url(repo_path)
-                metadata = get_repo_metadata(repo_path, remote_url, skip_github_info=no_github, skip_pages_check=no_pages, preserve_symlinks=True)
-                print(json.dumps(metadata), flush=True)
-        else:
-            # Default: Stream deduplicated repos with details
-            _stream_deduplicated_repos(repos, include_details=True, skip_github_info=no_github, skip_pages_check=no_pages)
+        with progress.task("Gathering repository information", total=len(repos)) as update:
+            repo_count = 0
+            if no_dedup:
+                # Stream all instances without deduplication
+                for repo_path in repos:
+                    repo_count += 1
+                    update(repo_count, os.path.basename(repo_path))
+                    remote_url = get_remote_url(repo_path)
+                    metadata = get_repo_metadata(repo_path, remote_url, skip_github_info=no_github, skip_pages_check=no_pages, preserve_symlinks=True)
+                    if not quiet:
+                        yield metadata
+            else:
+                # Default: Stream deduplicated repos with details
+                for repo_data in _collect_deduplicated_repos(repos, include_details=True, skip_github_info=no_github, skip_pages_check=no_pages):
+                    repo_count += 1
+                    update(repo_count, repo_data.get('name', ''))
+                    if not quiet:
+                        yield repo_data
 
 
 def _collect_deduplicated_repos(repo_paths, include_details, skip_github_info=False, skip_pages_check=False):

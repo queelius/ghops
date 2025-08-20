@@ -399,6 +399,34 @@ class MetadataStore:
         except Exception as e:
             logger.warning(f"Failed to detect docs for {repo_path}: {e}")
         
+        # Get README content
+        try:
+            readme_files = ['README.md', 'README.rst', 'README.txt', 'README', 'readme.md', 'Readme.md']
+            readme_path = None
+            for readme_name in readme_files:
+                potential_path = os.path.join(repo_path, readme_name)
+                if os.path.exists(potential_path):
+                    readme_path = potential_path
+                    break
+            
+            if readme_path:
+                try:
+                    with open(readme_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        readme_content = f.read()
+                        # Store both full content and a truncated preview
+                        metadata['readme_content'] = readme_content
+                        metadata['readme_preview'] = readme_content[:500] if len(readme_content) > 500 else readme_content
+                        metadata['readme_file'] = os.path.basename(readme_path)
+                        metadata['has_readme'] = True
+                except Exception as e:
+                    logger.warning(f"Failed to read README for {repo_path}: {e}")
+                    metadata['has_readme'] = False
+            else:
+                metadata['has_readme'] = False
+        except Exception as e:
+            logger.warning(f"Failed to check README for {repo_path}: {e}")
+            metadata['has_readme'] = False
+        
         # Get file stats
         try:
             # Count files

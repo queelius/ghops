@@ -73,7 +73,7 @@ def get_repositories_from_path(base_dir: str, recursive: bool = False) -> Genera
     Generator that yields repository paths from a directory.
     
     Args:
-        base_dir: Base directory to search
+        base_dir: Base directory to search (None means use config)
         recursive: Whether to search recursively
         
     Yields:
@@ -81,8 +81,8 @@ def get_repositories_from_path(base_dir: str, recursive: bool = False) -> Genera
     """
     config = load_config()
     
-    if base_dir == '.':
-        # Use configured directories if available
+    if base_dir is None:
+        # Use configured directories if no base_dir specified
         repo_paths = find_git_repos_from_config(
             config.get('general', {}).get('repository_directories', []),
             recursive
@@ -93,12 +93,34 @@ def get_repositories_from_path(base_dir: str, recursive: bool = False) -> Genera
                 yield repo_path
         else:
             # Fall back to current directory
-            for repo_dir in find_git_repos(base_dir, recursive):
-                yield os.path.join(os.getcwd(), repo_dir)
+            for repo_dir in find_git_repos('.', recursive):
+                yield os.path.abspath(repo_dir)
     else:
-        # User specified a directory
-        for repo_dir in find_git_repos(base_dir, recursive):
-            yield os.path.join(base_dir, repo_dir)
+        # User specified a directory - just use it directly
+        from .utils import is_git_repo
+        import os
+        
+        # Expand and normalize the path
+        expanded_dir = os.path.expanduser(base_dir)
+        expanded_dir = os.path.abspath(expanded_dir)
+        
+        # Check if the directory itself is a repo
+        if is_git_repo(expanded_dir):
+            if not recursive:
+                # Just this directory
+                yield expanded_dir
+            else:
+                # Include this directory and search inside
+                yield expanded_dir
+                # Also search subdirectories
+                for repo_dir in find_git_repos(expanded_dir, recursive=True):
+                    abs_path = os.path.abspath(repo_dir)
+                    if abs_path != expanded_dir:  # Don't yield the same dir twice
+                        yield abs_path
+        else:
+            # Directory is not a repo, search inside it
+            for repo_dir in find_git_repos(expanded_dir, recursive):
+                yield os.path.abspath(repo_dir)
 
 
 def get_repository_status(base_dir: str = None, recursive: bool = False, skip_pages_check: bool = False, 
@@ -146,9 +168,11 @@ def _get_filtered_repositories(base_dir: str, recursive: bool, tag_filters: list
     config = load_config()
     
     # Get all repos based on base_dir or config
-    if base_dir and base_dir != ".":
+    if base_dir is not None:
+        # If base_dir is specified (including "."), use it
         repos = list(get_repositories_from_path(base_dir, recursive))
     else:
+        # Only use config if no base_dir specified
         repo_dirs = config.get("general", {}).get("repository_directories", [])
         repos = list(find_git_repos_from_config(repo_dirs))
     

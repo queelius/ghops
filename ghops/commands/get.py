@@ -17,7 +17,8 @@ from typing import Generator, Dict, Any, List, Optional
 from ..config import load_config, save_config
 from ..render import render_get_table
 from ..utils import run_command, parse_repo_url
-from rich.console import Console
+from ..cli_utils import standard_command, add_common_options
+from ..exit_codes import NoReposFoundError
 
 
 def is_path_covered(path: str, repo_dirs: List[str]) -> bool:
@@ -318,14 +319,17 @@ def clone_repositories(repos: List[Dict[str, Any]], target_dir: str,
 @click.option("--limit", default=100, help="Maximum repositories per user")
 @click.option("--visibility", type=click.Choice(["all", "public", "private"]), default="all", help="Repository visibility filter")
 @click.option("--dry-run", is_flag=True, help="Preview operations without making changes")
-@click.option("--pretty", is_flag=True, help="Display as formatted table instead of JSONL")
+@click.option("--table/--no-table", default=None, help="Display as formatted table (auto-detected by default)")
 @click.option("--add-to-config", is_flag=True, help="Add cloned directory to ghops repository directories")
 @click.option("--no-add-to-config", is_flag=True, help="Don't add to config (useful if it becomes default)")
 @click.option("--tag", "-t", "tags", multiple=True, help="Tags for repositories (e.g., org:torvalds, lang:python)")
 @click.option("--import-github-tags", is_flag=True, default=True, help="Import GitHub topics and metadata as tags")
 @click.option("--no-import-github-tags", is_flag=True, help="Don't import GitHub metadata")
-def get_repo_handler(target, users, target_dir, ignore, limit, visibility, dry_run, pretty, 
-                    add_to_config, no_add_to_config, tags, import_github_tags, no_import_github_tags):
+@add_common_options('verbose', 'quiet')
+@standard_command(streaming=True)
+def get_repo_handler(target, users, target_dir, ignore, limit, visibility, dry_run, table, 
+                    add_to_config, no_add_to_config, tags, import_github_tags, no_import_github_tags,
+                    progress, quiet, **kwargs):
     """
     Clone repositories from GitHub.
     
@@ -334,9 +338,27 @@ def get_repo_handler(target, users, target_dir, ignore, limit, visibility, dry_r
     - A GitHub username to clone all their repos
     - Omitted to clone repos from the authenticated user
     
-    By default, outputs JSONL (one JSON object per line) for each repository.
-    Use --pretty for a human-readable table format.
+    \\b
+    Output format:
+    - Interactive terminal: Table format by default
+    - Piped/redirected: JSONL streaming by default
+    - Use --table to force table output
+    - Use --no-table to force JSONL output
+    
+    Examples:
+    
+    \\b
+        ghops get torvalds                          # Clone all repos from torvalds
+        ghops get https://github.com/user/repo.git  # Clone single repo
+        ghops get --users user1 user2               # Clone from multiple users
+        ghops get -d ~/projects                     # Clone to specific directory
+        ghops get --tag org:company --add-to-config # Clone and add to config with tags
     """
+    # Auto-detect table mode if not specified
+    if table is None:
+        import sys
+        table = sys.stdout.isatty()
+    
     # Expand target directory
     target_dir = os.path.expanduser(target_dir)
     results = []
@@ -352,12 +374,24 @@ def get_repo_handler(target, users, target_dir, ignore, limit, visibility, dry_r
     # Determine what to clone
     if target and target.startswith(("http://", "https://", "git@")):
         # Single repository URL
-        result = clone_repository(target, target_dir, dry_run)
-        all_results.append(result)
-        if pretty:
-            results.append(result)
-        else:
-            print(json.dumps(result, ensure_ascii=False), flush=True)
+        progress(f"Cloning repository from {target}...")
+        
+        with progress.task("Cloning repository", total=1) as update:
+            result = clone_repository(target, target_dir, dry_run)
+            all_results.append(result)
+            update(1, result.get('name', 'repository'))
+            
+            if result.get('actions', {}).get('cloned'):
+                progress.success(f"Cloned {result['name']} to {result['path']}")
+            elif result.get('actions', {}).get('existed'):
+                progress.warning(f"Repository {result['name']} already exists")
+            elif result.get('error'):
+                progress.error(f"Failed to clone: {result['error']}")
+            
+            if table:
+                results.append(result)
+            elif not quiet:
+                yield result
     else:
         # Clone from users
         usernames = list(users)
@@ -372,6 +406,8 @@ def get_repo_handler(target, users, target_dir, ignore, limit, visibility, dry_r
         for username in usernames:
             user_display = username if username else "authenticated user"
             
+            progress(f"Fetching repositories for {user_display}...")
+            
             # Extract topic filters from tags
             topic_filters = [t for t in tags if t.startswith("topic:")]
             
@@ -384,23 +420,51 @@ def get_repo_handler(target, users, target_dir, ignore, limit, visibility, dry_r
                     "error": "No repositories found",
                     "type": "user_error"
                 }
-                if pretty:
+                progress.warning(f"No repositories found for {user_display}")
+                if table:
                     results.append(error_result)
-                else:
-                    print(json.dumps(error_result, ensure_ascii=False), flush=True)
+                elif not quiet:
+                    yield error_result
                 continue
             
+            progress(f"Found {len(repos)} repositories for {user_display}")
+            
             # Clone repositories
-            for result in clone_repositories(repos, target_dir, ignore, dry_run):
-                result["user"] = user_display
-                all_results.append(result)
-                if pretty:
-                    results.append(result)
-                else:
-                    print(json.dumps(result, ensure_ascii=False), flush=True)
+            cloned_count = 0
+            existed_count = 0
+            error_count = 0
+            
+            with progress.task(f"Cloning from {user_display}", total=len(repos)) as update:
+                for i, result in enumerate(clone_repositories(repos, target_dir, ignore, dry_run), 1):
+                    result["user"] = user_display
+                    all_results.append(result)
+                    
+                    update(i, result.get('name', 'repository'))
+                    
+                    # Track stats
+                    if result.get('actions', {}).get('cloned'):
+                        cloned_count += 1
+                    elif result.get('actions', {}).get('existed'):
+                        existed_count += 1
+                    elif result.get('actions', {}).get('error'):
+                        error_count += 1
+                        progress.error(f"Failed to clone {result['name']}: {result['actions']['error']}")
+                    
+                    if table:
+                        results.append(result)
+                    elif not quiet:
+                        yield result
+            
+            # Show summary for this user
+            if cloned_count > 0:
+                progress.success(f"Cloned {cloned_count} repositories from {user_display}")
+            if existed_count > 0:
+                progress(f"Skipped {existed_count} existing repositories")
+            if error_count > 0:
+                progress.error(f"Failed to clone {error_count} repositories")
     
-    # Render pretty table if requested
-    if pretty and results:
+    # Render table if requested
+    if table and results:
         render_get_table(results)
     
     # Resolve conflicting flags for GitHub tag import
@@ -453,10 +517,9 @@ def get_repo_handler(target, users, target_dir, ignore, limit, visibility, dry_r
                     "tags": final_tags,
                     "message": "[DRY RUN] Would add to config" if dry_run else "Added to config"
                 }
-                if not pretty:
-                    print(json.dumps(config_msg, ensure_ascii=False), flush=True)
-                else:
-                    console = Console()
-                    console.print(f"\n[green]✓[/green] {config_msg['message']}: {abs_target_dir}")
-                    if final_tags:
-                        console.print(f"  Tags: {', '.join(final_tags)}")
+                if not quiet and not table:
+                    yield config_msg
+                
+                progress.success(f"{config_msg['message']}: {abs_target_dir}")
+                if final_tags:
+                    progress(f"  Tags: {', '.join(final_tags)}")
