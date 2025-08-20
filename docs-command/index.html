@@ -9,6 +9,10 @@
       
       
       
+        <link rel="prev" href="../export-command/">
+      
+      
+        <link rel="next" href="../list-command/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -16,7 +20,7 @@
     
     
       
-        <title>Changelog - ghops</title>
+        <title>Documentation - ghops</title>
       
     
     
@@ -67,6 +71,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#ghops-docs-command" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -97,7 +106,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Changelog
+              Documentation
             
           </span>
         </div>
@@ -246,10 +255,12 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../catalog-query/" class="md-tabs__link">
           
   
@@ -414,26 +425,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -446,7 +462,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             Commands
@@ -526,10 +542,32 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../docs-command/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Documentation
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -540,6 +578,164 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Commands
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#docs-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      docs status
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#docs-detect" class="md-nav__link">
+    <span class="md-ellipsis">
+      docs detect
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#docs-build" class="md-nav__link">
+    <span class="md-ellipsis">
+      docs build
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#docs-serve" class="md-nav__link">
+    <span class="md-ellipsis">
+      docs serve
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#docs-deploy" class="md-nav__link">
+    <span class="md-ellipsis">
+      docs deploy
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supported-documentation-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Supported Documentation Tools
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      Examples
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#find-all-repos-with-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Find all repos with documentation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#batch-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Batch operations
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#integration-with-other-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Integration with other commands
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#jsonl-output-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      JSONL Output Schema
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notes
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -683,9 +879,153 @@
   
 
 
-  <h1>Changelog</h1>
+<h1 id="ghops-docs-command">ghops docs Command</h1>
+<p>The <code>ghops docs</code> command provides comprehensive documentation management for your repositories, including detection, building, serving, and deployment to GitHub Pages.</p>
+<h2 id="overview">Overview</h2>
+<p>The docs command can:
+- Detect documentation tools (MkDocs, Sphinx, Jekyll, Hugo, etc.)
+- Build documentation locally
+- Serve documentation for preview
+- Deploy to GitHub Pages
+- Track documentation status across all repositories</p>
+<h2 id="commands">Commands</h2>
+<h3 id="docs-status">docs status</h3>
+<p>Show documentation status for repositories:</p>
+<pre><code class="language-bash"># Show docs status for all repositories (JSONL output)
+ghops docs status
 
+# Pretty table format
+ghops docs status --pretty
 
+# Specific directory
+ghops docs status --dir /path/to/repos --recursive
+</code></pre>
+<p>Output includes:
+- Documentation tool detected
+- Configuration files found
+- GitHub Pages status
+- Build/serve commands available</p>
+<h3 id="docs-detect">docs detect</h3>
+<p>Detect which documentation tool a repository uses:</p>
+<pre><code class="language-bash"># Detect docs tool for current directory
+ghops docs detect .
+
+# Output (JSONL)
+{
+  &quot;tool&quot;: &quot;mkdocs&quot;,
+  &quot;config&quot;: &quot;mkdocs.yml&quot;,
+  &quot;build_cmd&quot;: &quot;mkdocs build&quot;,
+  &quot;serve_cmd&quot;: &quot;mkdocs serve&quot;,
+  &quot;output_dir&quot;: &quot;site&quot;,
+  &quot;detected_files&quot;: [&quot;mkdocs.yml&quot;]
+}
+</code></pre>
+<h3 id="docs-build">docs build</h3>
+<p>Build documentation for one or more repositories:</p>
+<pre><code class="language-bash"># Build docs for current repository
+ghops docs build .
+
+# Build all repositories with docs (using tag filter)
+ghops docs build -t &quot;repo:*&quot;
+
+# Build only MkDocs projects
+ghops docs build -t &quot;tool:mkdocs&quot;
+
+# Build Python projects with docs
+ghops docs build -t &quot;lang:python&quot; -t &quot;has:docs&quot; --all-tags
+
+# Dry run to see what would be built
+ghops docs build -t &quot;has:docs&quot; --dry-run
+</code></pre>
+<h3 id="docs-serve">docs serve</h3>
+<p>Serve documentation locally for preview:</p>
+<pre><code class="language-bash"># Serve current repository docs
+ghops docs serve .
+
+# Custom port
+ghops docs serve . --port 8080
+
+# Open browser automatically
+ghops docs serve . --open
+</code></pre>
+<h3 id="docs-deploy">docs deploy</h3>
+<p>Deploy documentation to GitHub Pages:</p>
+<pre><code class="language-bash"># Deploy current repository
+ghops docs deploy .
+
+# Custom branch (default: gh-pages)
+ghops docs deploy . --branch docs
+
+# Custom commit message
+ghops docs deploy . --message &quot;Update API docs&quot;
+
+# Dry run
+ghops docs deploy . --dry-run
+</code></pre>
+<h2 id="supported-documentation-tools">Supported Documentation Tools</h2>
+<p>The docs command automatically detects:</p>
+<ol>
+<li><strong>MkDocs</strong> - <code>mkdocs.yml</code> or <code>mkdocs.yaml</code></li>
+<li><strong>Sphinx</strong> - <code>docs/conf.py</code> or <code>doc/conf.py</code></li>
+<li><strong>Jekyll</strong> - <code>_config.yml</code>, <code>_posts</code>, <code>_layouts</code></li>
+<li><strong>Docusaurus</strong> - <code>docusaurus.config.js</code></li>
+<li><strong>VuePress</strong> - <code>.vuepress/config.js</code></li>
+<li><strong>Hugo</strong> - <code>config.toml/yaml/json</code> with <code>content/</code> or <code>themes/</code></li>
+<li><strong>Generic Markdown</strong> - Any <code>docs/</code> directory with <code>.md</code> files</li>
+</ol>
+<h2 id="examples">Examples</h2>
+<h3 id="find-all-repos-with-documentation">Find all repos with documentation</h3>
+<pre><code class="language-bash"># List repos with docs
+ghops docs status | jq 'select(.has_docs == true)'
+
+# Count by documentation tool
+ghops docs status | jq -s 'group_by(.docs_tool) | map({tool: .[0].docs_tool, count: length})'
+
+# Find repos without GitHub Pages
+ghops docs status | jq 'select(.has_docs == true and .pages_url == null)'
+</code></pre>
+<h3 id="batch-operations">Batch operations</h3>
+<pre><code class="language-bash"># Build all MkDocs projects
+ghops docs status | \
+  jq -r 'select(.docs_tool == &quot;mkdocs&quot;) | .path' | \
+  xargs -I {} ghops docs build {}
+
+# Deploy all repos with built docs
+ghops docs build --all --tool mkdocs
+ghops docs status | \
+  jq -r 'select(.docs_tool == &quot;mkdocs&quot;) | .path' | \
+  xargs -I {} ghops docs deploy {}
+</code></pre>
+<h3 id="integration-with-other-commands">Integration with other commands</h3>
+<pre><code class="language-bash"># Find Python projects with docs
+ghops query &quot;lang:python&quot; | \
+  jq -r '.path' | \
+  xargs -I {} ghops docs detect {} | \
+  jq 'select(.tool != null)'
+
+# Export repos with docs to Hugo
+ghops docs status | \
+  jq 'select(.has_docs == true)' | \
+  ghops export --format hugo --stdin
+</code></pre>
+<h2 id="jsonl-output-schema">JSONL Output Schema</h2>
+<pre><code class="language-json">{
+  &quot;path&quot;: &quot;/absolute/path/to/repo&quot;,
+  &quot;name&quot;: &quot;repo-name&quot;,
+  &quot;has_docs&quot;: true,
+  &quot;docs_tool&quot;: &quot;mkdocs&quot;,
+  &quot;docs_config&quot;: &quot;mkdocs.yml&quot;,
+  &quot;detected_files&quot;: [&quot;mkdocs.yml&quot;],
+  &quot;pages_url&quot;: &quot;https://user.github.io/repo&quot;
+}
+</code></pre>
+<h2 id="notes">Notes</h2>
+<ul>
+<li>The deploy command requires either <code>ghp-import</code> or git to be installed</li>
+<li>Some documentation tools may require specific dependencies to be installed</li>
+<li>GitHub Pages detection works both locally and via API</li>
+<li>All commands output JSONL by default for pipeline composition</li>
+</ul>
 
 
 

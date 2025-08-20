@@ -9,6 +9,10 @@
       
       
       
+        <link rel="prev" href="../query-cookbook/">
+      
+      
+        <link rel="next" href="../contributing/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -16,7 +20,7 @@
     
     
       
-        <title>Changelog - ghops</title>
+        <title>Architecture - ghops</title>
       
     
     
@@ -67,6 +71,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#ghops-architecture-vision" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -97,7 +106,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Changelog
+              Architecture
             
           </span>
         </div>
@@ -266,9 +275,11 @@
   
   
   
+    
   
-    <li class="md-tabs__item">
-      <a href="../architecture-vision/" class="md-tabs__link">
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
         
   
   
@@ -602,10 +613,32 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../architecture-vision/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Architecture
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -616,6 +649,191 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-philosophy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Core Philosophy
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#jsonl-the-universal-interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      JSONL: The Universal Interface
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="JSONL: The Universal Interface">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-jsonl" class="md-nav__link">
+    <span class="md-ellipsis">
+      Why JSONL?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pipeline-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pipeline Examples
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#structured-output-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      Structured Output Schema
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ghops-repository-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      ghops - Repository Operations
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ghj-github-metadata-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      ghj - GitHub Metadata &amp; Search
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#repodocs-documentation-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      repodocs - Documentation Generation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-flow-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data Flow Architecture
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ghops-export-group-proposal" class="md-nav__link">
+    <span class="md-ellipsis">
+      ghops Export Group Proposal
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ghops Export Group Proposal">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#export-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Export Operations
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#not-in-ghops-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      NOT in ghops export
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example Workflow
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#plugin-architecture-for-ghops" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plugin Architecture for ghops
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#benefits-of-this-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Benefits of This Architecture
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommendation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recommendation
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -683,9 +901,186 @@
   
 
 
-  <h1>Changelog</h1>
+<h1 id="ghops-architecture-vision">ghops Architecture Vision</h1>
+<h2 id="overview">Overview</h2>
+<p>ghops is a comprehensive multi-platform git project management system that helps developers manage the full lifecycle of their projects across multiple platforms - from local development through hosting, distribution, documentation, and promotion.</p>
+<h2 id="core-philosophy">Core Philosophy</h2>
+<ul>
+<li><strong>Local-first with remote awareness</strong>: Your local git repositories are the ground truth</li>
+<li><strong>Unix Philosophy</strong>: Commands do one thing well and compose via JSONL streams  </li>
+<li><strong>Extensible</strong>: Plugin architecture for providers and custom operations</li>
+<li><strong>Unified Interface</strong>: One tool to manage projects across all platforms</li>
+</ul>
+<h2 id="jsonl-the-universal-interface">JSONL: The Universal Interface</h2>
+<p>Every ghops command outputs newline-delimited JSON (JSONL) by default, making it perfect for pipeline composition with standard Unix tools.</p>
+<h3 id="why-jsonl">Why JSONL?</h3>
+<ul>
+<li><strong>Streamable</strong>: Process millions of repos without loading all into memory</li>
+<li><strong>Composable</strong>: Pipe through <code>jq</code>, <code>grep</code>, <code>awk</code>, or custom scripts</li>
+<li><strong>Parseable</strong>: Every line is valid JSON, easy to process in any language</li>
+<li><strong>Human-friendly</strong>: Use <code>--pretty</code> flag when you want formatted tables</li>
+</ul>
+<h3 id="pipeline-examples">Pipeline Examples</h3>
+<pre><code class="language-bash"># Find Python projects with uncommitted changes
+ghops status | jq 'select(.has_uncommitted_changes == true and .language == &quot;Python&quot;)'
 
+# List repos with both GitHub and PyPI presence  
+ghops list | jq 'select(.topics | contains([&quot;pypi&quot;]) and .provider == &quot;github&quot;)'
 
+# Get total stars across all projects
+ghops query &quot;provider == 'github'&quot; | jq -s 'map(.stargazers_count // 0) | add'
+
+# Find outdated documentation
+ghops metadata refresh | \
+  jq 'select(.has_pages == true and (.pushed_at | fromdateiso8601) &lt; (now - 86400 * 30))'
+
+# Export active projects to Hugo
+ghops query &quot;has_uncommitted or open_issues_count &gt; 0&quot; | \
+  ghops export --format hugo --stdin
+
+# Chain operations: find, update, and report
+ghops list | \
+  jq 'select(.language == &quot;Python&quot; and .topics | contains([&quot;cli&quot;]))' | \
+  jq -r '.path' | \
+  xargs -I {} ghops update {} | \
+  jq '{repo: .name, status: .update_status}'
+
+# Complex aggregation: repos by language
+ghops list | \
+  jq -s 'group_by(.language) | 
+    map({language: .[0].language, count: length, stars: map(.stargazers_count // 0) | add})'
+</code></pre>
+<h3 id="structured-output-schema">Structured Output Schema</h3>
+<p>Every command returns predictable JSON structures:</p>
+<pre><code class="language-json">// ghops status output
+{
+  &quot;path&quot;: &quot;/home/user/projects/myrepo&quot;,
+  &quot;name&quot;: &quot;myrepo&quot;,
+  &quot;provider&quot;: &quot;github&quot;,
+  &quot;has_uncommitted_changes&quot;: true,
+  &quot;branch&quot;: &quot;main&quot;,
+  &quot;language&quot;: &quot;Python&quot;,
+  &quot;stargazers_count&quot;: 42
+}
+
+// ghops query output  
+{
+  &quot;path&quot;: &quot;/home/user/projects/myrepo&quot;,
+  &quot;name&quot;: &quot;myrepo&quot;,
+  &quot;tags&quot;: [&quot;lang:python&quot;, &quot;tool:cli&quot;],
+  &quot;language&quot;: &quot;Python&quot;,
+  &quot;stars&quot;: 42
+}
+</code></pre>
+<p>This enables powerful workflows:</p>
+<pre><code class="language-bash"># Morning routine: check what needs attention
+ghops status | jq -r '
+  select(.has_uncommitted_changes or .open_issues_count &gt; 0) | 
+  &quot;\(.name): \(
+    if .has_uncommitted_changes then &quot;uncommitted changes&quot; else &quot;&quot; end
+  ) \(
+    if .open_issues_count &gt; 0 then &quot;\(.open_issues_count) issues&quot; else &quot;&quot; end
+  )&quot;'
+</code></pre>
+<h3 id="ghops-repository-operations"><code>ghops</code> - Repository Operations</h3>
+<p><strong>Focus</strong>: Direct operations on git repositories</p>
+<pre><code class="language-bash">ghops status     # Repository health and metadata
+ghops sync       # Sync with remotes
+ghops clean      # Cleanup operations
+ghops backup     # Archive repositories
+ghops migrate    # Move between services (GitHub -&gt; GitLab)
+ghops health     # Check repository integrity
+</code></pre>
+<h3 id="ghj-github-metadata-search"><code>ghj</code> - GitHub Metadata &amp; Search</h3>
+<p><strong>Focus</strong>: GitHub API data mining and analysis</p>
+<pre><code class="language-bash">ghj search --query &quot;language:python stars:&gt;100&quot;
+ghj analyze --user username
+ghj export --format csv
+</code></pre>
+<h3 id="repodocs-documentation-generation"><code>repodocs</code> - Documentation Generation</h3>
+<p><strong>Focus</strong>: Transform repositories into documentation sites</p>
+<pre><code class="language-bash">repodocs generate --input repos.jsonl --output-dir ./site
+repodocs hugo --theme academic
+repodocs search-index --engine lunr
+</code></pre>
+<h2 id="data-flow-architecture">Data Flow Architecture</h2>
+<pre><code>┌─────────┐    JSONL    ┌──────────┐    JSONL    ┌──────────┐
+│  ghops  │──────────→  │    jq    │──────────→  │ repodocs │
+│ status  │             │ filter   │             │ generate │
+└─────────┘             └──────────┘             └──────────┘
+     │                       │                       │
+     │                       ▼                       ▼
+     │                  ┌──────────┐             ┌──────────┐
+     │                  │   ghj    │             │   Hugo   │
+     │                  │ enrich   │             │   Site   │
+     │                  └──────────┘             └──────────┘
+     │
+     ▼ JSONL
+┌──────────┐
+│ Custom   │
+│ Scripts  │
+└──────────┘
+</code></pre>
+<h2 id="ghops-export-group-proposal">ghops Export Group Proposal</h2>
+<p>For the export functionality in <code>ghops</code>, focus on repository-level operations:</p>
+<h3 id="export-operations">Export Operations</h3>
+<pre><code class="language-bash"># Repository migration
+ghops export github-to-gitlab --repos repos.jsonl
+ghops export backup --format tar.gz
+ghops export clone-bundle --include-lfs
+
+# Integration exports
+ghops export dashboard --format json    # For external dashboards
+ghops export metrics --format prometheus
+ghops export inventory --format csv
+</code></pre>
+<h3 id="not-in-ghops-export">NOT in ghops export</h3>
+<ul>
+<li>Documentation generation (belongs in <code>repodocs</code>)</li>
+<li>Markdown conversion (belongs in <code>repodocs</code>) </li>
+<li>Static site generation (belongs in <code>repodocs</code>)</li>
+</ul>
+<h2 id="example-workflow">Example Workflow</h2>
+<pre><code class="language-bash"># 1. Discover and analyze repositories
+ghops status --recursive &gt; repos.jsonl
+
+# 2. Filter for specific criteria
+cat repos.jsonl | jq 'select(.github.on_github and .license.name)' &gt; public-repos.jsonl
+
+# 3. Migrate to GitLab
+ghops export github-to-gitlab --input public-repos.jsonl
+
+# 4. Generate documentation site
+repodocs generate --input public-repos.jsonl --template hugo-academic
+
+# 5. Enrich with GitHub API data
+ghj enrich --input public-repos.jsonl &gt; enriched-repos.jsonl
+</code></pre>
+<h2 id="plugin-architecture-for-ghops">Plugin Architecture for ghops</h2>
+<pre><code class="language-python"># ghops/plugins/export/gitlab.py
+@click.command(&quot;gitlab&quot;)
+@click.option(&quot;--input&quot;, type=click.File('r'))
+def export_to_gitlab(input):
+    &quot;&quot;&quot;Export repositories to GitLab.&quot;&quot;&quot;
+    for line in input:
+        repo = json.loads(line)
+        # Migration logic here
+        yield {&quot;repo&quot;: repo[&quot;name&quot;], &quot;status&quot;: &quot;migrated&quot;, &quot;url&quot;: new_url}
+</code></pre>
+<h2 id="benefits-of-this-architecture">Benefits of This Architecture</h2>
+<ol>
+<li><strong>Focused Tools</strong>: Each tool has a clear, single responsibility</li>
+<li><strong>Composability</strong>: JSONL streaming enables powerful combinations</li>
+<li><strong>Extensibility</strong>: Plugin architecture for custom operations</li>
+<li><strong>Reusability</strong>: Components can be mixed and matched</li>
+<li><strong>Maintenance</strong>: Easier to maintain smaller, focused codebases</li>
+</ol>
+<h2 id="recommendation">Recommendation</h2>
+<p>Keep <code>ghops</code> focused on repository operations. Add export functionality for:
+- Repository migration between services
+- Backup and archival operations
+- Integration with external tools (dashboards, monitoring)</p>
+<p>Create separate tools for documentation generation and GitHub API analysis.</p>
 
 
 

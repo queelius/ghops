@@ -9,6 +9,10 @@
       
       
       
+        <link rel="prev" href="../audit-command/">
+      
+      
+        <link rel="next" href="../docs-command/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -16,7 +20,7 @@
     
     
       
-        <title>Changelog - ghops</title>
+        <title>Portfolio Export - ghops</title>
       
     
     
@@ -67,6 +71,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#export-command" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -97,7 +106,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Changelog
+              Portfolio Export
             
           </span>
         </div>
@@ -246,10 +255,12 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../catalog-query/" class="md-tabs__link">
           
   
@@ -414,26 +425,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -446,7 +462,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             Commands
@@ -503,10 +519,32 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../export-command/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Portfolio Export
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -517,6 +555,251 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Options
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#export-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      Export Formats
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Export Formats">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#markdown-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      Markdown Export
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hugo-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hugo Export
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#html-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      HTML Export
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#json-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      JSON Export
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#csv-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      CSV Export
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#latexpdf-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      LaTeX/PDF Export
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#grouping-and-organization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Grouping and Organization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#templates" class="md-nav__link">
+    <span class="md-ellipsis">
+      Templates
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pipeline-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pipeline Integration
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      Examples
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#complete-portfolio-website" class="md-nav__link">
+    <span class="md-ellipsis">
+      Complete Portfolio Website
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#work-vs-personal-projects" class="md-nav__link">
+    <span class="md-ellipsis">
+      Work vs Personal Projects
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#language-specific-portfolios" class="md-nav__link">
+    <span class="md-ellipsis">
+      Language-Specific Portfolios
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Executive Summary
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      API Documentation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-with-static-site-generators" class="md-nav__link">
+    <span class="md-ellipsis">
+      Integration with Static Site Generators
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integration with Static Site Generators">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hugo" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hugo
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#jekyll" class="md-nav__link">
+    <span class="md-ellipsis">
+      Jekyll
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nextjs-gatsby" class="md-nav__link">
+    <span class="md-ellipsis">
+      Next.js / Gatsby
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -683,9 +966,238 @@
   
 
 
-  <h1>Changelog</h1>
+<h1 id="export-command">Export Command</h1>
+<p>The <code>ghops export</code> command generates portfolio exports from your repositories in various formats, perfect for creating documentation sites, portfolios, and reports.</p>
+<h2 id="overview">Overview</h2>
+<p>Export your repository data as:
+- <strong>Markdown</strong> - Clean, readable documentation
+- <strong>Hugo</strong> - Complete Hugo site structure with taxonomies
+- <strong>HTML</strong> - Interactive portfolio with search and filtering
+- <strong>JSON</strong> - Structured data for further processing
+- <strong>CSV</strong> - Tabular data for spreadsheets
+- <strong>LaTeX/PDF</strong> - Professional printed portfolios</p>
+<h2 id="usage">Usage</h2>
+<pre><code class="language-bash">ghops export generate [OPTIONS]
+</code></pre>
+<h2 id="key-options">Key Options</h2>
+<ul>
+<li><code>-f, --format FORMAT</code> - Output format (markdown, hugo, html, json, csv, pdf, latex)</li>
+<li><code>-o, --output DIR</code> - Output directory</li>
+<li><code>--single-file</code> - Export to single file instead of multiple</li>
+<li><code>--group-by PREFIX</code> - Group repositories by tag prefix</li>
+<li><code>--template NAME</code> - Use custom template</li>
+<li><code>-t, --tag TAG</code> - Filter by tags</li>
+<li><code>-q, --query EXPR</code> - Filter by query expression</li>
+<li><code>--pretty</code> - Display export progress</li>
+</ul>
+<h2 id="export-formats">Export Formats</h2>
+<h3 id="markdown-export">Markdown Export</h3>
+<p>Simple, clean markdown suitable for any documentation system.</p>
+<pre><code class="language-bash"># Export all repos to markdown
+ghops export generate -f markdown -o ./portfolio
 
+# Export Python projects only
+ghops export generate -f markdown -t &quot;lang:python&quot; -o ./python-projects
 
+# Single file export
+ghops export generate -f markdown --single-file -o ./output
+</code></pre>
+<h3 id="hugo-export">Hugo Export</h3>
+<p>Creates a complete Hugo content structure with front matter.</p>
+<pre><code class="language-bash"># Generate Hugo site content
+ghops export generate -f hugo -o ./my-site/content/projects
+
+# Group by language
+ghops export generate -f hugo --group-by lang -o ./my-site/content/projects
+
+# Export work projects
+ghops export generate -f hugo -t &quot;dir:work&quot; -o ./my-site/content/work
+</code></pre>
+<p>Generated structure:</p>
+<pre><code>content/projects/
+├── _index.md          # Section index with statistics
+├── python/
+│   ├── _index.md      # Language group index
+│   ├── project1.md    # Individual project page
+│   └── project2.md
+└── javascript/
+    ├── _index.md
+    └── project3.md
+</code></pre>
+<h3 id="html-export">HTML Export</h3>
+<p>Interactive portfolio with JavaScript-powered search and filtering.</p>
+<pre><code class="language-bash"># Create interactive portfolio
+ghops export generate -f html -o ./portfolio
+
+# Single-page application
+ghops export generate -f html --single-file -o ./portfolio
+
+# Group by directory
+ghops export generate -f html --group-by dir -o ./portfolio
+</code></pre>
+<p>Features:
+- Live search filtering
+- Language dropdown filter
+- Sort by name, stars, or update date
+- Responsive design
+- No external dependencies</p>
+<h3 id="json-export">JSON Export</h3>
+<p>Clean JSON for API consumption or further processing.</p>
+<pre><code class="language-bash"># Export all metadata
+ghops export generate -f json -o ./data
+
+# Single file with all repos
+ghops export generate -f json --single-file -o ./data
+
+# Filter high-star projects
+ghops export generate -f json -q &quot;stars &gt; 10&quot; -o ./popular
+</code></pre>
+<h3 id="csv-export">CSV Export</h3>
+<p>Tabular format for spreadsheet analysis.</p>
+<pre><code class="language-bash"># Export to CSV
+ghops export generate -f csv -o ./reports
+
+# Group by language
+ghops export generate -f csv --group-by lang -o ./reports
+</code></pre>
+<p>Columns included:
+- name, description, language
+- stars, forks, license
+- created_at, updated_at
+- homepage, repository_url
+- topics (comma-separated)</p>
+<h3 id="latexpdf-export">LaTeX/PDF Export</h3>
+<p>Professional document format for printed portfolios.</p>
+<pre><code class="language-bash"># Generate LaTeX document
+ghops export generate -f latex -o ./portfolio
+
+# Compile to PDF (requires pdflatex)
+ghops export generate -f latex -o ./portfolio
+cd ./portfolio &amp;&amp; pdflatex repositories.tex
+</code></pre>
+<h2 id="grouping-and-organization">Grouping and Organization</h2>
+<p>Use <code>--group-by</code> to organize repositories by tag prefix:</p>
+<pre><code class="language-bash"># Group by directory
+ghops export generate -f hugo --group-by dir
+
+# Group by language
+ghops export generate -f html --group-by lang
+
+# Group by organization
+ghops export generate -f markdown --group-by org
+</code></pre>
+<h2 id="templates">Templates</h2>
+<p>Custom templates allow you to control the export format:</p>
+<pre><code class="language-bash"># List available templates
+ghops export templates --list
+
+# Use a template
+ghops export generate -f markdown --template my-template
+
+# Show template content
+ghops export templates --show my-template
+</code></pre>
+<h2 id="pipeline-integration">Pipeline Integration</h2>
+<p>Export commands output JSONL by default for progress tracking:</p>
+<pre><code class="language-bash"># Monitor export progress
+ghops export generate -f hugo -o ./site | jq -r '.file'
+
+# Count exported files
+ghops export generate -f html | jq -s 'length'
+
+# Get export summary
+ghops export generate -f markdown | jq -s '{
+  total_files: length,
+  total_repos: [.[] | .repositories // 0] | add
+}'
+</code></pre>
+<h2 id="examples">Examples</h2>
+<h3 id="complete-portfolio-website">Complete Portfolio Website</h3>
+<pre><code class="language-bash"># Generate full Hugo site for all projects
+ghops export generate -f hugo \
+  --group-by lang \
+  -o ./my-portfolio/content/projects
+
+# Add to Hugo config.yaml:
+# menu:
+#   main:
+#     - name: &quot;Projects&quot;
+#       url: &quot;/projects/&quot;
+#       weight: 10
+</code></pre>
+<h3 id="work-vs-personal-projects">Work vs Personal Projects</h3>
+<pre><code class="language-bash"># Export work projects
+ghops export generate -f html \
+  -t &quot;dir:work&quot; \
+  -o ./portfolios/work \
+  --single-file
+
+# Export personal projects
+ghops export generate -f html \
+  -t &quot;dir:personal&quot; \
+  -o ./portfolios/personal \
+  --single-file
+</code></pre>
+<h3 id="language-specific-portfolios">Language-Specific Portfolios</h3>
+<pre><code class="language-bash"># Python portfolio
+ghops export generate -f markdown \
+  -t &quot;lang:python&quot; \
+  -o ./python-portfolio \
+  --single-file
+
+# JavaScript portfolio
+ghops export generate -f markdown \
+  -t &quot;lang:javascript&quot; \
+  -o ./js-portfolio \
+  --single-file
+</code></pre>
+<h3 id="executive-summary">Executive Summary</h3>
+<pre><code class="language-bash"># High-level PDF report of popular projects
+ghops export generate -f latex \
+  -q &quot;stars &gt; 5 or forks &gt; 2&quot; \
+  -o ./executive-summary \
+  --single-file
+
+cd ./executive-summary
+pdflatex repositories.tex
+</code></pre>
+<h3 id="api-documentation">API Documentation</h3>
+<pre><code class="language-bash"># Export all repos with docs to JSON
+ghops export generate -f json \
+  -t &quot;has:docs&quot; \
+  -o ./api/data \
+  --single-file
+
+# Serve with any static server
+cd ./api &amp;&amp; python -m http.server
+</code></pre>
+<h2 id="integration-with-static-site-generators">Integration with Static Site Generators</h2>
+<h3 id="hugo">Hugo</h3>
+<pre><code class="language-bash"># Export directly to Hugo content directory
+ghops export generate -f hugo -o ./my-site/content/projects
+
+# Build and serve
+cd ./my-site
+hugo serve
+</code></pre>
+<h3 id="jekyll">Jekyll</h3>
+<pre><code class="language-bash"># Export as markdown to Jekyll collections
+ghops export generate -f markdown -o ./my-site/_projects
+
+# Add to _config.yml:
+# collections:
+#   projects:
+#     output: true
+</code></pre>
+<h3 id="nextjs-gatsby">Next.js / Gatsby</h3>
+<pre><code class="language-bash"># Export as JSON for static generation
+ghops export generate -f json \
+  --single-file \
+  -o ./my-app/data/projects.json
+
+# Import in your app
+# import projects from '../data/projects.json'
+</code></pre>
 
 
 

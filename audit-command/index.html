@@ -9,6 +9,10 @@
       
       
       
+        <link rel="prev" href="../catalog-query/">
+      
+      
+        <link rel="next" href="../export-command/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -16,7 +20,7 @@
     
     
       
-        <title>Changelog - ghops</title>
+        <title>Repository Audit - ghops</title>
       
     
     
@@ -67,6 +71,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#audit-command" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -97,7 +106,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Changelog
+              Repository Audit
             
           </span>
         </div>
@@ -246,10 +255,12 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../catalog-query/" class="md-tabs__link">
           
   
@@ -414,26 +425,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -446,7 +462,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             Commands
@@ -480,10 +496,32 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../audit-command/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Repository Audit
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -494,6 +532,173 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#subcommands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Subcommands
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Subcommands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ghops-audit-all" class="md-nav__link">
+    <span class="md-ellipsis">
+      ghops audit all
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ghops-audit-license" class="md-nav__link">
+    <span class="md-ellipsis">
+      ghops audit license
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ghops-audit-security" class="md-nav__link">
+    <span class="md-ellipsis">
+      ghops audit security
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ghops-audit-deps" class="md-nav__link">
+    <span class="md-ellipsis">
+      ghops audit deps
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ghops-audit-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      ghops audit docs
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common Options
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      Output Format
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fix-capabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fix Capabilities
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      Examples
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#comprehensive-audit-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      Comprehensive Audit Report
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#targeted-fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Targeted Fixes
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#integration-with-cicd" class="md-nav__link">
+    <span class="md-ellipsis">
+      Integration with CI/CD
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -683,9 +888,165 @@
   
 
 
-  <h1>Changelog</h1>
+<h1 id="audit-command">Audit Command</h1>
+<p>The <code>ghops audit</code> command provides comprehensive health checks for your repositories, identifying and optionally fixing common issues.</p>
+<h2 id="overview">Overview</h2>
+<p>The audit command checks repositories for:
+- Missing or outdated licenses
+- Missing README files
+- Security vulnerabilities (hardcoded secrets)
+- Dependency management issues
+- Documentation setup problems
+- Missing or incomplete .gitignore files</p>
+<h2 id="usage">Usage</h2>
+<pre><code class="language-bash">ghops audit SUBCOMMAND [OPTIONS]
+</code></pre>
+<h2 id="subcommands">Subcommands</h2>
+<h3 id="ghops-audit-all"><code>ghops audit all</code></h3>
+<p>Run all audit checks on repositories.</p>
+<pre><code class="language-bash"># Audit all repositories
+ghops audit all --pretty
 
+# Audit and fix issues
+ghops audit all --fix
 
+# Audit Python repositories only
+ghops audit all -t &quot;lang:python&quot; --pretty
+
+# Dry run to see what would be fixed
+ghops audit all --fix --dry-run
+</code></pre>
+<h3 id="ghops-audit-license"><code>ghops audit license</code></h3>
+<p>Check for missing or problematic license files.</p>
+<pre><code class="language-bash"># Check all repos for licenses
+ghops audit license --pretty
+
+# Add MIT licenses to repos missing them
+ghops audit license --fix --type MIT --author &quot;Your Name&quot;
+
+# Audit specific repositories
+ghops audit license -t &quot;dir:work&quot; --fix --type Apache-2.0
+</code></pre>
+<h3 id="ghops-audit-security"><code>ghops audit security</code></h3>
+<p>Scan for potential security issues like hardcoded secrets.</p>
+<pre><code class="language-bash"># Security scan all repos
+ghops audit security --pretty
+
+# Fix security issues (adds secrets to .gitignore)
+ghops audit security --fix
+
+# Scan specific repos
+ghops audit security -q &quot;language == 'python'&quot;
+</code></pre>
+<h3 id="ghops-audit-deps"><code>ghops audit deps</code></h3>
+<p>Check dependency management health.</p>
+<pre><code class="language-bash"># Check all repos
+ghops audit deps --pretty
+
+# Check JavaScript projects
+ghops audit deps -q &quot;has:package.json&quot;
+
+# Check Python projects
+ghops audit deps -t &quot;lang:python&quot;
+</code></pre>
+<h3 id="ghops-audit-docs"><code>ghops audit docs</code></h3>
+<p>Verify documentation setup and configuration.</p>
+<pre><code class="language-bash"># Check documentation health
+ghops audit docs --pretty
+
+# Fix missing documentation setup
+ghops audit docs --fix
+
+# Check repos that should have docs
+ghops audit docs -q &quot;file_count &gt; 100&quot;
+</code></pre>
+<h2 id="common-options">Common Options</h2>
+<ul>
+<li><code>--fix</code> - Automatically fix issues found</li>
+<li><code>--dry-run</code> - Preview what would be fixed without making changes</li>
+<li><code>-t, --tag TAG</code> - Filter repositories by tag</li>
+<li><code>-q, --query EXPR</code> - Filter by query expression</li>
+<li><code>--pretty</code> - Display as formatted table (default is JSONL)</li>
+</ul>
+<h2 id="output-format">Output Format</h2>
+<p>By default, audit commands output JSONL for pipeline processing:</p>
+<pre><code class="language-bash"># Find all repos failing security audit
+ghops audit security | jq 'select(.status == &quot;fail&quot;)'
+
+# Get summary of all audit failures
+ghops audit all | jq 'select(.status == &quot;fail&quot;) | {
+  name: .name,
+  failed_checks: [.checks | to_entries[] | select(.value.status == &quot;fail&quot;) | .key]
+}'
+
+# Export audit results to CSV
+ghops audit all | jq -r '
+  [.name, .status, (.checks.license.status), (.checks.security.status)] | @csv
+' &gt; audit-results.csv
+</code></pre>
+<h2 id="fix-capabilities">Fix Capabilities</h2>
+<p>The <code>--fix</code> flag enables automatic remediation:</p>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Fix Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>License</td>
+<td>Adds license file with proper attribution</td>
+</tr>
+<tr>
+<td>README</td>
+<td>Creates basic README.md template</td>
+</tr>
+<tr>
+<td>Security</td>
+<td>Adds .env to .gitignore, creates .gitignore if missing</td>
+</tr>
+<tr>
+<td>Docs</td>
+<td>Adds MkDocs configuration for repos with docs/ directory</td>
+</tr>
+<tr>
+<td>Gitignore</td>
+<td>Creates comprehensive .gitignore for detected language</td>
+</tr>
+</tbody>
+</table>
+<h2 id="examples">Examples</h2>
+<h3 id="comprehensive-audit-report">Comprehensive Audit Report</h3>
+<pre><code class="language-bash"># Generate full audit report for all repos
+ghops audit all --pretty &gt; audit-report.txt
+
+# Get JSON summary
+ghops audit all | jq -s '{
+  total: length,
+  passed: [.[] | select(.status == &quot;pass&quot;)] | length,
+  failed: [.[] | select(.status == &quot;fail&quot;)] | length,
+  fixed: [.[] | select(.status == &quot;fixed&quot;)] | length
+}'
+</code></pre>
+<h3 id="targeted-fixes">Targeted Fixes</h3>
+<pre><code class="language-bash"># Fix all Python repos missing licenses
+ghops audit license -t &quot;lang:python&quot; --fix --type MIT \
+  --author &quot;Your Name&quot; --email &quot;your@email.com&quot;
+
+# Add READMEs to all work projects
+ghops audit readme -t &quot;dir:work&quot; --fix
+
+# Secure all repos with potential issues
+ghops audit security --fix
+</code></pre>
+<h3 id="integration-with-cicd">Integration with CI/CD</h3>
+<pre><code class="language-bash"># Fail CI if any audits fail
+if ghops audit all | jq -e 'any(.status == &quot;fail&quot;)'; then
+  echo &quot;Audit failed!&quot;
+  exit 1
+fi
+</code></pre>
 
 
 

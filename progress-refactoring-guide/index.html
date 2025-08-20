@@ -16,7 +16,7 @@
     
     
       
-        <title>Changelog - ghops</title>
+        <title>Progress System Refactoring Guide - ghops</title>
       
     
     
@@ -67,6 +67,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#progress-system-refactoring-guide" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -97,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Changelog
+              Progress System Refactoring Guide
             
           </span>
         </div>
@@ -683,9 +688,200 @@
   
 
 
-  <h1>Changelog</h1>
+<h1 id="progress-system-refactoring-guide">Progress System Refactoring Guide</h1>
+<h2 id="overview">Overview</h2>
+<p>We've built a unified progress reporting system that separates concerns:
+- <strong>stdout</strong>: Clean JSON/JSONL data for piping
+- <strong>stderr</strong>: Progress, warnings, errors for humans
+- <strong>Auto-detection</strong>: Smart defaults based on TTY detection</p>
+<h2 id="benefits-of-refactoring">Benefits of Refactoring</h2>
+<ol>
+<li><strong>Consistency</strong>: All commands behave the same way</li>
+<li><strong>Simplicity</strong>: Remove <code>if pretty:</code> conditionals everywhere</li>
+<li><strong>Pipe-friendly</strong>: Clean data output for scripting</li>
+<li><strong>User-friendly</strong>: Automatic progress in terminals</li>
+<li><strong>Maintainable</strong>: Single source of truth for progress logic</li>
+</ol>
+<h2 id="refactoring-checklist">Refactoring Checklist</h2>
+<p>For each command:</p>
+<h3 id="1-replace-pretty-with-v-verbose">1. Replace <code>--pretty</code> with <code>-v/--verbose</code></h3>
+<pre><code class="language-python"># Before
+@click.option('--pretty', is_flag=True)
 
+# After  
+@click.option('-v', '--verbose', is_flag=True)
+</code></pre>
+<h3 id="2-initialize-progress">2. Initialize Progress</h3>
+<pre><code class="language-python"># Before
+if pretty:
+    console.print(&quot;Starting...&quot;)
 
+# After
+from ghops.progress import get_progress
+progress = get_progress(enabled=verbose or None)
+progress(&quot;Starting...&quot;)
+</code></pre>
+<h3 id="3-replace-console-output">3. Replace Console Output</h3>
+<pre><code class="language-python"># Before
+if pretty:
+    console.print(f&quot;[green]✓[/green] Success&quot;)
+    console.print(f&quot;[red]✗[/red] Error&quot;)
+    console.print(f&quot;[yellow]⚠[/yellow] Warning&quot;)
+
+# After
+progress.success(&quot;Success&quot;)
+progress.error(&quot;Error&quot;)  
+progress.warning(&quot;Warning&quot;)
+</code></pre>
+<h3 id="4-use-progress-contexts">4. Use Progress Contexts</h3>
+<pre><code class="language-python"># Before
+for i, item in enumerate(items):
+    if pretty:
+        console.print(f&quot;Processing {item}...&quot;)
+    process(item)
+
+# After
+with progress.task(&quot;Processing items&quot;, total=len(items)) as update:
+    for i, item in enumerate(items):
+        update(i + 1, item)
+        process(item)
+</code></pre>
+<h3 id="5-always-output-json">5. Always Output JSON</h3>
+<pre><code class="language-python"># Before
+if pretty:
+    console.print(f&quot;Result: {result}&quot;)
+else:
+    print(json.dumps(result))
+
+# After
+print(json.dumps(result))  # Always output data
+progress(f&quot;Result processed&quot;)  # Progress to stderr
+</code></pre>
+<h3 id="6-handle-interrupts">6. Handle Interrupts</h3>
+<pre><code class="language-python"># Built-in with progress system
+# Ctrl+C is handled gracefully
+</code></pre>
+<h2 id="commands-to-refactor">Commands to Refactor</h2>
+<p>Priority order based on usage:</p>
+<h3 id="high-priority">High Priority</h3>
+<ul>
+<li>[x] <code>catalog import-github</code> - DONE</li>
+<li>[ ] <code>status</code> - Main command, needs progress bars</li>
+<li>[ ] <code>update</code> - Long-running, needs progress</li>
+<li>[ ] <code>query</code> - Could show query progress</li>
+<li>[ ] <code>get</code> - Cloning repos needs progress</li>
+</ul>
+<h3 id="medium-priority">Medium Priority</h3>
+<ul>
+<li>[ ] <code>list</code> - Quick but could show scan progress</li>
+<li>[ ] <code>export</code> - File generation needs progress</li>
+<li>[ ] <code>docs</code> - Building docs needs progress</li>
+<li>[ ] <code>social post</code> - API calls need feedback</li>
+<li>[ ] <code>audit</code> - Long analysis needs progress</li>
+</ul>
+<h3 id="low-priority">Low Priority</h3>
+<ul>
+<li>[ ] <code>config</code> - Usually instant</li>
+<li>[ ] <code>metadata</code> - Quick operations</li>
+<li>[ ] <code>service</code> - Daemon mode</li>
+</ul>
+<h2 id="standard-patterns">Standard Patterns</h2>
+<h3 id="pattern-1-simple-progress">Pattern 1: Simple Progress</h3>
+<pre><code class="language-python">@click.command()
+@click.option('-v', '--verbose', is_flag=True)
+def my_command(verbose):
+    progress = get_progress(enabled=verbose or None)
+
+    progress(&quot;Starting operation...&quot;)
+    # Do work
+    progress.success(&quot;Completed!&quot;)
+
+    # Output data
+    print(json.dumps(result))
+</code></pre>
+<h3 id="pattern-2-with-progress-bar">Pattern 2: With Progress Bar</h3>
+<pre><code class="language-python">with progress.task(&quot;Processing&quot;, total=count) as update:
+    for i, item in enumerate(items, 1):
+        update(i, item.name)
+        result = process(item)
+        print(json.dumps(result))  # Stream results
+</code></pre>
+<h3 id="pattern-3-with-spinner">Pattern 3: With Spinner</h3>
+<pre><code class="language-python">with progress.spinner(&quot;Fetching from API...&quot;):
+    data = fetch_from_api()
+
+print(json.dumps(data))
+</code></pre>
+<h3 id="pattern-4-using-cli_utils-decorator">Pattern 4: Using cli_utils Decorator</h3>
+<pre><code class="language-python">from ghops.cli_utils import standard_command
+
+@click.command()
+@standard_command()
+def my_command(progress, **kwargs):
+    progress(&quot;Working...&quot;)
+    yield {&quot;status&quot;: &quot;success&quot;}  # Auto-printed as JSON
+</code></pre>
+<h2 id="testing">Testing</h2>
+<p>After refactoring, test:</p>
+<ol>
+<li><strong>Terminal output</strong>: <code>ghops &lt;command&gt;</code></li>
+<li>
+<p>Should show progress automatically</p>
+</li>
+<li>
+<p><strong>Piped output</strong>: <code>ghops &lt;command&gt; | jq .</code></p>
+</li>
+<li>
+<p>Should show only JSON, no progress</p>
+</li>
+<li>
+<p><strong>Forced verbose</strong>: <code>ghops &lt;command&gt; -v | jq .</code></p>
+</li>
+<li>
+<p>Should show progress even when piped</p>
+</li>
+<li>
+<p><strong>Error handling</strong>: Ctrl+C during operation</p>
+</li>
+<li>Should exit gracefully with message</li>
+</ol>
+<h2 id="migration-strategy">Migration Strategy</h2>
+<ol>
+<li>Start with most-used commands (<code>status</code>, <code>update</code>)</li>
+<li>Test each command thoroughly</li>
+<li>Update documentation</li>
+<li>Deprecate <code>--pretty</code> flags (keep for compatibility initially)</li>
+<li>Remove old console.print code after transition period</li>
+</ol>
+<h2 id="example-pr">Example PR</h2>
+<pre><code class="language-markdown">## Refactor: Migrate `status` command to unified progress system
+
+### Changes
+- Replace `--pretty` with `-v/--verbose`
+- Use progress reporter instead of console.print
+- Separate data (stdout) from progress (stderr)
+- Add progress bar for repository scanning
+
+### Benefits
+- Consistent with other commands
+- Better piping support
+- Cleaner code (removed 50 lines)
+- Automatic progress in terminals
+
+### Testing
+- [x] Terminal shows progress
+- [x] Piping produces clean JSON
+- [x] Verbose flag works
+- [x] Ctrl+C handled gracefully
+</code></pre>
+<h2 id="future-enhancements">Future Enhancements</h2>
+<ol>
+<li><strong>Progress Levels</strong>: <code>-v</code>, <code>-vv</code>, <code>-vvv</code> for increasing detail</li>
+<li><strong>Quiet Mode</strong>: <code>-q</code> to suppress all progress</li>
+<li><strong>Machine-Readable Progress</strong>: JSON progress events</li>
+<li><strong>Progress Persistence</strong>: Resume interrupted operations</li>
+<li><strong>Parallel Progress</strong>: Multiple progress bars for concurrent ops</li>
+</ol>
 
 
 

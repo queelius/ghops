@@ -9,6 +9,10 @@
       
       
       
+        <link rel="prev" href="../list-command/">
+      
+      
+        <link rel="next" href="../architecture-vision/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -16,7 +20,7 @@
     
     
       
-        <title>Changelog - ghops</title>
+        <title>Query Cookbook - ghops</title>
       
     
     
@@ -67,6 +71,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#ghops-query-cookbook" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -97,7 +106,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Changelog
+              Query Cookbook
             
           </span>
         </div>
@@ -246,10 +255,12 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../catalog-query/" class="md-tabs__link">
           
   
@@ -414,26 +425,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -446,7 +462,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             Commands
@@ -572,10 +588,32 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../query-cookbook/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Query Cookbook
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -586,6 +624,284 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#basic-searches" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basic Searches
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Basic Searches">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#find-repositories-by-language" class="md-nav__link">
+    <span class="md-ellipsis">
+      Find repositories by language
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#find-popular-repositories" class="md-nav__link">
+    <span class="md-ellipsis">
+      Find popular repositories
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#find-repositories-with-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      Find repositories with issues
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complex-queries" class="md-nav__link">
+    <span class="md-ellipsis">
+      Complex Queries
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Complex Queries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#multi-criteria-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      Multi-criteria search
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#repository-health-assessment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Repository health assessment
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aggregations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Aggregations
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Aggregations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#language-distribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      Language distribution
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deployment-statistics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deployment statistics
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-formatting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Output Formatting
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Output Formatting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#csv-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      CSV export
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#markdown-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      Markdown report
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#html-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      HTML table
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-tips" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance Tips
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Performance Tips">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#streaming-for-large-datasets" class="md-nav__link">
+    <span class="md-ellipsis">
+      Streaming for large datasets
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#combine-commands-efficiently" class="md-nav__link">
+    <span class="md-ellipsis">
+      Combine commands efficiently
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common Patterns
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#find-todo-repositories" class="md-nav__link">
+    <span class="md-ellipsis">
+      Find "todo" repositories
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#portfolio-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      Portfolio analysis
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#maintenance-dashboard" class="md-nav__link">
+    <span class="md-ellipsis">
+      Maintenance dashboard
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-techniques" class="md-nav__link">
+    <span class="md-ellipsis">
+      Advanced Techniques
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Techniques">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#custom-scoring-function" class="md-nav__link">
+    <span class="md-ellipsis">
+      Custom scoring function
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#real-time-monitoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      Real-time monitoring
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -683,9 +999,133 @@
   
 
 
-  <h1>Changelog</h1>
+<h1 id="ghops-query-cookbook">ghops Query Cookbook</h1>
+<p>This cookbook shows common search and analysis patterns using <code>ghops</code> with <code>jq</code>.</p>
+<h2 id="basic-searches">Basic Searches</h2>
+<h3 id="find-repositories-by-language">Find repositories by language</h3>
+<pre><code class="language-bash">ghops list | jq 'select(.github.language == &quot;Python&quot;)'
+ghops list | jq 'select(.github.language | test(&quot;Java&quot;; &quot;i&quot;))'  # Case-insensitive
+</code></pre>
+<h3 id="find-popular-repositories">Find popular repositories</h3>
+<pre><code class="language-bash">ghops list | jq 'select(.github.stars &gt; 10)'
+ghops status | jq 'select(.github.on_github and .github.stars &gt; 5)'
+</code></pre>
+<h3 id="find-repositories-with-issues">Find repositories with issues</h3>
+<pre><code class="language-bash">ghops status | jq 'select(.status | contains(&quot;modified&quot;) or contains(&quot;untracked&quot;))'
+</code></pre>
+<h2 id="complex-queries">Complex Queries</h2>
+<h3 id="multi-criteria-search">Multi-criteria search</h3>
+<pre><code class="language-bash"># Python repos with PyPI packages
+ghops status | jq 'select(
+  .github.language == &quot;Python&quot; and 
+  .pypi_info != null and 
+  .github.stars &gt; 0
+)'
+</code></pre>
+<h3 id="repository-health-assessment">Repository health assessment</h3>
+<pre><code class="language-bash">ghops status | jq '{
+  name: .name,
+  health_score: (
+    (.github.on_github | if . then 2 else 0 end) +
+    ((.license.name != null) | if . then 1 else 0 end) +
+    ((.pypi_info != null) | if . then 2 else 0 end) +
+    ((.pages_url != null) | if . then 1 else 0 end) +
+    ((.github.stars &gt; 0) | if . then 1 else 0 end)
+  )
+} | select(.health_score &gt;= 4)'
+</code></pre>
+<h2 id="aggregations">Aggregations</h2>
+<h3 id="language-distribution">Language distribution</h3>
+<pre><code class="language-bash">ghops list | jq -s 'group_by(.github.language) | 
+  map({language: .[0].github.language, count: length}) | 
+  sort_by(.count) | reverse'
+</code></pre>
+<h3 id="deployment-statistics">Deployment statistics</h3>
+<pre><code class="language-bash">ghops status | jq -s '{
+  total: length,
+  on_github: map(select(.github.on_github)) | length,
+  with_pypi: map(select(.pypi_info != null)) | length,
+  with_pages: map(select(.pages_url != null)) | length,
+  with_license: map(select(.license.name != null)) | length
+}'
+</code></pre>
+<h2 id="output-formatting">Output Formatting</h2>
+<h3 id="csv-export">CSV export</h3>
+<pre><code class="language-bash">echo &quot;name,stars,language,has_pypi&quot; &gt; repos.csv
+ghops list | jq -r '[.name, .github.stars, .github.language, (.pypi_info != null)] | @csv' &gt;&gt; repos.csv
+</code></pre>
+<h3 id="markdown-report">Markdown report</h3>
+<pre><code class="language-bash">ghops list | jq -r '&quot;## &quot; + .name + &quot; (&quot; + (.github.language // &quot;Unknown&quot;) + &quot;)\n&quot; +
+  &quot;⭐ &quot; + (.github.stars | tostring) + &quot; stars\n&quot; +
+  (.github.description // &quot;No description&quot;) + &quot;\n&quot;'
+</code></pre>
+<h3 id="html-table">HTML table</h3>
+<pre><code class="language-bash">echo &quot;&lt;table&gt;&lt;tr&gt;&lt;th&gt;Name&lt;/th&gt;&lt;th&gt;Stars&lt;/th&gt;&lt;th&gt;Language&lt;/th&gt;&lt;/tr&gt;&quot;
+ghops list | jq -r '&quot;&lt;tr&gt;&lt;td&gt;&quot; + .name + &quot;&lt;/td&gt;&lt;td&gt;&quot; + (.github.stars | tostring) + &quot;&lt;/td&gt;&lt;td&gt;&quot; + (.github.language // &quot;&quot;) + &quot;&lt;/td&gt;&lt;/tr&gt;&quot;'
+echo &quot;&lt;/table&gt;&quot;
+</code></pre>
+<h2 id="performance-tips">Performance Tips</h2>
+<h3 id="streaming-for-large-datasets">Streaming for large datasets</h3>
+<pre><code class="language-bash"># Process results as they come in (don't wait for all repos)
+ghops status --recursive | jq 'select(.github.stars &gt; 100)' | head -10
+</code></pre>
+<h3 id="combine-commands-efficiently">Combine commands efficiently</h3>
+<pre><code class="language-bash"># Use process substitution for complex joins
+join -t$'\t' \
+  &lt;(ghops list | jq -r '[.name, .github.stars] | @tsv' | sort) \
+  &lt;(ghops status | jq -r '[.name, (.pypi_info != null)] | @tsv' | sort)
+</code></pre>
+<h2 id="common-patterns">Common Patterns</h2>
+<h3 id="find-todo-repositories">Find "todo" repositories</h3>
+<pre><code class="language-bash"># Repos that need attention
+ghops status | jq 'select(
+  (.status | contains(&quot;modified&quot;)) or
+  (.license.name == null) or
+  (.github.on_github == false) or
+  (.github.description == null or .github.description == &quot;&quot;)
+)' | jq '{name: .name, issues: [
+  (if .status | contains(&quot;modified&quot;) then &quot;uncommitted changes&quot; else empty end),
+  (if .license.name == null then &quot;no license&quot; else empty end),
+  (if .github.on_github == false then &quot;not on github&quot; else empty end),
+  (if .github.description == null or .github.description == &quot;&quot; then &quot;no description&quot; else empty end)
+]}'
+</code></pre>
+<h3 id="portfolio-analysis">Portfolio analysis</h3>
+<pre><code class="language-bash"># Your coding portfolio stats
+ghops list | jq -s '{
+  total_repos: length,
+  languages: [group_by(.github.language) | .[] | {lang: .[0].github.language, count: length}],
+  total_stars: map(.github.stars) | add,
+  original_projects: map(select(.github.is_fork == false)) | length
+}'
+</code></pre>
+<h3 id="maintenance-dashboard">Maintenance dashboard</h3>
+<pre><code class="language-bash"># Repos needing updates
+ghops status | jq 'select(.status | contains(&quot;behind&quot;))' | jq '{
+  name: .name,
+  status: .status,
+  action: &quot;git pull needed&quot;
+}'
+</code></pre>
+<h2 id="advanced-techniques">Advanced Techniques</h2>
+<h3 id="custom-scoring-function">Custom scoring function</h3>
+<pre><code class="language-bash">ghops_score() {
+  ghops status | jq --arg weight_stars &quot;$1&quot; --arg weight_pypi &quot;$2&quot; '{
+    name: .name,
+    score: (
+      (.github.stars * ($weight_stars | tonumber)) +
+      ((.pypi_info != null) | if . then ($weight_pypi | tonumber) else 0 end) +
+      ((.license.name != null) | if . then 5 else 0 end)
+    )
+  } | select(.score &gt; 10)'
+}
 
-
+# Usage: ghops_score 2 10  (2 points per star, 10 for PyPI)
+</code></pre>
+<h3 id="real-time-monitoring">Real-time monitoring</h3>
+<pre><code class="language-bash"># Watch for changes (requires `watch` command)
+watch -n 30 'ghops status | jq &quot;select(.status | contains(\&quot;modified\&quot;))&quot; | jq -r &quot;.name + \&quot;: \&quot; + .status&quot;'
+</code></pre>
 
 
 
