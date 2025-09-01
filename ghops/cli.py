@@ -17,6 +17,8 @@ from ghops.commands.query import query_handler
 from ghops.commands.metadata import metadata_cmd
 from ghops.commands.docs import docs_group
 from ghops.commands.export import export_cmd
+from ghops.commands.network import network_cmd
+from ghops.commands.ai import ai_cmd
 
 
 @click.group()
@@ -40,6 +42,8 @@ cli.add_command(query_handler, name='query')
 cli.add_command(metadata_cmd)
 cli.add_command(docs_group)
 cli.add_command(export_cmd)
+cli.add_command(network_cmd)
+cli.add_command(ai_cmd)
 
 
 def main():
