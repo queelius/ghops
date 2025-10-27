@@ -14,9 +14,19 @@ from ghops.core import create_social_media_posts, execute_social_media_posts
 from ghops.render import render_social_media_posts
 from ghops.repo_filter import get_filtered_repos, add_common_repo_options
 
-@click.group()
+@click.group(name='social')
 def social_cmd():
-    """Manage social media posts for repositories."""
+    """Manage social media posts for repositories.
+
+    Create, schedule, and publish social media posts about your repositories.
+
+    Examples:
+
+    \b
+        ghops social post --repo myproject
+        ghops social create --sample-size 5
+        ghops social status
+    """
     pass
 
 @social_cmd.command("create")

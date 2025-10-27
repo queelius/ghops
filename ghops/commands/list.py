@@ -5,23 +5,82 @@ from ghops.pypi import detect_pypi_package
 from ghops.render import render_list_table
 from ghops.cli_utils import standard_command, add_common_options
 from ghops.exit_codes import NoReposFoundError
+from ghops.metadata import get_metadata_store
 import json
 import os
 import sys
 from pathlib import Path
 
 
-def get_repo_metadata(repo_path, remote_url, skip_github_info=False, skip_pages_check=False, preserve_symlinks=False):
+def get_repo_metadata(repo_path, remote_url, skip_github_info=False, skip_pages_check=False, preserve_symlinks=False, use_metadata_store=True):
     """Get basic repository metadata for discovery and filtering."""
     # For the name, always use the resolved path to get consistent names
     repo_name = os.path.basename(str(Path(repo_path).resolve()))
-    
+
     # For the path, optionally preserve symlinks
     if preserve_symlinks:
         display_path = str(Path(repo_path).absolute())
     else:
         display_path = str(Path(repo_path).resolve())
-    
+
+    # Try to use metadata store first for speed
+    if use_metadata_store and not skip_github_info:
+        store = get_metadata_store()
+        # Try to get by exact path first
+        stored_metadata = store.get(repo_path)
+
+        # If not found, try with resolved path
+        if not stored_metadata:
+            resolved_path = str(Path(repo_path).resolve())
+            if resolved_path != repo_path:
+                stored_metadata = store.get(resolved_path)
+        if stored_metadata:
+            # Use stored metadata but adapt to list command format
+            metadata = {
+                "name": repo_name,
+                "path": display_path,
+                "remote_url": stored_metadata.get("remote_url") or remote_url,
+                "has_license": bool(stored_metadata.get("license")),
+                "has_package": False,  # Will check below
+                "github": None
+            }
+
+            # Check for package indicators in metadata
+            # The metadata store doesn't have "package_type", so we check for typical package files
+            # that would have been detected during metadata refresh
+            if (stored_metadata.get("has_readme") and
+                any(pkg_indicator in stored_metadata.get("readme_content", "").lower()
+                    for pkg_indicator in ["pypi", "npm", "crates.io", "packagist"])):
+                metadata["has_package"] = True
+            # Or check if it's a known language with typical package managers
+            elif stored_metadata.get("language") in ["Python", "JavaScript", "TypeScript", "Rust", "Go", "PHP", "Ruby"]:
+                # Assume repos in these languages likely have packages - this is a heuristic
+                # The slow check would be to look at the filesystem, which we're avoiding
+                pass
+
+            # Add GitHub info if available (provider == 'github')
+            if stored_metadata.get("provider") == "github":
+                github_info = {
+                    "is_private": stored_metadata.get("private", False),
+                    "is_fork": stored_metadata.get("fork", False)
+                }
+
+                # Add pages URL if available
+                if not skip_pages_check:
+                    if stored_metadata.get("has_pages"):
+                        # Construct GitHub Pages URL
+                        owner = stored_metadata.get("owner")
+                        repo = stored_metadata.get("repo")
+                        if owner and repo:
+                            github_info["pages_url"] = f"https://{owner}.github.io/{repo}"
+                    else:
+                        github_info["pages_url"] = None
+
+                metadata["github"] = github_info
+
+            return metadata
+
+    # Fallback to original logic if metadata store not available or skipped
     metadata = {
         "name": repo_name,
         "path": display_path,
@@ -56,7 +115,7 @@ def get_repo_metadata(repo_path, remote_url, skip_github_info=False, skip_pages_
         if owner and repo_name_parsed:
             try:
                 # Use GitHub CLI to get basic repo info
-                repo_info = run_command(
+                repo_info, _ = run_command(
                     "gh repo view --json name,stargazerCount,description,primaryLanguage,isPrivate,isFork,forkCount", 
                     cwd=repo_path, 
                     capture_output=True, 
@@ -77,7 +136,7 @@ def get_repo_metadata(repo_path, remote_url, skip_github_info=False, skip_pages_
                 if not skip_pages_check:
                     if owner and repo_name_parsed:
                         # Cache removed - go directly to GitHub API
-                            pages_result = run_command(
+                            pages_result, _ = run_command(
                                 f"gh api repos/{owner}/{repo_name_parsed}/pages",
                                 capture_output=True,
                                 check=False,
@@ -116,41 +175,46 @@ def get_repo_metadata(repo_path, remote_url, skip_github_info=False, skip_pages_
 
 
 @click.command("list")
-@click.option("-d", "--dir", help="Directory to search (overrides config)")
+@click.option("-d", "--dir", help="[DEPRECATED] Use: ghops fs ls /repos or ghops status /")
 @click.option("--recursive", is_flag=True, help="Search subdirectories for git repos")
 @click.option("--no-dedup", is_flag=True, help="Show all instances including duplicates and soft links")
 @click.option("--no-github", is_flag=True, help="Skip GitHub API calls for faster listing")
 @click.option("--no-pages", is_flag=True, help="Skip GitHub Pages check for faster results")
-@click.option("-t", "--tag", "tag_filters", multiple=True, help="Filter by tags (e.g., org:torvalds, lang:python)")
+@click.option("-t", "--tag", "tag_filters", multiple=True, help="[DEPRECATED] Use VFS paths like: ghops fs ls /by-tag/work")
 @click.option("--all-tags", is_flag=True, help="Match all tags (default: match any)")
 @click.option("--table/--no-table", default=None, help="Display as formatted table (auto-detected by default)")
 @add_common_options('verbose', 'quiet', 'format', 'fields')
 @standard_command(streaming=True)
 def list_repos_handler(dir, recursive, no_dedup, no_github, no_pages, tag_filters, all_tags, table, format, fields, progress, quiet, **kwargs):
     """
-    List available repositories with deduplication by default.
-    
+    [DEPRECATED] List available repositories.
+
+    ⚠️  This command is deprecated. Use instead:
+    - ghops fs ls -l /            For list with metadata
+    - ghops status /              For comprehensive status
+    - ghops fs ls /by-tag/work    For tagged repos
+
     \b
-    Automatically detects and marks soft links vs true duplicates.
-    
-    Output format:
-    - Interactive terminal: Table format by default
-    - Piped/redirected: JSONL streaming by default
-    - Use --table to force table output
-    - Use --no-table to force JSONL output
-    - Use -v/--verbose to show progress
-    - Use -q/--quiet to suppress JSON output
-    
+    This command still works but will be removed in a future version.
+
     Examples:
-    
+
     \b
-        ghops list                      # Table format (if terminal)
-        ghops list | jq .               # JSONL format (piped)
-        ghops list --no-table           # Force JSONL output
-        ghops list -d ~/projects        # List repos in ~/projects
-        ghops list -r                   # Recursive search
-        ghops list -t org:torvalds      # Filter by tag
+        # OLD (deprecated):
+        ghops list
+        ghops list -t lang:python
+        ghops list -d ~/projects
+
+        # NEW (recommended):
+        ghops fs ls -l /
+        ghops fs ls /by-language/Python
+        ghops status /
     """
+    import sys
+    print("⚠️  Warning: 'ghops list' is deprecated.", file=sys.stderr)
+    print("   Use 'ghops fs ls -l /' for fast listing with metadata", file=sys.stderr)
+    print("   Or 'ghops status /' for comprehensive status", file=sys.stderr)
+    print(file=sys.stderr)
     config = load_config()
     
     # Auto-detect table mode if not specified
@@ -186,7 +250,22 @@ def list_repos_handler(dir, recursive, no_dedup, no_github, no_pages, tag_filter
         raise NoReposFoundError("No repositories found in specified directories")
     
     progress(f"Found {len(repos)} repositories")
-    
+
+    # Check metadata store coverage and warn if low
+    if not no_github:
+        try:
+            store = get_metadata_store()
+            in_store = sum(1 for r in repos if store.get(r) or store.get(str(Path(r).resolve())))
+            coverage = (in_store / len(repos)) * 100 if repos else 0
+
+            if coverage < 50:
+                import sys
+                print(f"⚠️  Metadata coverage: {coverage:.0f}% ({in_store}/{len(repos)} repos)", file=sys.stderr)
+                print(f"   For faster results, refresh metadata: ghops metadata refresh --github", file=sys.stderr)
+                print(f"   Or skip GitHub info: ghops list --no-github", file=sys.stderr)
+        except Exception:
+            pass  # Don't fail if metadata check fails
+
     # Apply tag filtering if specified
     if tag_filters:
         from ..tags import filter_tags

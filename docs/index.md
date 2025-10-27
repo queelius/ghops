@@ -1,10 +1,26 @@
 # ghops Documentation
 
-Welcome to the documentation for **ghops** - a powerful, local-first git project management system that helps developers manage the full lifecycle of their projects across multiple platforms.
+Welcome to the documentation for **ghops** - a comprehensive repository orchestration platform that helps developers manage, analyze, and automate their projects across multiple platforms with advanced clustering, workflow orchestration, and intelligent integrations.
 
 ## What is ghops?
 
-`ghops` is a comprehensive project management tool that treats your local git repositories as the source of truth, with remote platforms (GitHub, GitLab, PyPI, etc.) serving as enrichment and distribution services. It provides powerful organization, discovery, auditing, and export capabilities for managing projects at scale.
+`ghops` is a powerful repository orchestration platform that treats your local git repositories as the source of truth, with remote platforms (GitHub, GitLab, PyPI, etc.) serving as enrichment and distribution services. It provides advanced repository analysis, intelligent clustering, workflow automation, and comprehensive export capabilities for managing projects at scale.
+
+## 🚀 What's New in Version 0.8.0
+
+- **🧠 Repository Clustering**: Advanced machine learning algorithms for grouping similar projects
+  - Multiple clustering algorithms: K-means, DBSCAN, Hierarchical, Network-based
+  - Code duplication detection at function and class level
+  - Intelligent consolidation advisor with confidence scoring
+  - Support for Python, JavaScript, Java, and Go code analysis
+- **🔄 Workflow Orchestration**: YAML-based workflow automation with DAG execution
+  - Parallel and sequential step execution with dependency resolution
+  - Multiple action types: shell, python, http, git, ghops
+  - Conditional execution and retry mechanisms
+  - Built-in actions library and extensible custom actions
+- **📊 Data Visualization**: Interactive charts and graphs for repository analytics
+- **🎓 Tutorial Notebooks**: 5 comprehensive Jupyter notebooks for hands-on learning
+- **🔌 Plugin Architecture**: Extensible integration system for custom features
 
 ## 🎯 Core Philosophy
 
@@ -15,6 +31,54 @@ Welcome to the documentation for **ghops** - a powerful, local-first git project
 - **Multi-Platform**: Works with GitHub, GitLab, Bitbucket, and more (coming soon)
 
 ## ✨ Key Features
+
+### 🧠 **Advanced Repository Analysis**
+- **Intelligent Clustering**: Automatically group similar repositories using machine learning
+  - K-means clustering with automatic optimal cluster detection
+  - DBSCAN for density-based clustering of arbitrary shapes
+  - Hierarchical clustering with dendrogram visualization
+  - Network-based clustering using repository relationships
+  - Ensemble methods combining multiple algorithms
+- **Code Duplication Detection**: Find duplicate code blocks across repositories
+  - Function and class-level code extraction
+  - Cross-repository similarity scoring
+  - Multi-language support: Python, JavaScript, Java, Go
+  - Actionable recommendations with confidence levels
+- **Consolidation Advisor**: Get intelligent suggestions for merging similar repositories
+  - Confidence scoring (0.0 to 1.0) for consolidation recommendations
+  - Effort estimation: low, medium, high complexity
+  - Detailed rationale and expected benefits
+  - Consideration of shared dependencies and code patterns
+- **Technology Stack Analysis**: Deep insights into languages, frameworks, and dependencies
+
+### 🔄 **Workflow Orchestration**
+- **YAML Workflows**: Define complex multi-step workflows in human-readable YAML
+  - Clear workflow definitions with variables and templating
+  - Support for workflow composition and reuse
+  - Schedule workflows with cron expressions
+  - Version control friendly format
+- **DAG Execution**: Directed Acyclic Graph execution with dependency management
+  - Automatic dependency resolution and topological sorting
+  - Parallel execution of independent steps
+  - Sequential execution for dependent operations
+  - Dynamic step generation based on runtime conditions
+- **Multiple Action Types**: Rich variety of built-in and custom actions
+  - **shell**: Execute shell commands with timeout and retry
+  - **python**: Run Python code with context access
+  - **http**: Make HTTP requests with authentication
+  - **git**: Git operations (clone, pull, push, commit)
+  - **ghops**: Integrate all ghops commands seamlessly
+  - **custom**: Extensible custom action support
+- **Conditional Logic**: Support for if/else conditions and dynamic branching
+  - Jinja2-style template expressions
+  - Access to step outputs and workflow context
+  - Complex boolean expressions
+  - Skip steps based on previous results
+- **Error Handling**: Robust retry and recovery mechanisms
+  - Configurable retry with exponential backoff
+  - Continue on error or stop on failure options
+  - Error recovery steps and fallback actions
+  - Comprehensive error reporting
 
 ### 🔍 **Repository Discovery & Organization**
 - **Tag-Based Catalogs**: Organize repos with explicit tags and auto-generated implicit tags
@@ -108,6 +172,21 @@ ghops status -r
 # Pretty-print status as a table
 ghops status -r --pretty
 
+# Analyze repository clusters using K-means
+ghops cluster analyze --algorithm kmeans --n-clusters 5
+
+# Find duplicate code across repositories
+ghops cluster find-duplicates --min-similarity 0.7 -r
+
+# Get consolidation suggestions
+ghops cluster suggest-consolidation --confidence 0.8 --pretty
+
+# Run a workflow
+ghops workflow run examples/workflows/morning-routine.yaml
+
+# Run workflow with variables
+ghops workflow run release-pipeline.yaml --var version=1.0.0
+
 # Filter repos with jq
 ghops status | jq 'select(.status.uncommitted_changes == true)'
 
@@ -136,16 +215,43 @@ ghops social post --dry-run
 
 ## Getting Started
 
-1. **[Installation](usage.md#installation-and-setup)** - Install and configure ghops
-2. **[Basic Usage](usage.md#core-commands)** - Learn the core commands
-3. **[Configuration](usage.md#configuration-management)** - Set up your preferences
-4. **[Advanced Features](usage.md#pypi-integration)** - Explore PyPI and social media features
+1. **[Installation](getting-started.md)** - Quick start guide for new users
+2. **[Tutorial Notebooks](tutorials/notebooks.md)** - Interactive Jupyter notebooks for learning
+3. **[Basic Usage](usage.md)** - Learn the core commands
+4. **[Configuration](usage.md#configuration-management)** - Set up your preferences
+5. **[Advanced Features](usage.md#pypi-integration)** - Explore PyPI and social media features
 
 ## Documentation Sections
 
+### 📖 Core Documentation
+- **[Getting Started](getting-started.md)** - Quick installation and first steps
 - **[Usage Guide](usage.md)** - Comprehensive command reference and examples
+- **[Query Cookbook](query-cookbook.md)** - Advanced query examples and patterns
+- **[Architecture & Vision](architecture-vision.md)** - System design and philosophy
+
+### 🔌 Integrations
+- **[Integration Overview](integrations/overview.md)** - Plugin architecture and available integrations
+- **[Repository Clustering](integrations/clustering.md)** - Machine learning-based clustering
+- **[Workflow Orchestration](integrations/workflow.md)** - YAML-based automation
+- **[Network Analysis](integrations/network-analysis.md)** - Repository relationship analysis
+
+### 📚 Tutorials & Guides
+- **[Tutorial Notebooks](tutorials/notebooks.md)** - Interactive Jupyter notebooks
+- **[Best Practices](guides/best-practices.md)** - Repository management best practices
+- **[Migration Guide](guides/migration.md)** - Upgrading from older versions
+- **[Troubleshooting](guides/troubleshooting.md)** - Common issues and solutions
+
+### 🔧 Commands & API
+- **[Catalog & Query](catalog-query.md)** - Organization and discovery
+- **[Repository Audit](audit-command.md)** - Health checks and auto-fixes
+- **[Portfolio Export](export-command.md)** - Export to multiple formats
+- **[Documentation](docs-command.md)** - Documentation management
+- **[API Reference](api/index.md)** - Complete API documentation
+
+### 🚀 Development
+- **[Contributing](contributing.md)** - How to contribute to the project
 - **[Future Plans](future-plans.md)** - Roadmap and upcoming features
-- **[Contributing](../contributing.md)** - How to contribute to the project
+- **[Changelog](changelog.md)** - Version history and release notes
 
 ## Recent Updates
 

@@ -87,7 +87,7 @@ def get_github_repo_info(owner: str, repo: str) -> dict[str, JsonValue] | None:
     """
     try:
         # Use gh CLI to get full repo info
-        output = run_command(
+        output, _ = run_command(
             f'gh api repos/{owner}/{repo}',
             capture_output=True,
             check=False,
@@ -116,7 +116,7 @@ def check_github_repo_status(owner, repo):
         return {'exists': False, 'visibility': 'N/A', 'is_fork': False}
     try:
         command = f"gh repo view {owner}/{repo} --json name,visibility,isFork"
-        result = run_command(command, capture_output=True, check=False, log_stderr=False)
+        result, _ = run_command(command, capture_output=True, check=False, log_stderr=False)
 
         if result:
             try:
@@ -140,25 +140,30 @@ def run_command(command, cwd=".", dry_run=False, capture_output=False, check=Tru
     Runs a shell command and logs the output.
 
     Args:
-        command (str): The command to run.
+        command (str or list): The command to run. Can be a string (for shell=True) or list (for shell=False).
         cwd (str): The working directory.
         dry_run (bool): If True, log the command without executing.
-        capture_output (bool): If True, return stdout.
+        capture_output (bool): If True, return (stdout, returncode), otherwise return (None, returncode).
         check (bool): If True, raise CalledProcessError on non-zero exit codes.
         log_stderr (bool): If False, do not log stderr as an error.
 
     Returns:
-        str: The command's stdout if capture_output is True, otherwise None.
+        tuple: (stdout_str, returncode) if capture_output is True, otherwise (None, returncode).
     """
     if dry_run:
-        logger.info(f"[Dry Run] Would run command in '{cwd}': {command}")
-        return "Dry run output" if capture_output else None
+        cmd_str = command if isinstance(command, str) else ' '.join(command)
+        logger.info(f"[Dry Run] Would run command in '{cwd}': {cmd_str}")
+        return ("Dry run output", 0) if capture_output else (None, 0)
 
     try:
-        logger.debug(f"Running command in '{cwd}': {command}")
+        # Determine if we should use shell mode
+        use_shell = isinstance(command, str)
+        cmd_str = command if use_shell else ' '.join(command)
+
+        logger.debug(f"Running command in '{cwd}': {cmd_str}")
         result = subprocess.run(
             command,
-            shell=True,
+            shell=use_shell,
             capture_output=True,
             text=True,
             cwd=cwd,
@@ -169,7 +174,9 @@ def run_command(command, cwd=".", dry_run=False, capture_output=False, check=Tru
         # Log stdout at the appropriate level
         if result.stdout and result.stdout.strip():
             # For certain commands, stdout is informational, not an error
-            if command.startswith("git pull") and "already up to date" in result.stdout.lower():
+            # Handle both string and list command formats
+            cmd_str = command if isinstance(command, str) else ' '.join(command)
+            if cmd_str.startswith("git pull") and "already up to date" in result.stdout.lower():
                 logger.info(result.stdout.strip())
             else:
                 logger.debug(result.stdout.strip())
@@ -184,7 +191,7 @@ def run_command(command, cwd=".", dry_run=False, capture_output=False, check=Tru
                     result.returncode, command, output=result.stdout, stderr=result.stderr
                 )
 
-        return result.stdout.strip() if capture_output else None
+        return (result.stdout.strip() if capture_output else None, result.returncode)
     except subprocess.CalledProcessError as e:
         if log_stderr:
             logger.error(f"Command failed with exit code {e.returncode}: {command}")
@@ -194,12 +201,13 @@ def run_command(command, cwd=".", dry_run=False, capture_output=False, check=Tru
                 logger.error(f"Stdout: {e.stdout.strip()}")
         if check:
             raise
-        return e.stdout.strip() if capture_output else None
+        return (None, e.returncode)
     except Exception as e:
         logger.error(f"An unexpected error occurred while running command '{command}': {e}")
         if check:
             raise
-        return None
+        return (None, -1)
+
 
 def is_git_repo(path):
     """Check if a given path is a Git repository."""
@@ -266,15 +274,15 @@ def get_git_status(repo_path):
     """
     try:
         # Get current branch
-        branch_output = run_command("git rev-parse --abbrev-ref HEAD", cwd=repo_path, capture_output=True, check=False)
+        branch_output, _, _ = run_command("git rev-parse --abbrev-ref HEAD", cwd=repo_path, capture_output=True, check=False)
         branch = branch_output.strip() if branch_output else "unknown"
-        
+
         # Get status (porcelain format for clean parsing)
-        status_output = run_command("git status --porcelain", cwd=repo_path, capture_output=True, check=False)
-        
+        status_output, _, _ = run_command("git status --porcelain", cwd=repo_path, capture_output=True, check=False)
+
         if status_output is None:
             return None
-            
+
         # Parse status
         if not status_output.strip():
             status = "clean"
@@ -285,7 +293,7 @@ def get_git_status(repo_path):
             added = sum(1 for line in lines if line.startswith('A'))
             deleted = sum(1 for line in lines if line.startswith(' D') or line.startswith('D'))
             untracked = sum(1 for line in lines if line.startswith('??'))
-            
+
             status_parts = []
             if modified > 0:
                 status_parts.append(f"{modified} modified")
@@ -295,25 +303,25 @@ def get_git_status(repo_path):
                 status_parts.append(f"{deleted} deleted")
             if untracked > 0:
                 status_parts.append(f"{untracked} untracked")
-            
+
             status = ", ".join(status_parts) if status_parts else "changes"
-        
+
         # Get ahead/behind counts
         ahead = 0
         behind = 0
-        
+
         # Check if we have an upstream branch
-        upstream_check = run_command(
-            "git rev-parse --abbrev-ref @{u}", 
-            cwd=repo_path, 
-            capture_output=True, 
+        upstream_check, _, _ = run_command(
+            "git rev-parse --abbrev-ref @{u}",
+            cwd=repo_path,
+            capture_output=True,
             check=False,
             log_stderr=False
         )
-        
+
         if upstream_check and not upstream_check.startswith("fatal:"):
             # Get ahead/behind counts
-            rev_list_output = run_command(
+            rev_list_output, _, _ = run_command(
                 "git rev-list --left-right --count HEAD...@{u}",
                 cwd=repo_path,
                 capture_output=True,
@@ -351,7 +359,7 @@ def get_gh_pages_url(repo_path):
     """
     try:
         # Get the remote URL
-        remote_url = run_command("git remote get-url origin", repo_path, capture_output=True, check=False, log_stderr=False)
+        remote_url, _ = run_command("git remote get-url origin", repo_path, capture_output=True, check=False, log_stderr=False)
         if not remote_url:
             return None
         
@@ -374,7 +382,7 @@ def get_gh_pages_url(repo_path):
         
         # Method 1: Use GitHub CLI if available
         try:
-            pages_result = run_command(f"gh api repos/{owner}/{repo}/pages", repo_path, capture_output=True, check=False, log_stderr=False)
+            pages_result, _ = run_command(f"gh api repos/{owner}/{repo}/pages", repo_path, capture_output=True, check=False, log_stderr=False)
             if pages_result:
                 pages_data = json.loads(pages_result)
                 return pages_data.get("html_url")
@@ -383,7 +391,7 @@ def get_gh_pages_url(repo_path):
         
         # Method 2: Check for gh-pages branch
         try:
-            branches_result = run_command("git branch -r", repo_path, capture_output=True, check=False, log_stderr=False)
+            branches_result, _ = run_command("git branch -r", repo_path, capture_output=True, check=False, log_stderr=False)
             if branches_result and "origin/gh-pages" in branches_result:
                 return f"https://{owner}.github.io/{repo}/"
         except Exception:
@@ -564,7 +572,7 @@ def detect_github_pages_locally(repo_path):
     
     try:
         # Check for gh-pages branch
-        branches_result = run_command(
+        branches_result, _ = run_command(
             "git branch -a",
             cwd=repo_path,
             capture_output=True,

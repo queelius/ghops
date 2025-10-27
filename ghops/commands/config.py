@@ -8,6 +8,10 @@ def config_cmd():
     """Configuration management commands."""
     pass
 
+# Register repos subgroup
+from .config_repos import config_repos
+config_cmd.add_command(config_repos)
+
 @config_cmd.command("generate")
 def generate_config():
     """Generate an example configuration file."""

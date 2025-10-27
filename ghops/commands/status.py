@@ -11,7 +11,7 @@ This command follows our design principles:
 import json
 import click
 
-from ..core import get_repository_status
+from ..core import get_repository_status, _get_repository_status_for_path
 from ..render import render_status_table, console
 from ..config import load_config
 from ..cli_utils import standard_command, add_common_options
@@ -19,23 +19,27 @@ from ..exit_codes import NoReposFoundError
 
 
 @click.command(name='status')
-@click.option('-d', '--dir', default=None, help='Directory to search for repositories (default: use config)')
+@click.argument('vfs_path', default='/', required=False)
+@click.option('-d', '--dir', default=None, help='[DEPRECATED] Use VFS path instead')
 @click.option('-r', '--recursive', is_flag=True, help='Search recursively for repositories')
 @click.option('--no-pages', is_flag=True, help='Skip GitHub Pages check for faster results')
 @click.option('--no-pypi', is_flag=True, help='Skip PyPI package detection')
 @click.option('--no-dedup', is_flag=True, help='Show all instances including duplicates and soft links')
-@click.option('-t', '--tag', 'tag_filters', multiple=True, help='Filter by tags (e.g., org:torvalds, lang:python)')
+@click.option('-t', '--tag', 'tag_filters', multiple=True, help='[DEPRECATED] Use VFS path like /by-tag/work instead')
 @click.option('--all-tags', is_flag=True, help='Match all tags (default: match any)')
+@click.option('--refresh', is_flag=True, help='Refresh metadata before showing status')
 @click.option('--table/--no-table', default=None, help='Display as formatted table (auto-detected by default)')
 @add_common_options('verbose', 'quiet')
 @standard_command(streaming=True)
-def status_handler(dir, recursive, no_pages, no_pypi, no_dedup, tag_filters, all_tags, table, progress, quiet, **kwargs):
+def status_handler(vfs_path, dir, recursive, no_pages, no_pypi, no_dedup, tag_filters, all_tags, refresh, table, progress, quiet, **kwargs):
     """Show repository status.
-    
+
+    VFS_PATH: Virtual filesystem path (default: / for all repos)
+
     \b
-    By default, shows status for all repositories configured in ~/.ghops/config.json.
-    Use -d/--dir to check a specific directory instead of using config.
-    
+    Shows comprehensive status from the metadata store (fast).
+    Use --refresh to update metadata before displaying.
+
     Output format:
     - Interactive terminal: Table format by default
     - Piped/redirected: JSONL streaming by default
@@ -43,85 +47,113 @@ def status_handler(dir, recursive, no_pages, no_pypi, no_dedup, tag_filters, all
     - Use --no-table to force JSONL output
     - Use -v/--verbose to show progress
     - Use -q/--quiet to suppress data output
-    
+
     Examples:
-    
+
     \b
-        ghops status                    # Table format (if terminal)
-        ghops status | jq .             # JSONL format (piped)
-        ghops status --no-table         # Force JSONL output
-        ghops status -d .               # Show only current directory
-        ghops status -d . -r            # Show all repos under current
-        ghops status -d ~/projects      # Show repos in ~/projects
-        ghops status -t org:torvalds    # Filter by tag
+        ghops status                       # All repos (from config)
+        ghops status /by-tag/work/active   # Active work repos
+        ghops status /by-language/Python   # Python projects
+        ghops status /repos/myproject      # Single repo
+        ghops status / --refresh           # Refresh all, then show
+        ghops status --no-table            # Force JSONL output
+
+        # Deprecated (still work):
+        ghops status -d ~/projects         # Use: ghops status /repos
+        ghops status -t lang:python        # Use: ghops status /by-language/Python
     """
     # Auto-detect table mode if not specified
     if table is None:
         import sys
         table = sys.stdout.isatty()  # Use table format for interactive terminals
-    
+
+    # Show deprecation warnings
+    if dir is not None:
+        import sys
+        print("⚠️  Warning: -d/--dir is deprecated, use VFS path instead: ghops status /repos", file=sys.stderr)
+
+    if tag_filters:
+        import sys
+        print("⚠️  Warning: -t/--tag is deprecated, use VFS path instead: ghops status /by-tag/...", file=sys.stderr)
+
     # Override config if flags are provided
     if no_pypi:
         config = load_config()
         config['pypi'] = config.get('pypi', {})
         config['pypi']['check_by_default'] = False
-    
-    # Count total repos first for progress
+
+    # Determine repos to check
+    from ..git_ops.utils import get_repos_from_vfs_path
     from ..utils import find_git_repos, find_git_repos_from_config, is_git_repo
     import os
+
     config = load_config()
-    
     progress("Discovering repositories...")
-    
-    # If no directory specified (None), use config
-    # If directory specified (including '.'), use that directory only
-    if dir is None:
-        # Use config directories
+
+    # Priority: VFS path > -d flag > -t flag > config
+    if vfs_path and vfs_path != '/' and not dir and not tag_filters:
+        # Use VFS path
+        repo_paths = get_repos_from_vfs_path(vfs_path)
+        if not repo_paths:
+            raise NoReposFoundError(f"No repositories found at VFS path: {vfs_path}")
+    elif dir is not None:
+        # Deprecated: Use -d flag (backward compatibility)
+        expanded_dir = os.path.expanduser(dir)
+        expanded_dir = os.path.abspath(expanded_dir)
+
+        if is_git_repo(expanded_dir):
+            if not recursive:
+                repo_paths = [expanded_dir]
+            else:
+                repo_paths = [expanded_dir]
+                repo_paths.extend(find_git_repos(expanded_dir, recursive=True))
+                repo_paths = list(set(repo_paths))
+        else:
+            repo_paths = find_git_repos(expanded_dir, recursive)
+    else:
+        # Use config directories (default)
         repo_paths = find_git_repos_from_config(
             config.get('general', {}).get('repository_directories', []),
             recursive
         )
         if not repo_paths:
-            # Fallback to current directory if config has no repos
             repo_paths = find_git_repos('.', recursive)
-    else:
-        # Use specified directory only (ignores config)
-        expanded_dir = os.path.expanduser(dir)
-        expanded_dir = os.path.abspath(expanded_dir)
-        
-        # Check if the directory itself is a repo
-        if is_git_repo(expanded_dir):
-            # If not recursive, only check this directory
-            if not recursive:
-                repo_paths = [expanded_dir]
-            else:
-                # Recursive: include this repo and search for more inside
-                repo_paths = [expanded_dir]
-                # Also search subdirectories
-                repo_paths.extend(find_git_repos(expanded_dir, recursive=True))
-                # Remove duplicates (the directory itself might be found again)
-                repo_paths = list(set(repo_paths))
-        else:
-            # Directory is not a repo, search inside it
-            repo_paths = find_git_repos(expanded_dir, recursive)
     
     total_repos = len(repo_paths)
-    
+
     if total_repos == 0:
         raise NoReposFoundError("No repositories found in specified directories")
-    
+
     progress(f"Found {total_repos} repositories")
+
+    # Refresh metadata if requested
+    if refresh:
+        progress(f"Refreshing metadata for {total_repos} repositories...")
+        from ..metadata import get_metadata_store
+        metadata_store = get_metadata_store()
+        for repo_path in repo_paths:
+            metadata_store.refresh(repo_path)
+        progress("Metadata refresh complete")
     
     # Get repository status as a generator
-    # Pass None as base_dir to use config, or the specified directory
-    repos_generator = get_repository_status(
-        base_dir=dir if dir else None,
-        recursive=recursive,
-        skip_pages_check=no_pages,
-        deduplicate=not no_dedup,
-        tag_filters=tag_filters,
-        all_tags=all_tags
-    )
+    # If VFS path was used, iterate over those specific repos
+    # Otherwise, use the standard discovery process
+    if vfs_path and vfs_path != '/' and not dir and not tag_filters:
+        # VFS path was provided - use the filtered repo list
+        def repos_from_vfs_paths():
+            for repo_path in repo_paths:
+                yield from _get_repository_status_for_path(repo_path, skip_pages_check=no_pages)
+        repos_generator = repos_from_vfs_paths()
+    else:
+        # Use standard discovery
+        repos_generator = get_repository_status(
+            base_dir=dir if dir else None,
+            recursive=recursive,
+            skip_pages_check=no_pages,
+            deduplicate=not no_dedup,
+            tag_filters=tag_filters,
+            all_tags=all_tags
+        )
     
     if table:
         # For table output, we need to collect all repos

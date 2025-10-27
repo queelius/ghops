@@ -47,14 +47,14 @@ def update_repository(repo_path: str, auto_commit: bool = False,
     
     try:
         # Check for uncommitted changes
-        status_output = run_command("git status --porcelain", cwd=repo_path, capture_output=True)
+        status_output, _ = run_command("git status --porcelain", cwd=repo_path, capture_output=True)
         has_changes = bool(status_output and status_output.strip())
         
         if has_changes and auto_commit:
             # Commit changes
             if not dry_run:
                 run_command("git add -A", cwd=repo_path)
-                commit_output = run_command(
+                commit_output, _ = run_command(
                     f'git commit -m "{commit_message}"', 
                     cwd=repo_path, 
                     capture_output=True
@@ -68,7 +68,7 @@ def update_repository(repo_path: str, auto_commit: bool = False,
         
         # Pull latest changes
         if not dry_run:
-            pull_output = run_command(
+            pull_output, _ = run_command(
                 "git pull --rebase --autostash", 
                 cwd=repo_path, 
                 capture_output=True,
@@ -89,7 +89,7 @@ def update_repository(repo_path: str, auto_commit: bool = False,
         
         # Push if we committed
         if result["actions"]["committed"] and not dry_run:
-            push_output = run_command("git push", cwd=repo_path, capture_output=True)
+            push_output, _ = run_command("git push", cwd=repo_path, capture_output=True)
             if push_output and "everything up-to-date" not in push_output.lower():
                 result["actions"]["pushed"] = True
                 result["details"]["push_output"] = push_output.strip()

@@ -15,7 +15,6 @@ from pathlib import Path
 from typing import List, Dict, Optional, Generator
 
 from ghops.config import logger, stats, load_config
-from ghops import reporting
 
 from .pypi import detect_pypi_package, is_package_outdated
 from .utils import find_git_repos, find_git_repos_from_config, get_remote_url, get_license_info, get_gh_pages_url, get_git_status, run_command, parse_repo_url, get_git_remote_url
@@ -197,7 +196,7 @@ def _get_repository_status_for_path(repo_path: str, skip_pages_check: bool = Fal
         status_info = get_git_status(repo_path)
         
         # Check for uncommitted changes
-        result = run_command("git status --porcelain", cwd=repo_path, capture_output=True, check=False)
+        result, _ = run_command("git status --porcelain", cwd=repo_path, capture_output=True, check=False)
         has_uncommitted = bool(result and result.strip())
         
         # Check for unpushed commits (only if there's an upstream branch)
@@ -205,7 +204,7 @@ def _get_repository_status_for_path(repo_path: str, skip_pages_check: bool = Fal
         has_upstream = False
         if status_info.get('current_branch') and status_info.get('current_branch') != 'N/A':
             # Try to check for upstream branch
-            result = run_command(
+            result, _ = run_command(
                 f"git config --get branch.{status_info['current_branch']}.remote",
                 cwd=repo_path,
                 capture_output=True,
@@ -214,7 +213,7 @@ def _get_repository_status_for_path(repo_path: str, skip_pages_check: bool = Fal
             if result and result.strip():
                 has_upstream = True
                 # Check for unpushed commits
-                result = run_command(
+                result, _ = run_command(
                     f"git log @{{upstream}}..HEAD --oneline",
                     cwd=repo_path,
                     capture_output=True,
@@ -279,7 +278,7 @@ def _get_repository_status_for_path(repo_path: str, skip_pages_check: bool = Fal
             if owner and repo_parsed:
                 # Try to get it from GitHub CLI
                 try:
-                    result = run_command(
+                    result, _ = run_command(
                         f"gh repo view {owner}/{repo_parsed} --json name,visibility,isFork",
                         capture_output=True,
                         check=False
@@ -301,7 +300,7 @@ def _get_repository_status_for_path(repo_path: str, skip_pages_check: bool = Fal
                     github_info["pages_url"] = pages_info.get('pages_url')
                 elif owner and repo_parsed:
                     # Try GitHub API directly (cache removed)
-                    pages_result = run_command(
+                    pages_result, _ = run_command(
                         f"gh api repos/{owner}/{repo_parsed}/pages --silent",
                         capture_output=True,
                         check=False
@@ -357,7 +356,7 @@ def _get_repository_status_raw(base_dir: str, recursive: bool = False, skip_page
             status_info = get_git_status(repo_path)
             
             # Check for uncommitted changes
-            result = run_command("git status --porcelain", cwd=repo_path, capture_output=True, check=False)
+            result, _ = run_command("git status --porcelain", cwd=repo_path, capture_output=True, check=False)
             has_uncommitted = bool(result and result.strip())
             
             # Check for unpushed commits (only if there's an upstream branch)
@@ -365,7 +364,7 @@ def _get_repository_status_raw(base_dir: str, recursive: bool = False, skip_page
             has_upstream = False
             if status_info.get('current_branch') and status_info.get('current_branch') != 'N/A':
                 # Check if there's an upstream branch
-                upstream_check = run_command(
+                upstream_check, _ = run_command(
                     "git rev-parse --abbrev-ref @{u}", 
                     cwd=repo_path, 
                     capture_output=True, 
@@ -374,7 +373,7 @@ def _get_repository_status_raw(base_dir: str, recursive: bool = False, skip_page
                 )
                 if upstream_check and not upstream_check.startswith("fatal:"):
                     has_upstream = True
-                    result = run_command(
+                    result, _ = run_command(
                         "git cherry -v", 
                         cwd=repo_path, 
                         capture_output=True, 
@@ -451,7 +450,7 @@ def _get_repository_status_raw(base_dir: str, recursive: bool = False, skip_page
                 github_info = {}
                 
                 # Check GitHub Pages directly (cache removed)
-                pages_result = run_command(
+                pages_result, _ = run_command(
                     f"gh api repos/{owner}/{repo_name_parsed}/pages",
                     capture_output=True,
                     check=False,
@@ -592,7 +591,7 @@ def get_available_licenses():
     Returns:
         List of license dictionaries or None on error
     """
-    result = run_command("gh api /licenses", capture_output=True, check=False)
+    result, _ = run_command("gh api /licenses", capture_output=True, check=False)
     if result:
         try:
             return json.loads(result)
@@ -612,7 +611,7 @@ def get_license_template(license_key):
     Returns:
         License template dictionary or None on error
     """
-    result = run_command(f"gh api /licenses/{license_key}", capture_output=True, check=False)
+    result, _ = run_command(f"gh api /licenses/{license_key}", capture_output=True, check=False)
     if result:
         try:
             return json.loads(result)
@@ -633,7 +632,7 @@ def get_license_info(repo_path):
         Dictionary with license info or error
     """
     try:
-        output = run_command("gh repo view --json licenseInfo", cwd=repo_path, capture_output=True)
+        output, _ = run_command("gh repo view --json licenseInfo", cwd=repo_path, capture_output=True)
         if output:
             import json
             data = json.loads(output)
@@ -768,7 +767,7 @@ def update_repo(repo_path, auto_commit=False, commit_message="Auto commit", dry_
     
     try:
         # Check for uncommitted changes
-        status_output = run_command("git status --porcelain", cwd=repo_path, capture_output=True)
+        status_output, _ = run_command("git status --porcelain", cwd=repo_path, capture_output=True)
         has_changes = bool(status_output and status_output.strip())
         
         if has_changes and auto_commit:
@@ -779,7 +778,7 @@ def update_repo(repo_path, auto_commit=False, commit_message="Auto commit", dry_
             logger.info(f"Committed changes in {repo_path}")
         
         # Pull latest changes
-        pull_output = run_command("git pull", cwd=repo_path, capture_output=True)
+        pull_output, _ = run_command("git pull", cwd=repo_path, capture_output=True)
         if pull_output and "Already up to date" not in pull_output:
             result["pulled"] = True
             logger.info(f"Pulled updates for {repo_path}")

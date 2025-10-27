@@ -1,6 +1,12 @@
 # Future Plans for ghops
 
-This document outlines planned features and enhancements for `ghops`, organized by priority and complexity.
+## Vision: From GitHub Operations to Digital Legacy Platform
+
+ghops has evolved from a simple GitHub operations tool into a comprehensive repository and digital presence management system. This document outlines our vision, planned features, and development roadmap.
+
+## Core Philosophy
+
+**Local-first with remote awareness**: Your local git repositories are the ground truth, and remote platforms (GitHub, GitLab, PyPI, social media) are services that enrich and distribute your work.
 
 ## 🎉 v0.6.0 - Major Milestone Completed ✅
 

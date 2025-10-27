@@ -1,0 +1,1385 @@
+"""
+Unit tests for ghops shell commands.
+
+Tests for newly implemented shell commands:
+- do_git() with -r recursive flag
+- do_clone() with various options
+- do_config() with subcommands
+- do_export() with different formats
+- do_docs() with detect/build/deploy (recently fixed imports)
+"""
+
+import pytest
+import json
+import tempfile
+import os
+from pathlib import Path
+from unittest.mock import MagicMock, patch, call, ANY
+import click
+
+from ghops.shell.shell import GhopsShell
+
+
+@pytest.fixture
+def temp_config_dir(tmp_path):
+    """Create temporary config directory."""
+    config_dir = tmp_path / ".ghops"
+    config_dir.mkdir()
+    return config_dir
+
+
+@pytest.fixture
+def mock_repos(tmp_path):
+    """Create mock git repositories for testing."""
+    repos = []
+    for i, name in enumerate(['project-a', 'project-b', 'project-c']):
+        repo_path = tmp_path / name
+        repo_path.mkdir()
+        (repo_path / '.git').mkdir()
+        repos.append(str(repo_path))
+    return repos
+
+
+@pytest.fixture
+def mock_config(mock_repos):
+    """Create mock config with test repositories."""
+    return {
+        'general': {
+            'repository_directories': [str(Path(mock_repos[0]).parent)]
+        },
+        'repository_tags': {
+            mock_repos[0]: ['alex/beta', 'topic:ml'],
+            mock_repos[1]: ['alex/production', 'lang:python'],
+            mock_repos[2]: ['topic:scientific/engineering/ai']
+        }
+    }
+
+
+@pytest.fixture
+def mock_metadata():
+    """Create mock metadata store."""
+    return {
+        'language': 'Python',
+        'status': {
+            'has_uncommitted_changes': False,
+            'branch': 'main'
+        }
+    }
+
+
+@pytest.fixture
+def shell_instance(mock_repos):
+    """Create a shell instance with mocked dependencies."""
+    with patch('ghops.shell.shell.load_config') as mock_load_config, \
+         patch('ghops.shell.shell.find_git_repos_from_config') as mock_find_repos, \
+         patch('ghops.shell.shell.get_metadata_store') as mock_metadata_store, \
+         patch('ghops.shell.shell.get_repository_tags') as mock_get_tags:
+
+        mock_load_config.return_value = {
+            'general': {'repository_directories': [str(Path(mock_repos[0]).parent)]},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = mock_repos
+
+        mock_store = MagicMock()
+        mock_store.get.return_value = {'language': 'Python', 'status': {}}
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        shell = GhopsShell()
+        return shell
+
+
+class TestShellGitRecursive:
+    """Test git command with recursive flag."""
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.git_ops.utils.get_repos_from_vfs_path')
+    @patch('ghops.commands.git.git_status')
+    def test_git_recursive_status_multiple_repos(self, mock_git_status, mock_get_repos,
+                                                  mock_get_tags, mock_metadata_store,
+                                                  mock_find_repos, mock_load_config,
+                                                  mock_repos, capsys):
+        """Test git -r status on multiple repos."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = mock_repos
+
+        mock_store = MagicMock()
+        mock_store.get.return_value = {'language': 'Python', 'status': {}}
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Mock VFS resolution to return all repos
+        mock_get_repos.return_value = mock_repos
+
+        # Mock git_status callback
+        mock_git_status.callback = MagicMock()
+
+        # Create shell and execute
+        shell = GhopsShell()
+        shell.do_git('-r status')
+
+        # Verify get_repos_from_vfs_path was called
+        mock_get_repos.assert_called_once_with('/')
+
+        # Verify git_status was called for each repo
+        assert mock_git_status.callback.call_count == len(mock_repos)
+
+        # Check output shows progress
+        captured = capsys.readouterr()
+        assert f"Running 'git status' on {len(mock_repos)} repositories" in captured.out
+        assert 'project-a' in captured.out or 'project-b' in captured.out
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.git_ops.utils.get_repos_from_vfs_path')
+    @patch('ghops.commands.git.git_pull')
+    def test_git_recursive_pull_on_vfs_path(self, mock_git_pull, mock_get_repos,
+                                             mock_get_tags, mock_metadata_store,
+                                             mock_find_repos, mock_load_config,
+                                             mock_repos, capsys):
+        """Test git -r pull on VFS path with multiple repos."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = mock_repos
+
+        mock_store = MagicMock()
+        mock_store.get.return_value = {'language': 'Python', 'status': {}}
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Mock VFS resolution
+        mock_get_repos.return_value = mock_repos
+
+        # Mock git_pull callback
+        mock_git_pull.callback = MagicMock()
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Change to specific VFS path
+        shell.do_cd('/repos')
+
+        # Execute recursive pull
+        shell.do_git('-r pull')
+
+        # Verify git_pull was called for each repo
+        assert mock_git_pull.callback.call_count == len(mock_repos)
+
+        captured = capsys.readouterr()
+        assert "Running 'git pull'" in captured.out
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.commands.git.git_status')
+    def test_git_status_non_recursive(self, mock_git_status, mock_get_tags,
+                                       mock_metadata_store, mock_find_repos,
+                                       mock_load_config, mock_repos):
+        """Test git status (non-recursive) on single repo."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = mock_repos
+
+        mock_store = MagicMock()
+        mock_store.get.return_value = {'language': 'Python', 'status': {}}
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Mock git_status callback
+        mock_git_status.callback = MagicMock()
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute non-recursive status
+        shell.do_git('status')
+
+        # Should be called once for current path
+        mock_git_status.callback.assert_called_once()
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.git_ops.utils.get_repos_from_vfs_path')
+    def test_git_recursive_no_repos(self, mock_get_repos, mock_get_tags,
+                                     mock_metadata_store, mock_find_repos,
+                                     mock_load_config, capsys):
+        """Test git -r when VFS path has no repos."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Mock VFS resolution returning no repos
+        mock_get_repos.return_value = []
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute recursive git command
+        shell.do_git('-r status')
+
+        # Check error message
+        captured = capsys.readouterr()
+        assert 'No repositories found' in captured.out
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.commands.git.git_log')
+    def test_git_log_with_args(self, mock_git_log, mock_get_tags,
+                               mock_metadata_store, mock_find_repos,
+                               mock_load_config, mock_repos):
+        """Test git log with additional arguments."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = mock_repos
+
+        mock_store = MagicMock()
+        mock_store.get.return_value = {'language': 'Python', 'status': {}}
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Mock git_log callback
+        mock_git_log.callback = MagicMock()
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute git log with flags
+        shell.do_git('log --oneline -n 5')
+
+        # Verify callback was called with correct args
+        mock_git_log.callback.assert_called_once()
+        call_args = mock_git_log.callback.call_args
+        # Shell calls callback with positional args:
+        # git_log.callback(vfs_path, oneline, max_count, since, author, graph, all_branches, False)
+        assert len(call_args[0]) >= 3  # At least vfs_path, oneline, max_count
+        # Second arg is oneline (should be True)
+        assert call_args[0][1] == True  # oneline
+        # Third arg is max_count (should be 5)
+        assert call_args[0][2] == 5  # max_count
+
+
+class TestShellClone:
+    """Test clone command."""
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.commands.clone.clone_handler')
+    def test_clone_single_repo(self, mock_handler, mock_get_tags,
+                               mock_metadata_store, mock_find_repos,
+                               mock_load_config, capsys):
+        """Test cloning single repo."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Mock clone handler
+        mock_handler.callback = MagicMock()
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute clone
+        shell.do_clone('user/repo')
+
+        # Verify clone_handler was called
+        mock_handler.callback.assert_called_once()
+        call_args = mock_handler.callback.call_args
+        assert call_args[1]['repos'] == ['user/repo']
+        assert call_args[1]['user'] is None
+
+        # Check VFS refresh message
+        captured = capsys.readouterr()
+        assert 'Refreshing VFS' in captured.out
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.commands.clone.clone_handler')
+    def test_clone_multiple_repos(self, mock_handler, mock_get_tags,
+                                   mock_metadata_store, mock_find_repos,
+                                   mock_load_config):
+        """Test cloning multiple repos."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Mock clone handler
+        mock_handler.callback = MagicMock()
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute clone with multiple repos
+        shell.do_clone('user/repo1 user/repo2 user/repo3')
+
+        # Verify clone_handler was called with all repos
+        mock_handler.callback.assert_called_once()
+        call_args = mock_handler.callback.call_args
+        assert call_args[1]['repos'] == ['user/repo1', 'user/repo2', 'user/repo3']
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.commands.clone.clone_handler')
+    def test_clone_user_repos(self, mock_handler, mock_get_tags,
+                              mock_metadata_store, mock_find_repos,
+                              mock_load_config):
+        """Test cloning all repos for user."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Mock clone handler
+        mock_handler.callback = MagicMock()
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute clone --user
+        shell.do_clone('--user username')
+
+        # Verify clone_handler was called with user
+        mock_handler.callback.assert_called_once()
+        call_args = mock_handler.callback.call_args
+        assert call_args[1]['user'] == 'username'
+        assert call_args[1]['repos'] == []
+        assert call_args[1]['limit'] == 100
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.commands.clone.clone_handler')
+    def test_clone_user_with_limit(self, mock_handler, mock_get_tags,
+                                    mock_metadata_store, mock_find_repos,
+                                    mock_load_config):
+        """Test cloning user repos with limit."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Mock clone handler
+        mock_handler.callback = MagicMock()
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute clone --user with --limit
+        shell.do_clone('--user username --limit 10')
+
+        # Verify clone_handler was called with correct limit
+        mock_handler.callback.assert_called_once()
+        call_args = mock_handler.callback.call_args
+        assert call_args[1]['user'] == 'username'
+        assert call_args[1]['limit'] == 10
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.commands.clone.clone_handler')
+    def test_clone_url(self, mock_handler, mock_get_tags,
+                       mock_metadata_store, mock_find_repos,
+                       mock_load_config):
+        """Test cloning from URL."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Mock clone handler
+        mock_handler.callback = MagicMock()
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute clone with URL
+        shell.do_clone('https://github.com/user/repo')
+
+        # Verify clone_handler was called with URL
+        mock_handler.callback.assert_called_once()
+        call_args = mock_handler.callback.call_args
+        assert call_args[1]['repos'] == ['https://github.com/user/repo']
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    def test_clone_no_args(self, mock_get_tags, mock_metadata_store,
+                          mock_find_repos, mock_load_config, capsys):
+        """Test clone with no arguments."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute clone without args
+        shell.do_clone('')
+
+        # Check error message
+        captured = capsys.readouterr()
+        assert 'Usage:' in captured.out
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.commands.clone.clone_handler')
+    def test_clone_error_handling(self, mock_handler, mock_get_tags,
+                                   mock_metadata_store, mock_find_repos,
+                                   mock_load_config, capsys):
+        """Test clone error handling."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Mock clone handler to raise exception
+        mock_handler.callback = MagicMock(side_effect=Exception("Clone failed"))
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute clone
+        shell.do_clone('user/repo')
+
+        # Check error message
+        captured = capsys.readouterr()
+        assert 'error' in captured.out.lower()
+
+
+class TestShellConfig:
+    """Test config command."""
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.commands.config.show_config')
+    def test_config_show(self, mock_show_config, mock_get_tags,
+                        mock_metadata_store, mock_find_repos,
+                        mock_load_config):
+        """Test config show command."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Mock show_config
+        mock_show_config.callback = MagicMock()
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute config show
+        shell.do_config('show')
+
+        # Verify show_config was called
+        mock_show_config.callback.assert_called_once()
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.commands.config_repos.repos_list')
+    def test_config_repos_list(self, mock_repos_list, mock_get_tags,
+                               mock_metadata_store, mock_find_repos,
+                               mock_load_config):
+        """Test config repos list command."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Mock repos_list
+        mock_repos_list.callback = MagicMock()
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute config repos list
+        shell.do_config('repos list')
+
+        # Verify repos_list was called
+        mock_repos_list.callback.assert_called_once()
+        call_args = mock_repos_list.callback.call_args
+        assert call_args[1]['json_output'] == False
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.commands.config_repos.repos_add')
+    def test_config_repos_add(self, mock_repos_add, mock_get_tags,
+                             mock_metadata_store, mock_find_repos,
+                             mock_load_config, capsys):
+        """Test config repos add command."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Mock repos_add
+        mock_repos_add.callback = MagicMock()
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute config repos add
+        shell.do_config('repos add /path/to/repos')
+
+        # Verify repos_add was called
+        mock_repos_add.callback.assert_called_once()
+        call_args = mock_repos_add.callback.call_args
+        assert call_args[1]['path'] == '/path/to/repos'
+        assert call_args[1]['refresh'] == False
+
+        # Check VFS refresh message
+        captured = capsys.readouterr()
+        assert 'Refreshing VFS' in captured.out
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.commands.config_repos.repos_remove')
+    def test_config_repos_remove(self, mock_repos_remove, mock_get_tags,
+                                 mock_metadata_store, mock_find_repos,
+                                 mock_load_config, capsys):
+        """Test config repos remove command."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Mock repos_remove
+        mock_repos_remove.callback = MagicMock()
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute config repos remove
+        shell.do_config('repos remove /path/to/repos')
+
+        # Verify repos_remove was called
+        mock_repos_remove.callback.assert_called_once()
+        call_args = mock_repos_remove.callback.call_args
+        assert call_args[1]['path'] == '/path/to/repos'
+
+        # Check VFS refresh message
+        captured = capsys.readouterr()
+        assert 'Refreshing VFS' in captured.out
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.commands.config_repos.repos_clear')
+    def test_config_repos_clear(self, mock_repos_clear, mock_get_tags,
+                                mock_metadata_store, mock_find_repos,
+                                mock_load_config, capsys):
+        """Test config repos clear command."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Mock repos_clear
+        mock_repos_clear.callback = MagicMock()
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute config repos clear
+        shell.do_config('repos clear')
+
+        # Verify repos_clear was called
+        mock_repos_clear.callback.assert_called_once()
+
+        # Check VFS refresh message
+        captured = capsys.readouterr()
+        assert 'Refreshing VFS' in captured.out
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    def test_config_no_args(self, mock_get_tags, mock_metadata_store,
+                           mock_find_repos, mock_load_config, capsys):
+        """Test config with no arguments."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute config without args
+        shell.do_config('')
+
+        # Check error message
+        captured = capsys.readouterr()
+        assert 'Usage:' in captured.out
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    def test_config_invalid_subcommand(self, mock_get_tags, mock_metadata_store,
+                                       mock_find_repos, mock_load_config, capsys):
+        """Test config with invalid subcommand."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute config with invalid subcommand
+        shell.do_config('invalid')
+
+        # Check error message
+        captured = capsys.readouterr()
+        assert 'Unknown' in captured.out
+
+
+class TestShellExport:
+    """Test export command."""
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    def test_export_markdown(self, mock_get_tags, mock_metadata_store,
+                            mock_find_repos, mock_load_config, capsys):
+        """Test export markdown command."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute export markdown
+        shell.do_export('markdown')
+
+        # Check output
+        captured = capsys.readouterr()
+        assert 'Exporting as markdown' in captured.out
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    def test_export_hugo_with_output(self, mock_get_tags, mock_metadata_store,
+                                     mock_find_repos, mock_load_config, capsys):
+        """Test export hugo with output option."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute export hugo with output
+        shell.do_export('hugo --output ./site')
+
+        # Check output
+        captured = capsys.readouterr()
+        assert 'Exporting as hugo' in captured.out
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    def test_export_csv(self, mock_get_tags, mock_metadata_store,
+                       mock_find_repos, mock_load_config, capsys):
+        """Test export csv command."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute export csv
+        shell.do_export('csv --output repos.csv')
+
+        # Check output
+        captured = capsys.readouterr()
+        assert 'Exporting as csv' in captured.out
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    def test_export_no_args(self, mock_get_tags, mock_metadata_store,
+                           mock_find_repos, mock_load_config, capsys):
+        """Test export with no arguments."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute export without args
+        shell.do_export('')
+
+        # Check error message
+        captured = capsys.readouterr()
+        assert 'Usage:' in captured.out
+        assert 'markdown, hugo, html, csv, json' in captured.out
+
+
+class TestShellDocs:
+    """Test docs command (recently fixed imports)."""
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.commands.docs.docs_detect')
+    def test_docs_detect(self, mock_docs_detect, mock_get_tags,
+                        mock_metadata_store, mock_find_repos,
+                        mock_load_config, mock_repos):
+        """Test docs detect command."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = mock_repos
+
+        mock_store = MagicMock()
+        mock_store.get.return_value = {'language': 'Python', 'status': {}}
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Mock docs_detect
+        mock_docs_detect.callback = MagicMock()
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Navigate to repo
+        shell.do_cd('/repos/project-a')
+
+        # Execute docs detect
+        shell.do_docs('detect')
+
+        # Verify docs_detect was called
+        mock_docs_detect.callback.assert_called_once()
+        call_args = mock_docs_detect.callback.call_args
+        assert call_args[1]['repo_path'] == mock_repos[0]
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.commands.docs.docs_build')
+    def test_docs_build(self, mock_docs_build, mock_get_tags,
+                       mock_metadata_store, mock_find_repos,
+                       mock_load_config, mock_repos):
+        """Test docs build command."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = mock_repos
+
+        mock_store = MagicMock()
+        mock_store.get.return_value = {'language': 'Python', 'status': {}}
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Mock docs_build
+        mock_docs_build.callback = MagicMock()
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Navigate to repo
+        shell.do_cd('/repos/project-a')
+
+        # Execute docs build
+        shell.do_docs('build')
+
+        # Verify docs_build was called
+        mock_docs_build.callback.assert_called_once()
+        call_args = mock_docs_build.callback.call_args
+        assert call_args[1]['repo_path'] == mock_repos[0]
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.commands.docs.docs_deploy')
+    def test_docs_deploy(self, mock_docs_deploy, mock_get_tags,
+                        mock_metadata_store, mock_find_repos,
+                        mock_load_config, mock_repos):
+        """Test docs deploy command."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = mock_repos
+
+        mock_store = MagicMock()
+        mock_store.get.return_value = {'language': 'Python', 'status': {}}
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Mock docs_deploy
+        mock_docs_deploy.callback = MagicMock()
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Navigate to repo
+        shell.do_cd('/repos/project-a')
+
+        # Execute docs deploy
+        shell.do_docs('deploy')
+
+        # Verify docs_deploy was called
+        mock_docs_deploy.callback.assert_called_once()
+        call_args = mock_docs_deploy.callback.call_args
+        assert call_args[1]['repo_path'] == mock_repos[0]
+        assert call_args[1]['branch'] == 'gh-pages'
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.git_ops.utils.get_repos_from_vfs_path')
+    @patch('ghops.commands.docs.docs_detect')
+    def test_docs_detect_with_vfs_path(self, mock_docs_detect, mock_get_repos_from_vfs,
+                                       mock_get_tags, mock_metadata_store,
+                                       mock_find_repos, mock_load_config, mock_repos):
+        """Test docs detect with VFS path argument."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = mock_repos
+
+        mock_store = MagicMock()
+        mock_store.get.return_value = {'language': 'Python', 'status': {}}
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Mock docs_detect
+        mock_docs_detect.callback = MagicMock()
+
+        # Mock VFS path resolution
+        mock_get_repos_from_vfs.return_value = [mock_repos[0]]
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute docs detect with VFS path
+        shell.do_docs('detect /repos/project-a')
+
+        # Verify docs_detect was called
+        mock_docs_detect.callback.assert_called_once()
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    def test_docs_no_args(self, mock_get_tags, mock_metadata_store,
+                         mock_find_repos, mock_load_config, capsys):
+        """Test docs with no arguments."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute docs without args
+        shell.do_docs('')
+
+        # Check error message
+        captured = capsys.readouterr()
+        assert 'Usage:' in captured.out
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    def test_docs_invalid_subcommand(self, mock_get_tags, mock_metadata_store,
+                                    mock_find_repos, mock_load_config,
+                                    mock_repos, capsys):
+        """Test docs with invalid subcommand."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = mock_repos
+
+        mock_store = MagicMock()
+        mock_store.get.return_value = {'language': 'Python', 'status': {}}
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Navigate to repo
+        shell.do_cd('/repos/project-a')
+
+        # Execute docs with invalid subcommand
+        shell.do_docs('invalid')
+
+        # Check error message
+        captured = capsys.readouterr()
+        assert 'Unknown' in captured.out
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.git_ops.utils.get_repos_from_vfs_path')
+    def test_docs_no_repo_found(self, mock_get_repos_from_vfs, mock_get_tags,
+                                mock_metadata_store, mock_find_repos,
+                                mock_load_config, capsys):
+        """Test docs when no repository found in current directory."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Mock VFS path resolution returning no repos
+        mock_get_repos_from_vfs.return_value = []
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Stay at root (no repo)
+        shell.do_docs('detect')
+
+        # Check error message
+        captured = capsys.readouterr()
+        assert 'No repository' in captured.out
+
+
+class TestShellEdgeCases:
+    """Test edge cases and error handling."""
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    def test_git_no_args(self, mock_get_tags, mock_metadata_store,
+                        mock_find_repos, mock_load_config, capsys):
+        """Test git with no arguments."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute git without args
+        shell.do_git('')
+
+        # Check error message
+        captured = capsys.readouterr()
+        assert 'Usage:' in captured.out
+        assert 'Supported:' in captured.out
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    def test_git_unsupported_command(self, mock_get_tags, mock_metadata_store,
+                                     mock_find_repos, mock_load_config,
+                                     mock_repos, capsys):
+        """Test git with unsupported subcommand."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = mock_repos
+
+        mock_store = MagicMock()
+        mock_store.get.return_value = {'language': 'Python', 'status': {}}
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute git with unsupported command
+        shell.do_git('rebase')
+
+        # Check error message
+        captured = capsys.readouterr()
+        assert 'not a supported' in captured.out
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.commands.clone.clone_handler')
+    def test_clone_user_missing_username(self, mock_handler, mock_get_tags,
+                                         mock_metadata_store, mock_find_repos,
+                                         mock_load_config, capsys):
+        """Test clone --user without username."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute clone --user without username
+        shell.do_clone('--user')
+
+        # Check error message
+        captured = capsys.readouterr()
+        assert 'Error' in captured.out or 'requires a username' in captured.out
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.commands.config_repos.repos_add')
+    def test_config_repos_add_no_path(self, mock_repos_add, mock_get_tags,
+                                      mock_metadata_store, mock_find_repos,
+                                      mock_load_config, capsys):
+        """Test config repos add without path."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = []
+
+        mock_store = MagicMock()
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Execute config repos add without path
+        shell.do_config('repos add')
+
+        # Check error message
+        captured = capsys.readouterr()
+        assert 'Usage:' in captured.out
+
+
+class TestShellIntegration:
+    """Integration tests for shell commands."""
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.git_ops.utils.get_repos_from_vfs_path')
+    @patch('ghops.commands.git.git_status')
+    def test_git_recursive_from_different_vfs_paths(self, mock_git_status,
+                                                     mock_get_repos, mock_get_tags,
+                                                     mock_metadata_store,
+                                                     mock_find_repos,
+                                                     mock_load_config,
+                                                     mock_repos, capsys):
+        """Test git -r status from different VFS paths."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = mock_repos
+
+        mock_store = MagicMock()
+        mock_store.get.return_value = {'language': 'Python', 'status': {}}
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Mock git_status
+        mock_git_status.callback = MagicMock()
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Test from /by-language/Python
+        shell.do_cd('/by-language')
+        mock_get_repos.return_value = [mock_repos[0], mock_repos[1]]  # Two Python repos
+        shell.do_git('-r status')
+
+        # Should operate on repos from that VFS path
+        captured = capsys.readouterr()
+        assert 'Running' in captured.out
+        assert 'repositories' in captured.out
+
+    @patch('ghops.shell.shell.load_config')
+    @patch('ghops.shell.shell.find_git_repos_from_config')
+    @patch('ghops.shell.shell.get_metadata_store')
+    @patch('ghops.shell.shell.get_repository_tags')
+    @patch('ghops.commands.docs.docs_detect')
+    def test_docs_in_real_fs_mode(self, mock_docs_detect, mock_get_tags,
+                                  mock_metadata_store, mock_find_repos,
+                                  mock_load_config, mock_repos):
+        """Test docs command when in real filesystem mode."""
+        # Setup mocks
+        mock_load_config.return_value = {
+            'general': {'repository_directories': ['/tmp/repos']},
+            'repository_tags': {}
+        }
+        mock_find_repos.return_value = mock_repos
+
+        mock_store = MagicMock()
+        mock_store.get.return_value = {'language': 'Python', 'status': {}}
+        mock_metadata_store.return_value = mock_store
+
+        mock_get_tags.return_value = []
+
+        # Mock docs_detect
+        mock_docs_detect.callback = MagicMock()
+
+        # Create shell
+        shell = GhopsShell()
+
+        # Navigate into repo (enters real filesystem mode)
+        shell.do_cd('/repos/project-a')
+
+        # Set real filesystem state manually for testing
+        shell.in_real_fs = True
+        shell.real_fs_repo = mock_repos[0]
+
+        # Execute docs command
+        shell.do_docs('detect')
+
+        # Should use real_fs_repo path
+        mock_docs_detect.callback.assert_called_once()
+        call_args = mock_docs_detect.callback.call_args
+        assert call_args[1]['repo_path'] == mock_repos[0]

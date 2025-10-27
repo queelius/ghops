@@ -30,6 +30,7 @@ theme:
 
 nav:
   - Home: index.md
+  - Getting Started: getting-started.md
   - Usage: usage.md
   - Commands:
     - Organization & Discovery: catalog-query.md
@@ -38,6 +39,15 @@ nav:
     - Documentation: docs-command.md
     - List: list-command.md
     - Query Cookbook: query-cookbook.md
+  - Integrations:
+    - Overview: integrations/overview.md
+    - Repository Clustering: integrations/clustering.md
+    - Workflow Orchestration: integrations/workflow.md
+  - Tutorials:
+    - Jupyter Notebooks: tutorials.md
+  - API Reference:
+    - Integration API: api/integrations.md
   - Architecture: architecture-vision.md
+  - Changelog: changelog.md
   - Contributing: contributing.md
   - Future Plans: future-plans.md

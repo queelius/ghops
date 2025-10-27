@@ -1,5 +1,5 @@
 """
-Handles the 'get' command for cloning GitHub repositories.
+Handles the 'clone' command for cloning GitHub repositories.
 
 This command follows our design principles:
 - Default output is JSONL streaming
@@ -161,14 +161,14 @@ def clone_repository(repo_url: str, target_dir: str, dry_run: bool = False) -> D
             Path(target_dir).mkdir(parents=True, exist_ok=True)
             
             # Clone the repository
-            clone_output = run_command(
+            clone_output, returncode = run_command(
                 f'git clone "{repo_url}" "{repo_name}"',
                 cwd=target_dir,
                 capture_output=True,
                 check=False
             )
-            
-            if clone_output is not None:
+
+            if returncode == 0 and clone_output is not None:
                 result["actions"]["cloned"] = True
                 result["details"]["clone_output"] = clone_output.strip() if clone_output else "Cloned successfully"
             else:
@@ -205,13 +205,13 @@ def get_user_repositories(username: str, limit: int = 100,
         visibility_flag = f"--visibility {visibility}"
     
     # Get repositories using gh CLI with topics
-    repos_output = run_command(
+    repos_output, returncode = run_command(
         f'gh repo list {user_query} --limit {limit} {visibility_flag} --json nameWithOwner,isPrivate,isFork,description,repositoryTopics',
         capture_output=True,
         check=False
     )
-    
-    if not repos_output:
+
+    if returncode != 0 or not repos_output:
         return
     
     try:
@@ -311,7 +311,7 @@ def clone_repositories(repos: List[Dict[str, Any]], target_dir: str,
         yield result
 
 
-@click.command("get")
+@click.command("clone")
 @click.argument("target", required=False)
 @click.option("--users", multiple=True, help="GitHub usernames to clone from")
 @click.option("-d", "--dir", "target_dir", default=".", help="Target directory for cloning")
@@ -327,32 +327,32 @@ def clone_repositories(repos: List[Dict[str, Any]], target_dir: str,
 @click.option("--no-import-github-tags", is_flag=True, help="Don't import GitHub metadata")
 @add_common_options('verbose', 'quiet')
 @standard_command(streaming=True)
-def get_repo_handler(target, users, target_dir, ignore, limit, visibility, dry_run, table, 
-                    add_to_config, no_add_to_config, tags, import_github_tags, no_import_github_tags,
-                    progress, quiet, **kwargs):
+def clone_handler(target, users, target_dir, ignore, limit, visibility, dry_run, table,
+                 add_to_config, no_add_to_config, tags, import_github_tags, no_import_github_tags,
+                 progress, quiet, **kwargs):
     """
     Clone repositories from GitHub.
-    
+
     TARGET can be:
     - A repository URL to clone a single repo
     - A GitHub username to clone all their repos
     - Omitted to clone repos from the authenticated user
-    
+
     \\b
     Output format:
     - Interactive terminal: Table format by default
     - Piped/redirected: JSONL streaming by default
     - Use --table to force table output
     - Use --no-table to force JSONL output
-    
+
     Examples:
-    
+
     \\b
-        ghops get torvalds                          # Clone all repos from torvalds
-        ghops get https://github.com/user/repo.git  # Clone single repo
-        ghops get --users user1 user2               # Clone from multiple users
-        ghops get -d ~/projects                     # Clone to specific directory
-        ghops get --tag org:company --add-to-config # Clone and add to config with tags
+        ghops clone torvalds                          # Clone all repos from torvalds
+        ghops clone https://github.com/user/repo.git  # Clone single repo
+        ghops clone --users user1 user2               # Clone from multiple users
+        ghops clone -d ~/projects                     # Clone to specific directory
+        ghops clone --tag org:company --add-to-config # Clone and add to config with tags
     """
     # Auto-detect table mode if not specified
     if table is None:

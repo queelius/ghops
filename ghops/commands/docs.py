@@ -151,7 +151,7 @@ def get_docs_status(repo_path: str) -> Dict[str, any]:
                 status["pages_url"] = pages_info.get('pages_url')
             else:
                 # Try GitHub API
-                pages_result = run_command(
+                pages_result, _ = run_command(
                     f"gh api repos/{owner}/{repo_name_parsed}/pages --silent",
                     capture_output=True,
                     check=False
@@ -181,7 +181,7 @@ def build_docs(repo_path: str, tool_info: Dict[str, any]) -> Dict[str, any]:
         return result
     
     try:
-        output = run_command(
+        output, _ = run_command(
             tool_info["build_cmd"],
             cwd=repo_path,
             capture_output=True,
@@ -405,7 +405,7 @@ def docs_deploy(repo_path, branch, message, dry_run):
     # Deploy using ghp-import or git subtree
     try:
         # Check if ghp-import is available
-        ghp_check = run_command("which ghp-import", capture_output=True, check=False)
+        ghp_check, _ = run_command("which ghp-import", capture_output=True, check=False)
         
         if ghp_check:
             # Use ghp-import
