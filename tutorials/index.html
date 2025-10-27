@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../architecture-vision/">
+        <link rel="prev" href="../integrations/workflow/">
       
       
-        <link rel="next" href="../contributing/">
+        <link rel="next" href="../api/integrations/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -20,7 +20,7 @@
     
     
       
-        <title>Changelog - ghops</title>
+        <title>Jupyter Notebooks - ghops</title>
       
     
     
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#changelog" class="md-skip">
+        <a href="#tutorial-notebooks" class="md-skip">
           Skip to content
         </a>
       
@@ -106,7 +106,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Changelog
+              Jupyter Notebooks
             
           </span>
         </div>
@@ -314,11 +314,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../tutorials/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
           
   
   
@@ -373,11 +375,9 @@
   
   
   
-    
   
-  
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
+    <li class="md-tabs__item">
+      <a href="../changelog/" class="md-tabs__link">
         
   
   
@@ -852,26 +852,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
             
   
   
@@ -884,7 +889,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             Tutorials
@@ -895,10 +900,32 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../tutorials/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Jupyter Notebooks
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -909,6 +936,347 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-started" class="md-nav__link">
+    <span class="md-ellipsis">
+      Getting Started
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Getting Started">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prerequisites
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setup
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quick-start-with-docker" class="md-nav__link">
+    <span class="md-ellipsis">
+      Quick Start with Docker
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tutorial-notebooks_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tutorial Notebooks
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tutorial Notebooks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-getting-started-01_getting_startedipynb" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Getting Started (01_getting_started.ipynb)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-clustering-analysis-02_clustering_analysisipynb" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Clustering Analysis (02_clustering_analysis.ipynb)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-workflow-orchestration-03_workflow_orchestrationipynb" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Workflow Orchestration (03_workflow_orchestration.ipynb)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-advanced-integrations-04_advanced_integrationsipynb" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Advanced Integrations (04_advanced_integrations.ipynb)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-data-visualization-05_data_visualizationipynb" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. Data Visualization (05_data_visualization.ipynb)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#learning-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      Learning Path
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Learning Path">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#for-beginners" class="md-nav__link">
+    <span class="md-ellipsis">
+      For Beginners
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#for-intermediate-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      For Intermediate Users
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#for-advanced-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      For Advanced Users
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tips-for-success" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tips for Success
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tips for Success">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#environment-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Environment Setup
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#working-with-notebooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Working with Notebooks
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-preparation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data Preparation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Troubleshooting
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-topics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Advanced Topics
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Topics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creating-custom-visualizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Creating Custom Visualizations
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#building-interactive-dashboards" class="md-nav__link">
+    <span class="md-ellipsis">
+      Building Interactive Dashboards
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      Additional Resources
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Additional Resources">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Documentation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-repositories" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example Repositories
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#community" class="md-nav__link">
+    <span class="md-ellipsis">
+      Community
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#video-tutorials-coming-soon" class="md-nav__link">
+    <span class="md-ellipsis">
+      Video Tutorials (Coming Soon)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contributing-your-notebooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Contributing Your Notebooks
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Contributing Your Notebooks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#notebook-guidelines" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notebook Guidelines
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      Next Steps
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1020,32 +1388,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    Changelog
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
         
   
   
@@ -1056,479 +1402,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#080-2025-10-16" class="md-nav__link">
-    <span class="md-ellipsis">
-      [0.8.0] - 2025-10-16
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="[0.8.0] - 2025-10-16">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#added-major-integration-features" class="md-nav__link">
-    <span class="md-ellipsis">
-      Added - Major Integration Features
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Added - Major Integration Features">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#repository-clustering-integration" class="md-nav__link">
-    <span class="md-ellipsis">
-      Repository Clustering Integration
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#workflow-orchestration-engine" class="md-nav__link">
-    <span class="md-ellipsis">
-      Workflow Orchestration Engine
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#tutorial-notebooks" class="md-nav__link">
-    <span class="md-ellipsis">
-      Tutorial Notebooks
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#enhanced-existing-features" class="md-nav__link">
-    <span class="md-ellipsis">
-      Enhanced - Existing Features
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Enhanced - Existing Features">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#documentation-improvements" class="md-nav__link">
-    <span class="md-ellipsis">
-      Documentation Improvements
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#command-line-interface" class="md-nav__link">
-    <span class="md-ellipsis">
-      Command Line Interface
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#configuration-system" class="md-nav__link">
-    <span class="md-ellipsis">
-      Configuration System
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#changed" class="md-nav__link">
-    <span class="md-ellipsis">
-      Changed
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fixed" class="md-nav__link">
-    <span class="md-ellipsis">
-      Fixed
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#dependencies" class="md-nav__link">
-    <span class="md-ellipsis">
-      Dependencies
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Dependencies">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#new-required-dependencies" class="md-nav__link">
-    <span class="md-ellipsis">
-      New Required Dependencies
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#new-optional-dependencies" class="md-nav__link">
-    <span class="md-ellipsis">
-      New Optional Dependencies
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#migration-guide" class="md-nav__link">
-    <span class="md-ellipsis">
-      Migration Guide
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Migration Guide">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#from-07x-to-080" class="md-nav__link">
-    <span class="md-ellipsis">
-      From 0.7.x to 0.8.0
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#070-2025-10-01" class="md-nav__link">
-    <span class="md-ellipsis">
-      [0.7.0] - 2025-10-01
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="[0.7.0] - 2025-10-01">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#added-major-architecture-overhaul" class="md-nav__link">
-    <span class="md-ellipsis">
-      Added - Major Architecture Overhaul
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Added - Major Architecture Overhaul">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#component-based-export-system" class="md-nav__link">
-    <span class="md-ellipsis">
-      Component-Based Export System
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#unified-progress-system" class="md-nav__link">
-    <span class="md-ellipsis">
-      Unified Progress System
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#comprehensive-tagging-system" class="md-nav__link">
-    <span class="md-ellipsis">
-      Comprehensive Tagging System
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#query-language-enhancement" class="md-nav__link">
-    <span class="md-ellipsis">
-      Query Language Enhancement
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#documentation-management" class="md-nav__link">
-    <span class="md-ellipsis">
-      Documentation Management
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#repository-audit" class="md-nav__link">
-    <span class="md-ellipsis">
-      Repository Audit
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#changed_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      Changed
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#060-2025-09-15" class="md-nav__link">
-    <span class="md-ellipsis">
-      [0.6.0] - 2025-09-15
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="[0.6.0] - 2025-09-15">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#added" class="md-nav__link">
-    <span class="md-ellipsis">
-      Added
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#050-2025-09-01" class="md-nav__link">
-    <span class="md-ellipsis">
-      [0.5.0] - 2025-09-01
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="[0.5.0] - 2025-09-01">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#added_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      Added
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#040-2025-08-15" class="md-nav__link">
-    <span class="md-ellipsis">
-      [0.4.0] - 2025-08-15
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="[0.4.0] - 2025-08-15">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#added_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      Added
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#030-2025-08-01" class="md-nav__link">
-    <span class="md-ellipsis">
-      [0.3.0] - 2025-08-01
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="[0.3.0] - 2025-08-01">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#added_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      Added
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#020-2025-07-15" class="md-nav__link">
-    <span class="md-ellipsis">
-      [0.2.0] - 2025-07-15
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="[0.2.0] - 2025-07-15">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#added_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      Added
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#010-2025-07-01" class="md-nav__link">
-    <span class="md-ellipsis">
-      [0.1.0] - 2025-07-01
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="[0.1.0] - 2025-07-01">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#added_5" class="md-nav__link">
-    <span class="md-ellipsis">
-      Added
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#upcoming-in-090" class="md-nav__link">
-    <span class="md-ellipsis">
-      Upcoming in 0.9.0
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Upcoming in 0.9.0">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#planned-features" class="md-nav__link">
-    <span class="md-ellipsis">
-      Planned Features
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#improvements" class="md-nav__link">
-    <span class="md-ellipsis">
-      Improvements
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#support" class="md-nav__link">
-    <span class="md-ellipsis">
-      Support
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1596,358 +1469,564 @@
   
 
 
-<h1 id="changelog">Changelog</h1>
-<p>All notable changes to ghops will be documented in this file.</p>
-<p>The format is based on <a href="https://keepachangelog.com/en/1.0.0/">Keep a Changelog</a>,
-and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
-<h2 id="080-2025-10-16">[0.8.0] - 2025-10-16</h2>
-<h3 id="added-major-integration-features">Added - Major Integration Features</h3>
-<h4 id="repository-clustering-integration">Repository Clustering Integration</h4>
+<h1 id="tutorial-notebooks">Tutorial Notebooks</h1>
+<p>Learn ghops interactively with our comprehensive Jupyter notebook tutorials. These hands-on guides cover everything from basic repository management to advanced clustering and workflow automation.</p>
+<h2 id="overview">Overview</h2>
+<p>The ghops tutorial notebooks provide:</p>
 <ul>
-<li><strong>Multiple Clustering Algorithms</strong>: Support for K-means, DBSCAN, Hierarchical, and Network-based clustering</li>
-<li>K-means with automatic optimal cluster detection using silhouette scoring</li>
-<li>DBSCAN for density-based clustering and outlier detection</li>
-<li>Hierarchical clustering with dendrogram visualization</li>
-<li>Network-based clustering using repository dependencies and relationships</li>
-<li>Ensemble clustering combining multiple algorithms for consensus results</li>
-<li><strong>Code Duplication Detection</strong>: Advanced code similarity analysis</li>
-<li>Function and class-level code block extraction</li>
-<li>Cross-repository duplicate detection</li>
-<li>Multi-language support: Python, JavaScript, Java, Go</li>
-<li>Similarity scoring with configurable thresholds</li>
-<li>Actionable recommendations based on duplication levels</li>
-<li><strong>Consolidation Advisor</strong>: Intelligent repository consolidation suggestions</li>
-<li>Confidence scoring (0.0 to 1.0) for merge recommendations</li>
-<li>Effort estimation: low, medium, high complexity</li>
-<li>Detailed rationale and expected benefits</li>
-<li>Migration step suggestions</li>
-<li>Risk assessment and mitigation strategies</li>
-<li><strong>Feature Extraction</strong>: Comprehensive repository feature analysis</li>
-<li>Technology stack features (languages, frameworks, dependencies)</li>
-<li>Size metrics (LOC, file count, repository size)</li>
-<li>Activity patterns (commit frequency, contributors, last update)</li>
-<li>Complexity metrics (cyclomatic complexity, dependency depth)</li>
-<li>Documentation and quality scores</li>
-<li><strong>CLI Commands</strong>: New clustering command group</li>
-<li><code>ghops cluster analyze</code>: Analyze and cluster repositories</li>
-<li><code>ghops cluster find-duplicates</code>: Detect duplicate code</li>
-<li><code>ghops cluster suggest-consolidation</code>: Get consolidation recommendations</li>
-<li><code>ghops cluster export</code>: Export results in multiple formats (JSON, HTML, GraphML)</li>
-<li><strong>JSONL Output</strong>: Streaming output for all clustering operations</li>
-<li>Compatible with Unix pipelines and jq</li>
-<li>Progress updates and error reporting</li>
-<li>Detailed result schemas with comprehensive metadata</li>
+<li><strong>Interactive Learning</strong>: Run code and see results immediately</li>
+<li><strong>Progressive Complexity</strong>: Start simple, build to advanced topics</li>
+<li><strong>Real Examples</strong>: Work with actual repository data</li>
+<li><strong>Best Practices</strong>: Learn recommended patterns and workflows</li>
+<li><strong>Visualization</strong>: See your data through charts and graphs</li>
 </ul>
-<h4 id="workflow-orchestration-engine">Workflow Orchestration Engine</h4>
+<h2 id="getting-started">Getting Started</h2>
+<h3 id="prerequisites">Prerequisites</h3>
 <ul>
-<li><strong>YAML-Based Workflows</strong>: Human-readable workflow definitions</li>
-<li>Clear syntax for multi-step automation</li>
-<li>Variable templating with Jinja2-style expressions</li>
-<li>Workflow composition and reuse</li>
-<li>Version control friendly format</li>
-<li><strong>DAG Execution</strong>: Directed Acyclic Graph execution engine</li>
-<li>Automatic dependency resolution</li>
-<li>Topological sorting for optimal execution order</li>
-<li>Parallel execution of independent steps</li>
-<li>Sequential execution for dependent operations</li>
-<li>Cycle detection and validation</li>
-<li><strong>Multiple Action Types</strong>: Rich variety of built-in actions</li>
-<li><code>shell</code>: Execute shell commands with timeout and retry</li>
-<li><code>python</code>: Run Python code with context access</li>
-<li><code>http</code>: Make HTTP requests with authentication</li>
-<li><code>git</code>: Git operations (clone, pull, push, commit)</li>
-<li><code>ghops</code>: Integrate all ghops commands seamlessly</li>
-<li><code>custom</code>: Extensible custom action support</li>
-<li><strong>Conditional Execution</strong>: Advanced control flow</li>
-<li>If/else conditions using template expressions</li>
-<li>Access to step outputs and workflow context</li>
-<li>Complex boolean expressions</li>
-<li>Skip steps based on previous results</li>
-<li><strong>Error Handling</strong>: Robust retry and recovery mechanisms</li>
-<li>Configurable retry with exponential backoff</li>
-<li>Continue on error or stop on failure options</li>
-<li>Error recovery steps and fallback actions</li>
-<li>Comprehensive error reporting and logging</li>
-<li><strong>CLI Commands</strong>: Workflow management</li>
-<li><code>ghops workflow run</code>: Execute workflows with variables</li>
-<li><code>ghops workflow validate</code>: Syntax and semantic validation</li>
-<li><code>ghops workflow list</code>: List available workflows</li>
-<li><code>ghops workflow history</code>: Execution history and logs</li>
-<li><strong>Example Workflows</strong>: Production-ready workflow templates</li>
-<li>Morning routine: Daily repository maintenance</li>
-<li>Release pipeline: Automated release process</li>
-<li>Security audit: Vulnerability scanning workflow</li>
-<li>Dependency updates: Automated dependency management</li>
+<li>Python 3.8 or higher</li>
+<li>Jupyter Notebook or JupyterLab</li>
+<li>ghops installed: <code>pip install ghops</code></li>
 </ul>
-<h4 id="tutorial-notebooks">Tutorial Notebooks</h4>
+<h3 id="setup">Setup</h3>
+<pre><code class="language-bash"># Clone the ghops repository to access notebooks
+git clone https://github.com/queelius/ghops.git
+cd ghops/notebooks
+
+# Install Jupyter and visualization dependencies
+pip install jupyter matplotlib seaborn plotly pandas
+
+# Start Jupyter
+jupyter notebook
+
+# Or use JupyterLab for a more modern interface
+jupyter lab
+</code></pre>
+<h3 id="quick-start-with-docker">Quick Start with Docker</h3>
+<p>If you prefer a containerized environment:</p>
+<pre><code class="language-bash">docker run -it -p 8888:8888 \
+  -v $(pwd):/home/jovyan/work \
+  jupyter/datascience-notebook
+
+# Then navigate to /work/notebooks in the Jupyter interface
+</code></pre>
+<h2 id="tutorial-notebooks_1">Tutorial Notebooks</h2>
+<h3 id="1-getting-started-01_getting_startedipynb">1. Getting Started (01_getting_started.ipynb)</h3>
+<p><strong>Duration</strong>: 20-30 minutes
+<strong>Level</strong>: Beginner</p>
+<p>Learn the fundamentals of ghops:</p>
 <ul>
-<li><strong>5 Comprehensive Jupyter Notebooks</strong>: Interactive learning materials</li>
-<li><code>01_getting_started.ipynb</code>: Introduction to ghops basics</li>
-<li><code>02_clustering_analysis.ipynb</code>: Repository clustering tutorial</li>
-<li><code>03_workflow_orchestration.ipynb</code>: Building automated workflows</li>
-<li><code>04_advanced_integrations.ipynb</code>: Combining features and custom integrations</li>
-<li><code>05_data_visualization.ipynb</code>: Visualizing repository data</li>
-<li><strong>Hands-On Exercises</strong>: Practical exercises in each notebook</li>
-<li><strong>Sample Data</strong>: Example repositories and datasets for learning</li>
-<li><strong>Visualization Examples</strong>: Chart and graph templates using matplotlib, seaborn, plotly</li>
-<li><strong>Best Practices</strong>: Recommended patterns and workflows</li>
+<li>Installing and configuring ghops</li>
+<li>Understanding the JSONL output format</li>
+<li>Listing and querying repositories</li>
+<li>Working with the catalog and tags</li>
+<li>Basic status checks and updates</li>
 </ul>
-<h3 id="enhanced-existing-features">Enhanced - Existing Features</h3>
-<h4 id="documentation-improvements">Documentation Improvements</h4>
+<p><strong>What You'll Learn:</strong></p>
+<pre><code class="language-python"># List repositories and parse JSONL
+repos = !ghops list
+import json
+for line in repos:
+    repo = json.loads(line)
+    print(f&quot;{repo['name']}: {repo['language']}&quot;)
+
+# Query repositories with filters
+python_repos = !ghops query &quot;language == 'Python'&quot;
+print(f&quot;Found {len(python_repos)} Python repositories&quot;)
+
+# Add tags and organize
+!ghops catalog tag myrepo &quot;production&quot; &quot;python&quot; &quot;api&quot;
+</code></pre>
+<p><strong>Key Concepts:</strong>
+- JSONL streaming output
+- Unix pipeline composition
+- Tag-based organization
+- Query language basics</p>
+<h3 id="2-clustering-analysis-02_clustering_analysisipynb">2. Clustering Analysis (02_clustering_analysis.ipynb)</h3>
+<p><strong>Duration</strong>: 45-60 minutes
+<strong>Level</strong>: Intermediate</p>
+<p>Master repository clustering and analysis:</p>
 <ul>
-<li><strong>Comprehensive Integration Docs</strong>: Detailed guides for clustering and workflows</li>
-<li>Algorithm comparison and selection guide</li>
-<li>Complete JSONL output schemas</li>
-<li>Real-world use cases and examples</li>
-<li>Performance considerations and optimization tips</li>
-<li><strong>API Reference</strong>: Complete Python API documentation</li>
-<li>Integration base classes and interfaces</li>
-<li>Clustering API with examples</li>
-<li>Workflow API with task types</li>
-<li>Utility functions and helpers</li>
-<li><strong>Tutorial Documentation</strong>: Getting started with Jupyter notebooks</li>
-<li>Setup instructions for different environments</li>
-<li>Learning paths for different skill levels</li>
-<li>Troubleshooting guide</li>
-<li>Contributing your own notebooks</li>
-<li><strong>Enhanced Getting Started</strong>: Quick start examples for new features</li>
-<li>Clustering quick start</li>
-<li>Workflow quick start</li>
-<li>Integration examples</li>
+<li>Understanding clustering algorithms</li>
+<li>Feature extraction and selection</li>
+<li>Detecting duplicate code</li>
+<li>Visualizing cluster relationships</li>
+<li>Interpreting clustering results</li>
 </ul>
-<h4 id="command-line-interface">Command Line Interface</h4>
+<p><strong>What You'll Learn:</strong></p>
+<pre><code class="language-python">import pandas as pd
+import matplotlib.pyplot as plt
+
+# Run clustering and load results
+!ghops cluster analyze --algorithm kmeans -r &gt; clusters.jsonl
+
+# Parse and visualize
+clusters = pd.read_json('clusters.jsonl', lines=True)
+cluster_results = clusters[clusters['action'] == 'cluster_result']
+
+# Visualize cluster sizes
+cluster_sizes = cluster_results['cluster'].apply(lambda x: x['size'])
+plt.bar(range(len(cluster_sizes)), cluster_sizes)
+plt.title('Cluster Size Distribution')
+plt.xlabel('Cluster ID')
+plt.ylabel('Number of Repositories')
+plt.show()
+
+# Find duplicates
+!ghops cluster find-duplicates --min-similarity 0.8 -r &gt; duplicates.jsonl
+duplicates = pd.read_json('duplicates.jsonl', lines=True)
+high_sim = duplicates[duplicates['similarity'] &gt; 0.9]
+print(f&quot;Found {len(high_sim)} highly similar repository pairs&quot;)
+</code></pre>
+<p><strong>Key Concepts:</strong>
+- Clustering algorithm selection (K-means, DBSCAN, Hierarchical)
+- Feature importance and weighting
+- Similarity scoring and thresholds
+- Code duplication patterns
+- Cluster quality metrics (silhouette score, coherence)</p>
+<p><strong>Hands-On Exercises:</strong>
+1. Compare clustering algorithms on your repositories
+2. Identify duplicate code across projects
+3. Create a consolidation plan based on analysis
+4. Visualize technology stack distribution</p>
+<h3 id="3-workflow-orchestration-03_workflow_orchestrationipynb">3. Workflow Orchestration (03_workflow_orchestration.ipynb)</h3>
+<p><strong>Duration</strong>: 60-90 minutes
+<strong>Level</strong>: Intermediate to Advanced</p>
+<p>Build powerful automated workflows:</p>
 <ul>
-<li><strong>New Command Groups</strong>: Organized command structure</li>
-<li><code>ghops cluster</code>: Clustering and analysis commands</li>
-<li><code>ghops workflow</code>: Workflow management commands</li>
-<li><strong>Improved Output</strong>: Better formatting and progress indicators</li>
-<li>Streaming JSONL for all commands</li>
-<li>Pretty-print tables for human readability</li>
-<li>Progress bars for long-running operations</li>
-<li><strong>Better Error Messages</strong>: Clearer error reporting</li>
-<li>Structured error objects in JSONL</li>
-<li>Detailed error context and suggestions</li>
-<li>Recovery recommendations</li>
+<li>YAML workflow syntax</li>
+<li>DAG execution and dependencies</li>
+<li>Conditional logic and branching</li>
+<li>Parallel task execution</li>
+<li>Error handling and retries</li>
 </ul>
-<h4 id="configuration-system">Configuration System</h4>
+<p><strong>What You'll Learn:</strong></p>
+<pre><code class="language-python"># Create a workflow programmatically
+from ghops.integrations.workflow import Workflow, Task
+
+workflow = Workflow(
+    name=&quot;Portfolio Analysis&quot;,
+    description=&quot;Analyze entire repository portfolio&quot;
+)
+
+# Add tasks
+workflow.add_task(Task(
+    id=&quot;list_repos&quot;,
+    type=&quot;ghops&quot;,
+    command=&quot;list&quot;,
+    args=[&quot;--format&quot;, &quot;json&quot;],
+    parse_output=True,
+    output_var=&quot;all_repos&quot;
+))
+
+workflow.add_task(Task(
+    id=&quot;cluster_analysis&quot;,
+    type=&quot;ghops&quot;,
+    command=&quot;cluster analyze&quot;,
+    args=[&quot;--algorithm&quot;, &quot;kmeans&quot;],
+    depends_on=[&quot;list_repos&quot;],
+    parse_output=True,
+    output_var=&quot;clusters&quot;
+))
+
+workflow.add_task(Task(
+    id=&quot;generate_report&quot;,
+    type=&quot;python&quot;,
+    code=&quot;&quot;&quot;
+report = []
+report.append(f&quot;Total repos: {len(context['all_repos'])}&quot;)
+report.append(f&quot;Clusters found: {len(context['clusters'])}&quot;)
+with open('portfolio-report.md', 'w') as f:
+    f.write('\\n'.join(report))
+    &quot;&quot;&quot;,
+    depends_on=[&quot;cluster_analysis&quot;]
+))
+
+# Save and run
+workflow.save('portfolio-analysis.yaml')
+!ghops workflow run portfolio-analysis.yaml
+</code></pre>
+<p><strong>Key Concepts:</strong>
+- YAML workflow structure
+- Task dependencies and DAG
+- Variable templating and context
+- Parallel vs sequential execution
+- Error recovery strategies</p>
+<p><strong>Hands-On Exercises:</strong>
+1. Build a morning routine workflow
+2. Create a release pipeline workflow
+3. Implement error handling and retries
+4. Use conditional execution for different scenarios</p>
+<h3 id="4-advanced-integrations-04_advanced_integrationsipynb">4. Advanced Integrations (04_advanced_integrations.ipynb)</h3>
+<p><strong>Duration</strong>: 60-75 minutes
+<strong>Level</strong>: Advanced</p>
+<p>Combine multiple ghops features for powerful workflows:</p>
 <ul>
-<li><strong>Integration Configuration</strong>: New integration settings</li>
-<li>Clustering algorithm defaults</li>
-<li>Workflow execution parameters</li>
-<li>Feature extraction options</li>
-<li><strong>Environment Variables</strong>: Additional environment variable support</li>
-<li><code>GHOPS_CLUSTERING_ENABLED</code>: Enable/disable clustering</li>
-<li><code>GHOPS_WORKFLOW_DIR</code>: Custom workflow directory</li>
-<li><code>GHOPS_MAX_PARALLEL</code>: Maximum parallel tasks</li>
+<li>Integration patterns and composition</li>
+<li>Custom action development</li>
+<li>Network analysis and visualization</li>
+<li>Exporting to multiple formats</li>
+<li>Automation and scheduling</li>
 </ul>
-<h3 id="changed">Changed</h3>
+<p><strong>What You'll Learn:</strong></p>
+<pre><code class="language-python"># Combine clustering with export
+!ghops cluster analyze -r | \
+  jq 'select(.action == &quot;cluster_result&quot;)' | \
+  ghops export markdown --stdin --output clusters.md
+
+# Create custom workflow action
+from ghops.integrations.workflow import Action
+
+class AnalyzeAndReportAction(Action):
+    def execute(self, parameters, context):
+        # Cluster repositories
+        clusters = self.run_ghops_command('cluster', 'analyze', '-r')
+
+        # Find duplicates
+        duplicates = self.run_ghops_command('cluster', 'find-duplicates', '-r')
+
+        # Generate comprehensive report
+        report = self.generate_report(clusters, duplicates)
+
+        return {'status': 'success', 'report': report}
+
+# Use in workflow
+workflow.add_task(Task(
+    id=&quot;comprehensive_analysis&quot;,
+    action=&quot;custom.analyze_and_report&quot;
+))
+</code></pre>
+<p><strong>Key Concepts:</strong>
+- Pipeline composition with Unix tools
+- Custom integration development
+- Multi-format export workflows
+- Integration with external tools (jq, awk, etc.)
+- Service mode and automation</p>
+<p><strong>Hands-On Exercises:</strong>
+1. Build a custom workflow action
+2. Create a multi-stage analysis pipeline
+3. Integrate with external APIs
+4. Set up automated reporting</p>
+<h3 id="5-data-visualization-05_data_visualizationipynb">5. Data Visualization (05_data_visualization.ipynb)</h3>
+<p><strong>Duration</strong>: 45-60 minutes
+<strong>Level</strong>: Intermediate</p>
+<p>Visualize repository data effectively:</p>
 <ul>
-<li><strong>Minimum Python Version</strong>: Now requires Python 3.8+ (was 3.7+)</li>
-<li><strong>Optional Dependencies</strong>: Clustering and workflow features require extra packages</li>
-<li>Install with <code>pip install ghops[clustering]</code> for clustering features</li>
-<li>Install with <code>pip install ghops[workflows]</code> for workflow features</li>
-<li>Install with <code>pip install ghops[all]</code> for all features</li>
-<li><strong>Output Format</strong>: All commands now default to JSONL (was mixed)</li>
-<li>Use <code>--pretty</code> flag for human-readable table output</li>
-<li>Better Unix pipeline compatibility</li>
+<li>Creating informative charts</li>
+<li>Interactive dashboards</li>
+<li>Network visualizations</li>
+<li>Technology landscape maps</li>
+<li>Trend analysis over time</li>
 </ul>
-<h3 id="fixed">Fixed</h3>
-<ul>
-<li><strong>Memory Usage</strong>: Improved memory efficiency for large repository collections</li>
-<li>Streaming processing instead of loading everything in memory</li>
-<li>Generator-based iteration throughout</li>
-<li><strong>Performance</strong>: Faster repository analysis</li>
-<li>Parallel feature extraction</li>
-<li>Cached repository metadata</li>
-<li>Optimized clustering algorithms</li>
-<li><strong>Error Handling</strong>: More robust error recovery</li>
-<li>Better handling of corrupt repositories</li>
-<li>Graceful degradation on partial failures</li>
-<li>Detailed error context in JSONL output</li>
-</ul>
-<h3 id="dependencies">Dependencies</h3>
-<h4 id="new-required-dependencies">New Required Dependencies</h4>
-<ul>
-<li><code>pyyaml&gt;=6.0</code>: YAML workflow parsing</li>
-<li><code>jinja2&gt;=3.0</code>: Template rendering in workflows</li>
-</ul>
-<h4 id="new-optional-dependencies">New Optional Dependencies</h4>
-<ul>
-<li><code>scikit-learn&gt;=1.0.0</code>: Clustering algorithms</li>
-<li><code>scipy&gt;=1.7.0</code>: Scientific computing for clustering</li>
-<li><code>numpy&gt;=1.21.0</code>: Numerical operations</li>
-<li><code>pandas&gt;=1.3.0</code>: Data analysis in notebooks</li>
-<li><code>matplotlib&gt;=3.4.0</code>: Static visualizations</li>
-<li><code>seaborn&gt;=0.11.0</code>: Statistical visualizations</li>
-<li><code>plotly&gt;=5.0.0</code>: Interactive visualizations</li>
-<li><code>networkx&gt;=2.6.0</code>: Network analysis and visualization</li>
-</ul>
-<h3 id="migration-guide">Migration Guide</h3>
-<h4 id="from-07x-to-080">From 0.7.x to 0.8.0</h4>
-<p><strong>Breaking Changes:</strong>
-1. <strong>Python Version</strong>: Upgrade to Python 3.8+
-   <code>bash
-   # Check your Python version
-   python --version
-   # Upgrade if needed</code></p>
+<p><strong>What You'll Learn:</strong></p>
+<pre><code class="language-python">import plotly.express as px
+import plotly.graph_objects as go
+import networkx as nx
+
+# Load repository data
+repos = pd.read_json('repos.jsonl', lines=True)
+
+# Language distribution pie chart
+lang_counts = repos['language'].value_counts()
+fig = px.pie(values=lang_counts.values, names=lang_counts.index,
+             title='Repository Language Distribution')
+fig.show()
+
+# Cluster coherence scores
+clusters = pd.read_json('clusters.jsonl', lines=True)
+cluster_data = clusters[clusters['action'] == 'cluster_result']
+coherence = cluster_data['cluster'].apply(lambda x: x['coherence_score'])
+
+fig = go.Figure(data=[go.Bar(x=range(len(coherence)), y=coherence)])
+fig.update_layout(title='Cluster Coherence Scores',
+                  xaxis_title='Cluster ID',
+                  yaxis_title='Coherence Score')
+fig.show()
+
+# Repository dependency network
+G = nx.Graph()
+# Add nodes and edges from dependency data
+for repo in repos:
+    G.add_node(repo['name'])
+    for dep in repo.get('dependencies', []):
+        if dep in repos['name'].values:
+            G.add_edge(repo['name'], dep)
+
+# Visualize network
+pos = nx.spring_layout(G)
+nx.draw(G, pos, with_labels=True, node_color='lightblue',
+        node_size=500, font_size=8, font_weight='bold')
+plt.title('Repository Dependency Network')
+plt.show()
+</code></pre>
+<p><strong>Key Concepts:</strong>
+- Data preparation from JSONL
+- Static visualizations with matplotlib/seaborn
+- Interactive plots with Plotly
+- Network graphs with NetworkX
+- Dashboard creation with Dash</p>
+<p><strong>Hands-On Exercises:</strong>
+1. Create a technology stack heatmap
+2. Build an interactive cluster explorer
+3. Visualize repository dependencies
+4. Generate trend charts over time</p>
+<h2 id="learning-path">Learning Path</h2>
+<h3 id="for-beginners">For Beginners</h3>
 <ol>
-<li><strong>Optional Features</strong>: Install extra dependencies
-   ```bash
-   # For clustering
-   pip install ghops[clustering]</li>
-</ol>
-<p># For workflows
-   pip install ghops[workflows]</p>
-<p># For everything
-   pip install ghops[all]
-   ```</p>
-<ol>
-<li><strong>Output Format</strong>: All commands now output JSONL by default
-   ```bash
-   # Old way (might have mixed output)
-   ghops list</li>
-</ol>
-<p># New way (JSONL output)
-   ghops list</p>
-<p># For human-readable table
-   ghops list --pretty
-   ```</p>
-<p><strong>New Features to Try:</strong>
-1. <strong>Clustering</strong>: Organize your repositories
-   <code>bash
-   ghops cluster analyze --algorithm kmeans -r
-   ghops cluster find-duplicates --min-similarity 0.8</code></p>
-<ol>
+<li><strong>Start with Notebook 1</strong> (Getting Started)</li>
+<li>Learn basic commands and concepts</li>
+<li>Understand JSONL output format</li>
 <li>
-<p><strong>Workflows</strong>: Automate your tasks
-   <code>bash
-   ghops workflow run examples/workflows/morning-routine.yaml</code></p>
+<p>Practice with your own repositories</p>
 </li>
 <li>
-<p><strong>Notebooks</strong>: Learn interactively
-   <code>bash
-   cd notebooks/
-   jupyter notebook</code></p>
+<p><strong>Move to Notebook 5</strong> (Data Visualization)</p>
 </li>
+<li>See your data in visual form</li>
+<li>Understand repository patterns</li>
+<li>
+<p>Create informative charts</p>
+</li>
+<li>
+<p><strong>Try Notebook 2</strong> (Clustering Analysis)</p>
+</li>
+<li>Group similar repositories</li>
+<li>Find patterns in your portfolio</li>
+<li>Detect duplicates</li>
 </ol>
-<h2 id="070-2025-10-01">[0.7.0] - 2025-10-01</h2>
-<h3 id="added-major-architecture-overhaul">Added - Major Architecture Overhaul</h3>
-<h4 id="component-based-export-system">Component-Based Export System</h4>
+<h3 id="for-intermediate-users">For Intermediate Users</h3>
+<ol>
+<li><strong>Review Notebook 1</strong> quickly</li>
+<li><strong>Deep dive into Notebook 2</strong> (Clustering)</li>
+<li>Experiment with different algorithms</li>
+<li>Understand feature selection</li>
+<li>
+<p>Optimize clustering parameters</p>
+</li>
+<li>
+<p><strong>Master Notebook 3</strong> (Workflows)</p>
+</li>
+<li>Automate repetitive tasks</li>
+<li>Build complex pipelines</li>
+<li>
+<p>Implement error handling</p>
+</li>
+<li>
+<p><strong>Explore Notebook 4</strong> (Advanced Integrations)</p>
+</li>
+<li>Combine features creatively</li>
+<li>Build custom integrations</li>
+<li>Create production workflows</li>
+</ol>
+<h3 id="for-advanced-users">For Advanced Users</h3>
+<ol>
+<li><strong>Skip to Notebook 4</strong> (Advanced Integrations)</li>
+<li>Study integration patterns</li>
+<li>Develop custom actions</li>
+<li>
+<p>Build enterprise workflows</p>
+</li>
+<li>
+<p><strong>Use Notebook 5</strong> for inspiration</p>
+</li>
+<li>Advanced visualization techniques</li>
+<li>Custom dashboard creation</li>
+<li>
+<p>Real-time monitoring</p>
+</li>
+<li>
+<p><strong>Contribute back</strong></p>
+</li>
+<li>Share your notebooks</li>
+<li>Create new integrations</li>
+<li>Improve documentation</li>
+</ol>
+<h2 id="tips-for-success">Tips for Success</h2>
+<h3 id="environment-setup">Environment Setup</h3>
+<pre><code class="language-bash"># Create a dedicated environment
+python -m venv ghops-tutorials
+source ghops-tutorials/bin/activate  # On Windows: ghops-tutorials\Scripts\activate
+
+# Install all dependencies
+pip install ghops[clustering,workflows] jupyter pandas matplotlib seaborn plotly networkx
+</code></pre>
+<h3 id="working-with-notebooks">Working with Notebooks</h3>
+<ol>
+<li><strong>Execute cells sequentially</strong>: Notebooks build on previous cells</li>
+<li><strong>Save frequently</strong>: Use Ctrl+S or Cmd+S to save your work</li>
+<li><strong>Restart kernel if needed</strong>: If something breaks, restart and run all cells</li>
+<li><strong>Experiment freely</strong>: Copy cells to try variations</li>
+<li><strong>Add your own notes</strong>: Use markdown cells for observations</li>
+</ol>
+<h3 id="data-preparation">Data Preparation</h3>
+<pre><code class="language-python"># Helper function to load JSONL data
+import json
+import pandas as pd
+
+def load_ghops_output(file_or_command):
+    &quot;&quot;&quot;Load ghops JSONL output into a DataFrame.&quot;&quot;&quot;
+    if file_or_command.endswith('.jsonl'):
+        return pd.read_json(file_or_command, lines=True)
+    else:
+        import subprocess
+        result = subprocess.run(file_or_command, shell=True,
+                              capture_output=True, text=True)
+        lines = result.stdout.strip().split('\n')
+        data = [json.loads(line) for line in lines if line]
+        return pd.DataFrame(data)
+
+# Usage
+repos = load_ghops_output('ghops list')
+# or
+repos = load_ghops_output('repos.jsonl')
+</code></pre>
+<h3 id="troubleshooting">Troubleshooting</h3>
+<p><strong>Jupyter not starting:</strong></p>
+<pre><code class="language-bash">jupyter notebook --debug
+# Check for port conflicts, try a different port
+jupyter notebook --port 8889
+</code></pre>
+<p><strong>Kernel dies when running ghops commands:</strong></p>
+<pre><code class="language-bash"># Increase kernel timeout
+jupyter notebook --NotebookApp.iopub_data_rate_limit=1000000000
+</code></pre>
+<p><strong>Import errors:</strong></p>
+<pre><code class="language-bash"># Ensure you're using the right Python
+which python
+# Reinstall in the correct environment
+pip install --force-reinstall ghops
+</code></pre>
+<p><strong>JSONL parsing errors:</strong></p>
+<pre><code class="language-python"># Robust JSONL parsing
+import json
+
+def safe_parse_jsonl(file_path):
+    data = []
+    with open(file_path, 'r') as f:
+        for i, line in enumerate(f, 1):
+            try:
+                data.append(json.loads(line))
+            except json.JSONDecodeError as e:
+                print(f&quot;Error on line {i}: {e}&quot;)
+                continue
+    return data
+</code></pre>
+<h2 id="advanced-topics">Advanced Topics</h2>
+<h3 id="creating-custom-visualizations">Creating Custom Visualizations</h3>
+<pre><code class="language-python"># Template for custom visualization
+import plotly.graph_objects as go
+
+def create_cluster_sunburst(clusters_df):
+    &quot;&quot;&quot;Create a sunburst chart of cluster hierarchies.&quot;&quot;&quot;
+    data = []
+    labels = []
+    parents = []
+    values = []
+
+    for _, cluster in clusters_df.iterrows():
+        cluster_info = cluster['cluster']
+        cluster_id = f&quot;Cluster {cluster_info['cluster_id']}&quot;
+
+        # Add cluster as parent
+        labels.append(cluster_id)
+        parents.append(&quot;&quot;)
+        values.append(cluster_info['size'])
+
+        # Add repositories as children
+        for repo in cluster_info['repositories']:
+            repo_name = repo.split('/')[-1]
+            labels.append(repo_name)
+            parents.append(cluster_id)
+            values.append(1)
+
+    fig = go.Figure(go.Sunburst(
+        labels=labels,
+        parents=parents,
+        values=values,
+    ))
+
+    fig.update_layout(title='Repository Cluster Hierarchy')
+    return fig
+
+# Usage
+fig = create_cluster_sunburst(cluster_results)
+fig.show()
+</code></pre>
+<h3 id="building-interactive-dashboards">Building Interactive Dashboards</h3>
+<pre><code class="language-python"># Simple Dash dashboard
+from dash import Dash, dcc, html
+import dash_bootstrap_components as dbc
+
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+
+app.layout = dbc.Container([
+    dbc.Row([
+        dbc.Col(html.H1(&quot;Repository Dashboard&quot;), width=12)
+    ]),
+    dbc.Row([
+        dbc.Col(dcc.Graph(id='language-dist'), width=6),
+        dbc.Col(dcc.Graph(id='cluster-coherence'), width=6)
+    ]),
+    dbc.Row([
+        dbc.Col(dcc.Graph(id='dependency-network'), width=12)
+    ])
+])
+
+if __name__ == '__main__':
+    app.run_server(debug=True, port=8050)
+</code></pre>
+<h2 id="additional-resources">Additional Resources</h2>
+<h3 id="documentation">Documentation</h3>
 <ul>
-<li><strong>Multiple Export Formats</strong>: Markdown, Hugo, HTML, JSON, CSV, LaTeX, PDF</li>
-<li><strong>Interactive HTML</strong>: Live search, filtering, and sorting</li>
-<li><strong>Template Support</strong>: Customizable export templates</li>
-<li><strong>Grouping Options</strong>: Group by language, directory, or custom tags</li>
+<li><a href="../usage/">ghops Command Reference</a></li>
+<li><a href="../integrations/clustering/">Clustering Integration</a></li>
+<li><a href="../integrations/workflow/">Workflow Orchestration</a></li>
+<li><a href="../query-cookbook/">Query Language</a></li>
 </ul>
-<h4 id="unified-progress-system">Unified Progress System</h4>
+<h3 id="example-repositories">Example Repositories</h3>
 <ul>
-<li><strong>Consistent Progress Bars</strong>: All commands show progress</li>
-<li><strong>Proper Exit Codes</strong>: Commands return appropriate exit codes</li>
-<li><strong>Error Aggregation</strong>: Collect and report all errors</li>
+<li><a href="https://github.com/queelius/ghops/tree/main/examples">ghops Examples</a></li>
+<li><a href="https://github.com/queelius/ghops/tree/main/examples/workflows">Workflow Templates</a></li>
+<li><a href="https://github.com/queelius/ghops/tree/main/examples/actions">Custom Actions</a></li>
 </ul>
-<h4 id="comprehensive-tagging-system">Comprehensive Tagging System</h4>
+<h3 id="community">Community</h3>
 <ul>
-<li><strong>Explicit Tags</strong>: User-assigned tags in catalog</li>
-<li><strong>Implicit Tags</strong>: Auto-generated from metadata</li>
-<li><strong>Provider Tags</strong>: From GitHub topics, GitLab labels</li>
-<li><strong>Protected Namespaces</strong>: Reserved prefixes for system tags</li>
+<li><a href="https://github.com/queelius/ghops/discussions">GitHub Discussions</a></li>
+<li><a href="https://github.com/queelius/ghops/issues">Issue Tracker</a></li>
+<li><a href="../contributing/">Contributing Guide</a></li>
 </ul>
-<h4 id="query-language-enhancement">Query Language Enhancement</h4>
+<h3 id="video-tutorials-coming-soon">Video Tutorials (Coming Soon)</h3>
 <ul>
-<li><strong>Fuzzy Matching</strong>: Typo-tolerant queries with <code>~=</code> operator</li>
-<li><strong>Nested Field Access</strong>: Query nested objects with dot notation</li>
-<li><strong>Multiple Operators</strong>: <code>==</code>, <code>!=</code>, <code>~=</code>, <code>&gt;</code>, <code>&lt;</code>, <code>contains</code>, <code>in</code></li>
+<li>Introduction to ghops</li>
+<li>Clustering in action</li>
+<li>Building your first workflow</li>
+<li>Advanced integration patterns</li>
 </ul>
-<h4 id="documentation-management">Documentation Management</h4>
+<h2 id="contributing-your-notebooks">Contributing Your Notebooks</h2>
+<p>Have you created useful notebooks? Share them with the community!</p>
+<ol>
+<li><strong>Fork the repository</strong></li>
+<li><strong>Add your notebook</strong> to <code>notebooks/community/</code></li>
+<li><strong>Include a README</strong> explaining the notebook's purpose</li>
+<li><strong>Submit a pull request</strong></li>
+</ol>
+<h3 id="notebook-guidelines">Notebook Guidelines</h3>
 <ul>
-<li><strong>Multi-Tool Support</strong>: MkDocs, Sphinx, Jekyll, Hugo, Docusaurus</li>
-<li><strong>Status Checking</strong>: Documentation health across repos</li>
-<li><strong>Build &amp; Serve</strong>: Local documentation preview</li>
-<li><strong>Deploy to GitHub Pages</strong>: One-command deployment</li>
+<li>Clear documentation and comments</li>
+<li>Self-contained (include all necessary imports)</li>
+<li>Sample data or instructions to generate it</li>
+<li>Expected outcomes and interpretations</li>
+<li>Attribution for external resources</li>
 </ul>
-<h4 id="repository-audit">Repository Audit</h4>
-<ul>
-<li><strong>Health Checks</strong>: License, README, security, documentation</li>
-<li><strong>Auto-Fix</strong>: Automatically fix common issues</li>
-<li><strong>Security Scanning</strong>: Detect hardcoded secrets</li>
-<li><strong>Dependency Auditing</strong>: Check for outdated dependencies</li>
-</ul>
-<h3 id="changed_1">Changed</h3>
-<ul>
-<li><strong>Architecture</strong>: Modular command structure in <code>ghops/commands/</code></li>
-<li><strong>Testing</strong>: 138 tests with 86% coverage</li>
-<li><strong>Performance</strong>: Optional API checks for faster operations</li>
-</ul>
-<h2 id="060-2025-09-15">[0.6.0] - 2025-09-15</h2>
-<h3 id="added">Added</h3>
-<ul>
-<li><strong>PyPI Integration</strong>: Package detection and tracking</li>
-<li><strong>Social Media Automation</strong>: Twitter, LinkedIn, Mastodon</li>
-<li><strong>Configuration System</strong>: JSON and TOML support</li>
-<li><strong>Progress Bars</strong>: Real-time progress indicators</li>
-<li><strong>Enhanced Status</strong>: Clean status reporting</li>
-</ul>
-<h2 id="050-2025-09-01">[0.5.0] - 2025-09-01</h2>
-<h3 id="added_1">Added</h3>
-<ul>
-<li><strong>License Management</strong>: Bulk license operations</li>
-<li><strong>GitHub Pages Detection</strong>: Multi-method detection</li>
-<li><strong>Rate Limiting</strong>: Intelligent GitHub API rate limiting</li>
-<li><strong>Bulk Operations</strong>: Update multiple repositories</li>
-</ul>
-<h2 id="040-2025-08-15">[0.4.0] - 2025-08-15</h2>
-<h3 id="added_2">Added</h3>
-<ul>
-<li><strong>Repository Listing</strong>: Deduplicated repository discovery</li>
-<li><strong>Status Tracking</strong>: Git status with upstream tracking</li>
-<li><strong>Basic Configuration</strong>: JSON configuration file</li>
-</ul>
-<h2 id="030-2025-08-01">[0.3.0] - 2025-08-01</h2>
-<h3 id="added_3">Added</h3>
-<ul>
-<li><strong>Repository Cloning</strong>: Clone all GitHub repositories</li>
-<li><strong>Repository Updates</strong>: Smart conflict resolution</li>
-<li><strong>GitHub Integration</strong>: GitHub API integration</li>
-</ul>
-<h2 id="020-2025-07-15">[0.2.0] - 2025-07-15</h2>
-<h3 id="added_4">Added</h3>
-<ul>
-<li><strong>Basic Commands</strong>: list, status, update</li>
-<li><strong>Git Integration</strong>: Local git repository management</li>
-</ul>
-<h2 id="010-2025-07-01">[0.1.0] - 2025-07-01</h2>
-<h3 id="added_5">Added</h3>
-<ul>
-<li><strong>Initial Release</strong>: Basic repository management</li>
-<li><strong>CLI Framework</strong>: Click-based command line interface</li>
-<li><strong>Configuration</strong>: Simple configuration system</li>
-</ul>
-<hr />
-<h2 id="upcoming-in-090">Upcoming in 0.9.0</h2>
-<h3 id="planned-features">Planned Features</h3>
-<ul>
-<li><strong>Time Machine</strong>: Historical analysis and trend tracking</li>
-<li><strong>Container Analysis</strong>: Docker and Kubernetes support</li>
-<li><strong>Security Integration</strong>: Advanced vulnerability scanning</li>
-<li><strong>Code Quality</strong>: Static analysis integration</li>
-<li><strong>Cloud Providers</strong>: AWS, Azure, GCP integration</li>
-<li><strong>Issue Tracking</strong>: Jira, Linear, Asana sync</li>
-</ul>
-<h3 id="improvements">Improvements</h3>
-<ul>
-<li><strong>Performance</strong>: Further optimization for large collections</li>
-<li><strong>Documentation</strong>: More examples and tutorials</li>
-<li><strong>Testing</strong>: Increased test coverage</li>
-<li><strong>UI</strong>: Optional web interface</li>
-</ul>
-<hr />
-<h2 id="support">Support</h2>
-<ul>
-<li><strong>Issues</strong>: <a href="https://github.com/queelius/ghops/issues">GitHub Issues</a></li>
-<li><strong>Discussions</strong>: <a href="https://github.com/queelius/ghops/discussions">GitHub Discussions</a></li>
-<li><strong>Documentation</strong>: <a href="https://ghops.readthedocs.io">ghops.readthedocs.io</a></li>
-<li><strong>Contributing</strong>: <a href="../contributing/">CONTRIBUTING.md</a></li>
-</ul>
+<h2 id="next-steps">Next Steps</h2>
+<p>After completing the tutorials:</p>
+<ol>
+<li><strong>Apply to your repositories</strong>: Use ghops with your actual projects</li>
+<li><strong>Customize workflows</strong>: Build workflows for your specific needs</li>
+<li><strong>Explore integrations</strong>: Try advanced features and integrations</li>
+<li><strong>Join the community</strong>: Share experiences and get help</li>
+<li><strong>Contribute</strong>: Help improve ghops and its documentation</li>
+</ol>
+<p>Ready to dive in? <a href="../notebooks/01_getting_started.ipynb">Start with Notebook 1: Getting Started</a></p>
 
 
 

@@ -9,10 +9,6 @@
       
       
       
-        <link rel="prev" href="../usage/">
-      
-      
-        <link rel="next" href="../audit-command/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -20,7 +16,7 @@
     
     
       
-        <title>Organization & Discovery - ghops</title>
+        <title>Interactive TUI (Text User Interface) - ghops</title>
       
     
     
@@ -72,7 +68,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#repository-organization-with-catalog-and-query" class="md-skip">
+        <a href="#interactive-tui-text-user-interface" class="md-skip">
           Skip to content
         </a>
       
@@ -106,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Organization & Discovery
+              Interactive TUI (Text User Interface)
             
           </span>
         </div>
@@ -274,13 +270,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../catalog-query/" class="md-tabs__link">
           
   
   
@@ -545,31 +539,26 @@
       
   
   
-    
   
   
-  
     
     
     
     
-      
-        
-        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -582,7 +571,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             Commands
@@ -593,32 +582,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    Organization & Discovery
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../catalog-query/" class="md-nav__link">
         
   
   
@@ -629,263 +596,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#catalog-system" class="md-nav__link">
-    <span class="md-ellipsis">
-      Catalog System
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Catalog System">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#adding-tags" class="md-nav__link">
-    <span class="md-ellipsis">
-      Adding Tags
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#viewing-tagged-repositories" class="md-nav__link">
-    <span class="md-ellipsis">
-      Viewing Tagged Repositories
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#removing-tags" class="md-nav__link">
-    <span class="md-ellipsis">
-      Removing Tags
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#implicit-tags" class="md-nav__link">
-    <span class="md-ellipsis">
-      Implicit Tags
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#query-language" class="md-nav__link">
-    <span class="md-ellipsis">
-      Query Language
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Query Language">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#basic-syntax" class="md-nav__link">
-    <span class="md-ellipsis">
-      Basic Syntax
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#complex-expressions" class="md-nav__link">
-    <span class="md-ellipsis">
-      Complex Expressions
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fuzzy-matching" class="md-nav__link">
-    <span class="md-ellipsis">
-      Fuzzy Matching
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#combining-catalog-and-query" class="md-nav__link">
-    <span class="md-ellipsis">
-      Combining Catalog and Query
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#common-patterns" class="md-nav__link">
-    <span class="md-ellipsis">
-      Common Patterns
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Common Patterns">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#project-organization" class="md-nav__link">
-    <span class="md-ellipsis">
-      Project Organization
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#client-work" class="md-nav__link">
-    <span class="md-ellipsis">
-      Client Work
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#technology-stacks" class="md-nav__link">
-    <span class="md-ellipsis">
-      Technology Stacks
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#maintenance-status" class="md-nav__link">
-    <span class="md-ellipsis">
-      Maintenance Status
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#query-examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      Query Examples
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Query Examples">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#finding-repositories" class="md-nav__link">
-    <span class="md-ellipsis">
-      Finding Repositories
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#complex-queries" class="md-nav__link">
-    <span class="md-ellipsis">
-      Complex Queries
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#integration-with-other-commands" class="md-nav__link">
-    <span class="md-ellipsis">
-      Integration with Other Commands
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Integration with Other Commands">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#audit-filtered-repos" class="md-nav__link">
-    <span class="md-ellipsis">
-      Audit Filtered Repos
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#export-filtered-repos" class="md-nav__link">
-    <span class="md-ellipsis">
-      Export Filtered Repos
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#bulk-operations" class="md-nav__link">
-    <span class="md-ellipsis">
-      Bulk Operations
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#best-practices" class="md-nav__link">
-    <span class="md-ellipsis">
-      Best Practices
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1385,270 +1095,680 @@
   
 
 
-<h1 id="repository-organization-with-catalog-and-query">Repository Organization with Catalog and Query</h1>
-<p>ghops provides powerful tools for organizing and finding repositories through its tagging system and query language.</p>
-<h2 id="catalog-system">Catalog System</h2>
-<p>The catalog system allows you to organize repositories with tags, both explicit (user-defined) and implicit (auto-generated).</p>
-<h3 id="adding-tags">Adding Tags</h3>
-<pre><code class="language-bash"># Tag a single repository
-ghops catalog add myproject python ml research
+<h1 id="interactive-tui-text-user-interface">Interactive TUI (Text User Interface)</h1>
+<p>ghops provides a powerful, user-friendly TUI that offers an interactive, stateful alternative to the CLI commands. The TUI is built with <a href="https://textual.textualize.io/">Textual</a> and provides a modern terminal interface for repository management.</p>
+<h2 id="overview">Overview</h2>
+<p>The TUI transforms ghops into an interactive application with:</p>
+<ul>
+<li><strong>Visual repository tree</strong> with status indicators</li>
+<li><strong>Stateful navigation</strong> with history and bookmarks</li>
+<li><strong>Interactive clustering</strong> analysis with visual results</li>
+<li><strong>Workflow orchestration</strong> with live execution logs</li>
+<li><strong>Command palette</strong> for quick actions</li>
+<li><strong>Multi-repository selection</strong> for batch operations</li>
+</ul>
+<h2 id="installation">Installation</h2>
+<p>Install TUI support:</p>
+<pre><code class="language-bash"># Install TUI dependencies
+pip install ghops[tui]
 
-# Tag multiple repos
-ghops catalog add project1 client-work urgent
-ghops catalog add project2 client-work completed
+# Or install all features
+pip install ghops[all]
 </code></pre>
-<h3 id="viewing-tagged-repositories">Viewing Tagged Repositories</h3>
-<pre><code class="language-bash"># Show all tagged repos
-ghops catalog show --pretty
+<h2 id="quick-start">Quick Start</h2>
+<h3 id="launch-the-tui">Launch the TUI</h3>
+<pre><code class="language-bash"># Launch with default configuration
+ghops tui
 
-# Filter by specific tags
-ghops catalog show -t python --pretty
-
-# Require multiple tags (AND operation)
-ghops catalog show -t python -t ml --all-tags --pretty
-
-# JSONL output for processing
-ghops catalog show -t client-work | jq -r '.name'
+# Launch with custom config
+ghops tui --config ~/.ghopsrc
 </code></pre>
-<h3 id="removing-tags">Removing Tags</h3>
-<pre><code class="language-bash"># Remove specific tags
-ghops catalog remove myproject urgent
-
-# Remove all tags from a repo
-ghops catalog clear myproject
+<h3 id="first-steps">First Steps</h3>
+<ol>
+<li><strong>Navigate repositories</strong> - Use arrow keys to browse the tree</li>
+<li><strong>Select a repository</strong> - Press Enter to view details</li>
+<li><strong>Try clustering</strong> - Press 'c' for clustering analysis</li>
+<li><strong>Run a workflow</strong> - Press 'w' to see workflows</li>
+<li><strong>Get help</strong> - Press 'h' for keyboard shortcuts</li>
+</ol>
+<h2 id="interface-layout">Interface Layout</h2>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    ghops - Repository Management                │
+├──────────────────┬──────────────────────────────────────────────┤
+│                  │                                              │
+│  📂 Repositories │         Main Content Area                    │
+│                  │                                              │
+│  📂 work         │  • Repository details                        │
+│    ✅ project1   │  • Clustering results                        │
+│    ⚠️ project2   │  • Workflow editor                          │
+│    📤 project3   │  • Command output                           │
+│  📂 opensource   │                                              │
+│    ✅ lib1       │                                              │
+│    ✅ lib2       │                                              │
+│                  │                                              │
+│  Quick Stats:    │                                              │
+│  Total: 15       │                                              │
+│  ✅ 12 | ⚠️ 3   │                                              │
+│                  │                                              │
+├──────────────────┴──────────────────────────────────────────────┤
+│  Ready | Current: project1 | 3 repositories selected            │
+└─────────────────────────────────────────────────────────────────┘
 </code></pre>
-<h3 id="implicit-tags">Implicit Tags</h3>
-<p>The system automatically generates implicit tags from repository metadata:</p>
+<h2 id="keyboard-shortcuts">Keyboard Shortcuts</h2>
+<h3 id="navigation">Navigation</h3>
 <table>
 <thead>
 <tr>
-<th>Tag Pattern</th>
-<th>Description</th>
-<th>Example</th>
+<th>Key</th>
+<th>Action</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>repo:NAME</code></td>
-<td>Repository name</td>
-<td><code>repo:ghops</code></td>
+<td><code>Tab</code></td>
+<td>Cycle focus to next panel</td>
 </tr>
 <tr>
-<td><code>lang:LANGUAGE</code></td>
-<td>Primary language</td>
-<td><code>lang:python</code></td>
+<td><code>Shift+Tab</code></td>
+<td>Cycle focus to previous panel</td>
 </tr>
 <tr>
-<td><code>dir:PARENT</code></td>
-<td>Parent directory</td>
-<td><code>dir:work</code></td>
+<td><code>↑/↓</code></td>
+<td>Navigate lists and trees</td>
 </tr>
 <tr>
-<td><code>org:OWNER</code></td>
-<td>GitHub organization</td>
-<td><code>org:facebook</code></td>
+<td><code>Enter</code></td>
+<td>Select/Open item</td>
 </tr>
 <tr>
-<td><code>has:LICENSE</code></td>
-<td>Has license file</td>
-<td><code>has:license</code></td>
+<td><code>Escape</code></td>
+<td>Go back/Close modal</td>
 </tr>
 <tr>
-<td><code>has:README</code></td>
-<td>Has README file</td>
-<td><code>has:readme</code></td>
-</tr>
-<tr>
-<td><code>has:DOCS</code></td>
-<td>Has documentation</td>
-<td><code>has:docs</code></td>
-</tr>
-<tr>
-<td><code>tool:TOOL</code></td>
-<td>Documentation tool</td>
-<td><code>tool:mkdocs</code></td>
-</tr>
-<tr>
-<td><code>license:TYPE</code></td>
-<td>License type</td>
-<td><code>license:mit</code></td>
-</tr>
-<tr>
-<td><code>topic:TOPIC</code></td>
-<td>GitHub topics</td>
-<td><code>topic:machine-learning</code></td>
+<td><code>Ctrl+←/→</code></td>
+<td>Navigate history back/forward</td>
 </tr>
 </tbody>
 </table>
-<h2 id="query-language">Query Language</h2>
-<p>The query command provides fuzzy matching and complex boolean expressions.</p>
-<h3 id="basic-syntax">Basic Syntax</h3>
-<pre><code class="language-bash"># Simple equality
-ghops query &quot;language == 'Python'&quot;
-
-# Fuzzy matching with ~=
-ghops query &quot;language ~= 'pyton'&quot;  # Matches Python
-
-# Comparisons
-ghops query &quot;stars &gt; 10&quot;
-ghops query &quot;forks &gt;= 5&quot;
-ghops query &quot;created_at &lt; '2023-01-01'&quot;
-
-# Contains operator
-ghops query &quot;'machine-learning' in topics&quot;
-ghops query &quot;topics contains 'ml'&quot;
-
-# Not equal
-ghops query &quot;license.key != 'proprietary'&quot;
+<h3 id="repository-actions">Repository Actions</h3>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>u</code></td>
+<td>Update repository</td>
+</tr>
+<tr>
+<td><code>p</code></td>
+<td>Push changes</td>
+</tr>
+<tr>
+<td><code>o</code></td>
+<td>Open in external editor</td>
+</tr>
+<tr>
+<td><code>/</code></td>
+<td>Search repositories</td>
+</tr>
+<tr>
+<td><code>Space</code></td>
+<td>Toggle selection</td>
+</tr>
+<tr>
+<td><code>Ctrl+a</code></td>
+<td>Select all</td>
+</tr>
+<tr>
+<td><code>Ctrl+d</code></td>
+<td>Deselect all</td>
+</tr>
+</tbody>
+</table>
+<h3 id="views-and-features">Views and Features</h3>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>c</code></td>
+<td>Open clustering analysis</td>
+</tr>
+<tr>
+<td><code>w</code></td>
+<td>Open workflow orchestration</td>
+</tr>
+<tr>
+<td><code>Ctrl+p</code></td>
+<td>Open command palette</td>
+</tr>
+<tr>
+<td><code>h</code></td>
+<td>Show help screen</td>
+</tr>
+<tr>
+<td><code>r</code></td>
+<td>Refresh data</td>
+</tr>
+<tr>
+<td><code>q</code></td>
+<td>Quit application</td>
+</tr>
+</tbody>
+</table>
+<h2 id="features">Features</h2>
+<h3 id="repository-tree-navigation">Repository Tree Navigation</h3>
+<p>The left sidebar shows all repositories in a hierarchical tree structure:</p>
+<ul>
+<li><strong>📂 Directory nodes</strong> - Group repositories by parent directory</li>
+<li><strong>📁 Repository nodes</strong> - Individual repositories with status icons</li>
+<li><strong>Status indicators</strong>:</li>
+<li><code>✅</code> Clean repository</li>
+<li><code>⚠️</code> Uncommitted changes</li>
+<li><code>📤</code> Unpushed commits</li>
+<li><code>📥</code> Behind remote</li>
+</ul>
+<p><strong>Navigation:</strong></p>
+<pre><code>Use ↑/↓ to navigate
+Press Enter to view details
+Expand/collapse with →/←
 </code></pre>
-<h3 id="complex-expressions">Complex Expressions</h3>
-<pre><code class="language-bash"># AND operations
-ghops query &quot;stars &gt; 10 and language == 'Python'&quot;
-
-# OR operations
-ghops query &quot;language == 'Python' or language == 'JavaScript'&quot;
-
-# Parentheses for grouping
-ghops query &quot;(stars &gt; 5 or forks &gt; 2) and language ~= 'python'&quot;
-
-# Nested field access
-ghops query &quot;license.name contains 'MIT'&quot;
-ghops query &quot;remote.owner == 'myorg'&quot;
+<h3 id="repository-detail-view">Repository Detail View</h3>
+<p>Press Enter on a repository to view:</p>
+<ul>
+<li><strong>Basic Information</strong></li>
+<li>Path and name</li>
+<li>Primary language</li>
+<li>Current branch</li>
+<li>
+<p>Git status</p>
+</li>
+<li>
+<p><strong>File Browser</strong></p>
+</li>
+<li>Directory structure</li>
+<li>File sizes</li>
+<li>
+<p>Quick file access</p>
+</li>
+<li>
+<p><strong>Quick Actions</strong></p>
+</li>
+<li>Update repository</li>
+<li>Push changes</li>
+<li>Open in editor</li>
+</ul>
+<h3 id="clustering-analysis">Clustering Analysis</h3>
+<p>Press <code>c</code> to access clustering features:</p>
+<h4 id="configuration-panel">Configuration Panel</h4>
+<ul>
+<li>Select algorithm (K-means, DBSCAN, Hierarchical, Network, Auto)</li>
+<li>Set number of clusters</li>
+<li>Configure parameters</li>
+</ul>
+<h4 id="analysis-actions">Analysis Actions</h4>
+<ul>
+<li><strong>Run Clustering</strong> - Analyze repository relationships</li>
+<li><strong>Find Duplicates</strong> - Detect duplicate code across repos</li>
+<li><strong>Suggest Consolidation</strong> - Get merge recommendations</li>
+</ul>
+<h4 id="results-display">Results Display</h4>
+<ul>
+<li>Cluster assignments with coherence scores</li>
+<li>Duplication reports with similarity percentages</li>
+<li>Consolidation suggestions with confidence levels</li>
+</ul>
+<p><strong>Example Workflow:</strong></p>
+<pre><code>1. Press 'c' for clustering
+2. Select &quot;K-means&quot; algorithm
+3. Set clusters to 5
+4. Click &quot;Run Clustering&quot;
+5. Review cluster results
+6. Click &quot;Find Duplicates&quot; for detailed analysis
 </code></pre>
-<h3 id="fuzzy-matching">Fuzzy Matching</h3>
-<p>The <code>~=</code> operator uses fuzzy string matching:</p>
-<pre><code class="language-bash"># Typos are forgiven
-ghops query &quot;name ~= 'djago'&quot;  # Matches django
+<h3 id="workflow-orchestration">Workflow Orchestration</h3>
+<p>Press <code>w</code> to access workflow features:</p>
+<h4 id="workflow-list">Workflow List</h4>
+<ul>
+<li>Pre-defined workflows (Morning Routine, Release Pipeline)</li>
+<li>Custom workflows</li>
+<li>Recently used</li>
+</ul>
+<h4 id="workflow-editor">Workflow Editor</h4>
+<ul>
+<li>YAML syntax highlighting</li>
+<li>Real-time validation</li>
+<li>Variable substitution preview</li>
+</ul>
+<h4 id="execution-monitor">Execution Monitor</h4>
+<ul>
+<li>Step-by-step progress</li>
+<li>Real-time logs</li>
+<li>Error handling</li>
+<li>Artifact collection</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre><code class="language-yaml">name: morning-routine
+steps:
+  - name: Check Status
+    action: ghops
+    params:
+      command: status
+      args: [&quot;-r&quot;]
 
-# Partial matches
-ghops query &quot;description ~= 'web framework'&quot;
-
-# Case insensitive
-ghops query &quot;language ~= 'PYTHON'&quot;
+  - name: Update All
+    action: ghops
+    params:
+      command: update
+      args: [&quot;-r&quot;]
+    depends_on: [Check Status]
 </code></pre>
-<h2 id="combining-catalog-and-query">Combining Catalog and Query</h2>
-<p>Use both systems together for powerful filtering:</p>
-<pre><code class="language-bash"># Tag-based pre-filtering with query refinement
-ghops list -t &quot;lang:python&quot; | jq -r '.path' | \
-  xargs -I {} ghops query &quot;stars &gt; 5&quot; --path {}
-
-# Find untagged repos
-ghops query &quot;true&quot; | jq -r '.name' &gt; all-repos.txt
-ghops catalog show | jq -r '.name' &gt; tagged-repos.txt
-comm -23 &lt;(sort all-repos.txt) &lt;(sort tagged-repos.txt)
+<h3 id="command-palette">Command Palette</h3>
+<p>Press <code>Ctrl+p</code> to access the command palette:</p>
+<ul>
+<li><strong>Quick command access</strong> - Type to search commands</li>
+<li><strong>Fuzzy matching</strong> - Find commands quickly</li>
+<li><strong>Command descriptions</strong> - See what each command does</li>
+<li><strong>Parameter hints</strong> - Get help with command syntax</li>
+</ul>
+<p><strong>Available Commands:</strong>
+- <code>status</code> - Show repository status
+- <code>update</code> - Update repositories
+- <code>cluster</code> - Run clustering analysis
+- <code>workflow</code> - Open workflows
+- <code>cd &lt;repo&gt;</code> - Navigate to repository
+- <code>query &lt;expr&gt;</code> - Query repositories
+- <code>tag &lt;repo&gt; &lt;tags&gt;</code> - Add tags
+- <code>export &lt;format&gt;</code> - Export data</p>
+<h3 id="search-and-filter">Search and Filter</h3>
+<p>Press <code>/</code> to search:</p>
+<ul>
+<li><strong>Live search</strong> - Results update as you type</li>
+<li><strong>Search scope</strong> - Names, descriptions, tags</li>
+<li><strong>Filter by status</strong> - Clean, dirty, unpushed</li>
+<li><strong>Filter by language</strong> - Python, JavaScript, etc.</li>
+<li><strong>Filter by tags</strong> - Custom and implicit tags</li>
+</ul>
+<p><strong>Example Queries:</strong></p>
+<pre><code>python          # Find Python repos
+has:issues      # Repos with open issues
+tag:ml          # Repos tagged 'ml'
+uncommitted     # Repos with uncommitted changes
 </code></pre>
-<h2 id="common-patterns">Common Patterns</h2>
-<h3 id="project-organization">Project Organization</h3>
-<pre><code class="language-bash"># Tag by project status
-ghops catalog add project1 active in-development
-ghops catalog add project2 completed archived
-ghops catalog add project3 active needs-review
-
-# Find active projects needing review
-ghops catalog show -t active -t needs-review --all-tags
+<h3 id="selection-and-batch-operations">Selection and Batch Operations</h3>
+<p><strong>Multi-Select:</strong>
+1. Press <code>Space</code> on each repository to select
+2. Selected repos are highlighted
+3. Status bar shows selection count</p>
+<p><strong>Batch Operations:</strong>
+1. Select repositories
+2. Open command palette (<code>Ctrl+p</code>)
+3. Execute command on all selected</p>
+<p><strong>Selection Commands:</strong>
+- <code>Ctrl+a</code> - Select all visible repos
+- <code>Ctrl+d</code> - Deselect all
+- <code>Ctrl+i</code> - Invert selection
+- <code>Ctrl+c</code> - Copy selection to clipboard
+- <code>Ctrl+v</code> - Paste selection</p>
+<h3 id="stateful-navigation">Stateful Navigation</h3>
+<p>The TUI maintains state across your session:</p>
+<h4 id="navigation-history">Navigation History</h4>
+<ul>
+<li><strong>Back</strong> (<code>Ctrl+←</code>) - Go to previous location</li>
+<li><strong>Forward</strong> (<code>Ctrl+→</code>) - Go to next location</li>
+<li><strong>History</strong> - View navigation history</li>
+</ul>
+<h4 id="bookmarks">Bookmarks</h4>
+<ul>
+<li><strong>Add bookmark</strong> - Press <code>b</code> on a repository</li>
+<li><strong>View bookmarks</strong> - Press <code>B</code> for bookmark list</li>
+<li><strong>Quick access</strong> - Jump to bookmarked repos</li>
+</ul>
+<h4 id="context-awareness">Context Awareness</h4>
+<ul>
+<li><strong>Current repository</strong> - Commands apply to current context</li>
+<li><strong>Current directory</strong> - Like <code>cd</code> in shell</li>
+<li><strong>Breadcrumb navigation</strong> - See your location</li>
+</ul>
+<p><strong>Example:</strong></p>
+<pre><code>1. Navigate to project1 (becomes current context)
+2. Press 'u' to update (updates project1)
+3. Navigate to project2
+4. Press Ctrl+← to go back to project1
+5. Press 'b' to bookmark project1
 </code></pre>
-<h3 id="client-work">Client Work</h3>
-<pre><code class="language-bash"># Tag by client
-ghops catalog add webapp client:acme web
-ghops catalog add api client:acme backend
-ghops catalog add report client:bigco analysis
-
-# All work for a client
-ghops catalog show -t &quot;client:acme&quot;
+<h2 id="configuration">Configuration</h2>
+<p>The TUI respects ghops configuration with TUI-specific options:</p>
+<pre><code class="language-json">{
+  &quot;tui&quot;: {
+    &quot;theme&quot;: &quot;monokai&quot;,
+    &quot;refresh_interval&quot;: 30,
+    &quot;show_hidden&quot;: false,
+    &quot;default_view&quot;: &quot;tree&quot;,
+    &quot;tree_icons&quot;: true,
+    &quot;mouse_support&quot;: true,
+    &quot;status_icons&quot;: {
+      &quot;clean&quot;: &quot;✅&quot;,
+      &quot;dirty&quot;: &quot;⚠️&quot;,
+      &quot;unpushed&quot;: &quot;📤&quot;,
+      &quot;behind&quot;: &quot;📥&quot;
+    },
+    &quot;keybindings&quot;: {
+      &quot;quit&quot;: &quot;q&quot;,
+      &quot;refresh&quot;: &quot;r&quot;,
+      &quot;help&quot;: &quot;h&quot;
+    }
+  }
+}
 </code></pre>
-<h3 id="technology-stacks">Technology Stacks</h3>
-<pre><code class="language-bash"># Tag by stack
-ghops catalog add frontend react typescript webpack
-ghops catalog add backend python django postgresql
-ghops catalog add mobile flutter dart
-
-# Find all TypeScript projects
-ghops catalog show -t typescript
-# Or use implicit tags
-ghops list -t &quot;lang:typescript&quot;
+<h3 id="available-themes">Available Themes</h3>
+<ul>
+<li><code>monokai</code> (default) - Dark theme with vibrant colors</li>
+<li><code>gruvbox</code> - Retro groove</li>
+<li><code>dracula</code> - Dark purple theme</li>
+<li><code>nord</code> - Arctic, north-bluish theme</li>
+<li><code>solarized-dark</code> - Precision colors (dark)</li>
+<li><code>solarized-light</code> - Precision colors (light)</li>
+</ul>
+<h3 id="custom-themes">Custom Themes</h3>
+<p>Create custom themes:</p>
+<pre><code class="language-json">{
+  &quot;tui&quot;: {
+    &quot;custom_theme&quot;: {
+      &quot;primary&quot;: &quot;#61afef&quot;,
+      &quot;secondary&quot;: &quot;#98c379&quot;,
+      &quot;accent&quot;: &quot;#e06c75&quot;,
+      &quot;background&quot;: &quot;#282c34&quot;,
+      &quot;surface&quot;: &quot;#3e4451&quot;,
+      &quot;error&quot;: &quot;#e06c75&quot;
+    }
+  }
+}
 </code></pre>
-<h3 id="maintenance-status">Maintenance Status</h3>
-<pre><code class="language-bash"># Tag by maintenance needs
-ghops catalog add oldproject needs:update needs:tests
-ghops catalog add newproject well-maintained has:ci
-
-# Find projects needing attention
-ghops catalog show -t &quot;needs:update&quot;
+<h2 id="advanced-usage">Advanced Usage</h2>
+<h3 id="cd-command">CD Command</h3>
+<p>Navigate like a shell:</p>
+<pre><code class="language-bash"># In command palette (Ctrl+p)
+cd myproject       # Navigate to repo containing &quot;myproject&quot;
+cd work/lib        # Navigate using path
+cd ..              # Go to parent directory
+cd ~               # Go to root
 </code></pre>
-<h2 id="query-examples">Query Examples</h2>
-<h3 id="finding-repositories">Finding Repositories</h3>
-<pre><code class="language-bash"># Popular Python projects
-ghops query &quot;language == 'Python' and stars &gt; 10&quot;
+<h3 id="workflow-variables">Workflow Variables</h3>
+<p>Use variables in workflows:</p>
+<pre><code class="language-yaml">name: deploy
+params:
+  environment: production
+  version: ${VERSION}
 
-# Recently updated
-ghops query &quot;updated_at &gt; '2024-01-01'&quot;
-
-# Projects without licenses
-ghops query &quot;not has_license&quot;
-
-# Large projects
-ghops query &quot;file_count &gt; 1000 or total_size &gt; 10000000&quot;
-
-# ML projects
-ghops query &quot;'machine-learning' in topics or 'ml' in topics or name contains 'learn'&quot;
+steps:
+  - name: Deploy
+    action: shell
+    params:
+      command: deploy.sh ${environment} ${version}
 </code></pre>
-<h3 id="complex-queries">Complex Queries</h3>
-<pre><code class="language-bash"># Active web projects
-ghops query &quot;(language == 'JavaScript' or language == 'TypeScript') and updated_at &gt; '2023-06-01' and ('web' in topics or description contains 'web')&quot;
-
-# Python packages on PyPI
-ghops query &quot;language == 'Python' and has_package == true and package.registry == 'pypi'&quot;
-
-# Documentation sites
-ghops query &quot;has_docs == true and (has_pages == true or homepage contains 'github.io')&quot;
+<p>Run with:</p>
+<pre><code>1. Press 'w' for workflows
+2. Select 'deploy'
+3. Set VERSION variable
+4. Run workflow
 </code></pre>
-<h2 id="integration-with-other-commands">Integration with Other Commands</h2>
-<h3 id="audit-filtered-repos">Audit Filtered Repos</h3>
-<pre><code class="language-bash"># Audit all client work
-ghops audit all -t &quot;client:*&quot; --pretty
-
-# Audit Python projects without docs
-ghops audit docs -q &quot;language == 'Python' and not has_docs&quot;
+<h3 id="custom-actions">Custom Actions</h3>
+<p>Execute custom commands:</p>
+<pre><code class="language-bash"># In command palette
+!git log --oneline -n 10    # Run git command
+!code .                      # Open in VS Code
+!gh pr list                  # GitHub CLI commands
 </code></pre>
-<h3 id="export-filtered-repos">Export Filtered Repos</h3>
-<pre><code class="language-bash"># Export active projects to Hugo
-ghops export generate -t active -f hugo -o ./site/content/active
-
-# Export popular repos to PDF
-ghops export generate -q &quot;stars &gt; 5 or forks &gt; 2&quot; -f pdf
+<h3 id="integration-with-external-tools">Integration with External Tools</h3>
+<p>Open repositories in external tools:</p>
+<ul>
+<li><code>o</code> - Open in default editor (VS Code)</li>
+<li><code>!code .</code> - Explicitly open in VS Code</li>
+<li><code>!idea .</code> - Open in IntelliJ IDEA</li>
+<li><code>!gh repo view --web</code> - Open in GitHub</li>
+</ul>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="tui-wont-start">TUI Won't Start</h3>
+<p><strong>Problem:</strong> <code>ImportError: No module named 'textual'</code></p>
+<p><strong>Solution:</strong></p>
+<pre><code class="language-bash">pip install ghops[tui]
+# or
+pip install textual textual-dev
 </code></pre>
-<h3 id="bulk-operations">Bulk Operations</h3>
-<pre><code class="language-bash"># Update all work repos
-ghops update -t &quot;dir:work&quot;
-
-# Build docs for all documented Python projects
-ghops docs build -q &quot;language == 'Python' and has_docs == true&quot;
-</code></pre>
-<h2 id="best-practices">Best Practices</h2>
+<h3 id="visual-artifacts">Visual Artifacts</h3>
+<p><strong>Problem:</strong> Boxes, lines, or colors appear broken</p>
+<p><strong>Solutions:</strong>
+1. Use a modern terminal (iTerm2, Windows Terminal, Alacritty)
+2. Set terminal to 256 colors:
+   <code>bash
+   export TERM=xterm-256color</code>
+3. Update textual:
+   <code>bash
+   pip install --upgrade textual</code></p>
+<h3 id="slow-performance">Slow Performance</h3>
+<p><strong>Problem:</strong> TUI is slow with many repositories</p>
+<p><strong>Solutions:</strong>
+1. Enable lazy loading:
+   <code>json
+   {"tui": {"lazy_load": true}}</code>
+2. Reduce refresh interval:
+   <code>json
+   {"tui": {"refresh_interval": 60}}</code>
+3. Filter before opening TUI:
+   <code>bash
+   ghops query "language == 'Python'" | ghops tui --stdin</code></p>
+<h3 id="mouse-not-working">Mouse Not Working</h3>
+<p><strong>Problem:</strong> Mouse clicks don't work</p>
+<p><strong>Solutions:</strong>
+1. Enable mouse support:
+   <code>json
+   {"tui": {"mouse_support": true}}</code>
+2. Check terminal supports mouse:
+   <code>bash
+   echo $TERM  # Should show xterm or similar</code></p>
+<h2 id="tips-tricks">Tips &amp; Tricks</h2>
+<h3 id="productivity-tips">Productivity Tips</h3>
 <ol>
-<li>
-<p><strong>Use Namespaces</strong>: Prefix related tags (e.g., <code>client:*</code>, <code>project:*</code>, <code>status:*</code>)</p>
-</li>
-<li>
-<p><strong>Combine Systems</strong>: Use tags for stable categorization, queries for dynamic filtering</p>
-</li>
-<li>
-<p><strong>Document Tags</strong>: Keep a README of your tagging conventions</p>
-</li>
-<li>
-<p><strong>Regular Cleanup</strong>: Remove obsolete tags periodically
-   <code>bash
-   ghops catalog show -t obsolete | jq -r '.name' | \
-     xargs -I {} ghops catalog remove {} obsolete</code></p>
-</li>
-<li>
-<p><strong>Export Tag Documentation</strong>:
-   <code>bash
-   # Generate tag documentation
-   ghops catalog show | jq -r '.tags[]' | sort | uniq -c | \
-     sort -rn &gt; tag-usage.txt</code></p>
-</li>
+<li><strong>Use Command Palette</strong> - <code>Ctrl+p</code> is faster than navigating menus</li>
+<li><strong>Bookmark Frequently Used Repos</strong> - Press <code>b</code> to bookmark</li>
+<li><strong>Filter Before Opening</strong> - Use ghops query to pre-filter</li>
+<li><strong>Split Terminal</strong> - Run multiple TUI instances in tmux</li>
+<li><strong>Learn Shortcuts</strong> - Press <code>h</code> to see all shortcuts</li>
 </ol>
+<h3 id="workflow-tips">Workflow Tips</h3>
+<ol>
+<li><strong>Save Workflows</strong> - Create YAML files for repeated tasks</li>
+<li><strong>Use Variables</strong> - Parameterize workflows for flexibility</li>
+<li><strong>Chain Workflows</strong> - One workflow can trigger others</li>
+<li><strong>Test in Dry-Run</strong> - Use <code>--dry-run</code> flag for testing</li>
+</ol>
+<h3 id="clustering-tips">Clustering Tips</h3>
+<ol>
+<li><strong>Start with Auto</strong> - Let algorithm selection be automatic</li>
+<li><strong>Iterate on K</strong> - Try different cluster counts</li>
+<li><strong>Review Duplicates</strong> - Focus on high similarity (&gt;70%)</li>
+<li><strong>Act on Suggestions</strong> - Consolidation saves maintenance time</li>
+</ol>
+<h2 id="comparison-tui-vs-cli">Comparison: TUI vs CLI</h2>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>TUI</th>
+<th>CLI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Speed</strong></td>
+<td>Interactive exploration</td>
+<td>Fast single commands</td>
+</tr>
+<tr>
+<td><strong>Visual</strong></td>
+<td>Rich, colorful</td>
+<td>Minimal text</td>
+</tr>
+<tr>
+<td><strong>State</strong></td>
+<td>Stateful with history</td>
+<td>Stateless</td>
+</tr>
+<tr>
+<td><strong>Scripting</strong></td>
+<td>Not designed for it</td>
+<td>Excellent (JSONL)</td>
+</tr>
+<tr>
+<td><strong>Learning</strong></td>
+<td>Visual cues, easy</td>
+<td>Moderate</td>
+</tr>
+<tr>
+<td><strong>Batch Ops</strong></td>
+<td>Visual selection</td>
+<td>Pipe composition</td>
+</tr>
+<tr>
+<td><strong>Best For</strong></td>
+<td>Exploration, analysis</td>
+<td>Automation, scripts</td>
+</tr>
+</tbody>
+</table>
+<h3 id="when-to-use-tui">When to Use TUI</h3>
+<p>✅ <strong>Good for:</strong>
+- Exploring repositories interactively
+- Visual analysis and clustering
+- Learning ghops features
+- Multi-step workflows with monitoring
+- Repository discovery</p>
+<p>❌ <strong>Not ideal for:</strong>
+- CI/CD automation
+- Scripting and pipes
+- Headless environments
+- Quick single commands
+- Non-interactive tasks</p>
+<h3 id="when-to-use-cli">When to Use CLI</h3>
+<p>✅ <strong>Good for:</strong>
+- Automation and scripting
+- CI/CD pipelines
+- Quick single operations
+- Headless servers
+- Pipe compositions</p>
+<p>❌ <strong>Not ideal for:</strong>
+- Interactive exploration
+- Visual analysis
+- Learning the tool
+- Complex multi-step workflows</p>
+<h2 id="examples">Examples</h2>
+<h3 id="example-1-morning-routine">Example 1: Morning Routine</h3>
+<pre><code>1. Launch TUI: ghops tui
+2. Press 'r' to refresh all repositories
+3. Press '/' and search for &quot;uncommitted&quot;
+4. Press 'Space' to select all dirty repos
+5. Press 'Ctrl+p' and type &quot;update&quot;
+6. Monitor updates in real-time
+7. Press 'c' for clustering analysis
+8. Review consolidation suggestions
+</code></pre>
+<h3 id="example-2-release-pipeline">Example 2: Release Pipeline</h3>
+<pre><code>1. Navigate to project repository
+2. Press 'w' for workflows
+3. Select &quot;Release Pipeline&quot;
+4. Review workflow steps
+5. Run workflow
+6. Monitor execution in real-time
+7. View artifacts and outputs
+</code></pre>
+<h3 id="example-3-repository-discovery">Example 3: Repository Discovery</h3>
+<pre><code>1. Launch TUI with: ghops tui
+2. Browse tree with arrow keys
+3. Press 'c' for clustering
+4. Select &quot;Network&quot; algorithm
+5. Run clustering
+6. Explore related repositories
+7. Bookmark interesting repos with 'b'
+</code></pre>
+<h3 id="example-4-batch-updates">Example 4: Batch Updates</h3>
+<pre><code>1. Press '/' to search
+2. Type filter: &quot;language == 'Python'&quot;
+3. Press 'Ctrl+a' to select all
+4. Press 'Ctrl+p' for command palette
+5. Type: update --license mit
+6. Confirm and execute
+7. Watch progress in status bar
+</code></pre>
+<h2 id="development">Development</h2>
+<h3 id="running-from-source">Running from Source</h3>
+<pre><code class="language-bash">cd ghops
+pip install -e .[tui]
+
+# Run directly
+python -m ghops.tui.app
+
+# Or use CLI
+ghops tui
+</code></pre>
+<h3 id="creating-custom-screens">Creating Custom Screens</h3>
+<p>Extend the TUI with custom screens:</p>
+<pre><code class="language-python">from textual.screen import Screen
+from textual.widgets import Static
+from ghops.tui import GhopsApp
+
+class MyCustomScreen(Screen):
+    &quot;&quot;&quot;Custom screen example.&quot;&quot;&quot;
+
+    def compose(self):
+        yield Static(&quot;My Custom View&quot;)
+
+# Register in app
+app = GhopsApp()
+app.install_screen(MyCustomScreen(), name=&quot;custom&quot;)
+</code></pre>
+<h3 id="adding-custom-actions">Adding Custom Actions</h3>
+<p>Add custom actions to the command palette:</p>
+<pre><code class="language-python">from ghops.tui.app import GhopsApp
+
+class ExtendedApp(GhopsApp):
+    async def execute_custom_command(self, command):
+        if command == &quot;my-action&quot;:
+            # Custom logic
+            self.notify(&quot;Custom action executed!&quot;)
+        else:
+            await super().execute_command(command)
+</code></pre>
+<h2 id="future-enhancements">Future Enhancements</h2>
+<p>Planned TUI features:</p>
+<ul>
+<li>[ ] <strong>Git Graph Visualization</strong> - Visual commit history</li>
+<li>[ ] <strong>Diff Viewer</strong> - Side-by-side code comparison</li>
+<li>[ ] <strong>Commit Browser</strong> - Navigate commit history</li>
+<li>[ ] <strong>Real-time Collaboration</strong> - Multi-user TUI sessions</li>
+<li>[ ] <strong>Plugin System</strong> - Custom screens and actions</li>
+<li>[ ] <strong>Screenshot Export</strong> - Save TUI state as images</li>
+<li>[ ] <strong>IDE Integration</strong> - Direct integration with VS Code, etc.</li>
+<li>[ ] <strong>Dashboard Mode</strong> - Monitoring dashboard view</li>
+<li>[ ] <strong>Notification Center</strong> - Alerts and notifications</li>
+<li>[ ] <strong>Custom Widgets</strong> - User-defined UI components</li>
+</ul>
+<h2 id="resources">Resources</h2>
+<ul>
+<li><a href="https://textual.textualize.io/">Textual Documentation</a></li>
+<li><a href="cli-reference.md">ghops CLI Reference</a></li>
+<li><a href="integrations/workflows.md">Workflow Guide</a></li>
+<li><a href="../integrations/clustering/">Clustering Guide</a></li>
+<li><a href="https://github.com/queelius/ghops/issues">GitHub Issues</a></li>
+</ul>
 
 
 

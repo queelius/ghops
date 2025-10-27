@@ -9,10 +9,6 @@
       
       
       
-        <link rel="prev" href="../usage/">
-      
-      
-        <link rel="next" href="../audit-command/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -20,7 +16,7 @@
     
     
       
-        <title>Organization & Discovery - ghops</title>
+        <title>Shell Virtual Filesystem - ghops</title>
       
     
     
@@ -72,7 +68,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#repository-organization-with-catalog-and-query" class="md-skip">
+        <a href="#shell-virtual-filesystem" class="md-skip">
           Skip to content
         </a>
       
@@ -106,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Organization & Discovery
+              Shell Virtual Filesystem
             
           </span>
         </div>
@@ -274,13 +270,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../catalog-query/" class="md-tabs__link">
           
   
   
@@ -545,31 +539,26 @@
       
   
   
-    
   
   
-  
     
     
     
     
-      
-        
-        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -582,7 +571,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             Commands
@@ -593,32 +582,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    Organization & Discovery
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../catalog-query/" class="md-nav__link">
         
   
   
@@ -629,263 +596,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#catalog-system" class="md-nav__link">
-    <span class="md-ellipsis">
-      Catalog System
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Catalog System">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#adding-tags" class="md-nav__link">
-    <span class="md-ellipsis">
-      Adding Tags
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#viewing-tagged-repositories" class="md-nav__link">
-    <span class="md-ellipsis">
-      Viewing Tagged Repositories
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#removing-tags" class="md-nav__link">
-    <span class="md-ellipsis">
-      Removing Tags
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#implicit-tags" class="md-nav__link">
-    <span class="md-ellipsis">
-      Implicit Tags
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#query-language" class="md-nav__link">
-    <span class="md-ellipsis">
-      Query Language
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Query Language">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#basic-syntax" class="md-nav__link">
-    <span class="md-ellipsis">
-      Basic Syntax
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#complex-expressions" class="md-nav__link">
-    <span class="md-ellipsis">
-      Complex Expressions
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fuzzy-matching" class="md-nav__link">
-    <span class="md-ellipsis">
-      Fuzzy Matching
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#combining-catalog-and-query" class="md-nav__link">
-    <span class="md-ellipsis">
-      Combining Catalog and Query
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#common-patterns" class="md-nav__link">
-    <span class="md-ellipsis">
-      Common Patterns
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Common Patterns">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#project-organization" class="md-nav__link">
-    <span class="md-ellipsis">
-      Project Organization
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#client-work" class="md-nav__link">
-    <span class="md-ellipsis">
-      Client Work
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#technology-stacks" class="md-nav__link">
-    <span class="md-ellipsis">
-      Technology Stacks
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#maintenance-status" class="md-nav__link">
-    <span class="md-ellipsis">
-      Maintenance Status
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#query-examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      Query Examples
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Query Examples">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#finding-repositories" class="md-nav__link">
-    <span class="md-ellipsis">
-      Finding Repositories
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#complex-queries" class="md-nav__link">
-    <span class="md-ellipsis">
-      Complex Queries
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#integration-with-other-commands" class="md-nav__link">
-    <span class="md-ellipsis">
-      Integration with Other Commands
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Integration with Other Commands">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#audit-filtered-repos" class="md-nav__link">
-    <span class="md-ellipsis">
-      Audit Filtered Repos
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#export-filtered-repos" class="md-nav__link">
-    <span class="md-ellipsis">
-      Export Filtered Repos
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#bulk-operations" class="md-nav__link">
-    <span class="md-ellipsis">
-      Bulk Operations
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#best-practices" class="md-nav__link">
-    <span class="md-ellipsis">
-      Best Practices
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1385,270 +1095,299 @@
   
 
 
-<h1 id="repository-organization-with-catalog-and-query">Repository Organization with Catalog and Query</h1>
-<p>ghops provides powerful tools for organizing and finding repositories through its tagging system and query language.</p>
-<h2 id="catalog-system">Catalog System</h2>
-<p>The catalog system allows you to organize repositories with tags, both explicit (user-defined) and implicit (auto-generated).</p>
-<h3 id="adding-tags">Adding Tags</h3>
-<pre><code class="language-bash"># Tag a single repository
-ghops catalog add myproject python ml research
-
-# Tag multiple repos
-ghops catalog add project1 client-work urgent
-ghops catalog add project2 client-work completed
+<h1 id="shell-virtual-filesystem">Shell Virtual Filesystem</h1>
+<p>The ghops interactive shell provides a powerful virtual filesystem (VFS) for navigating and managing repositories using hierarchical tags.</p>
+<h2 id="overview">Overview</h2>
+<p>The shell VFS maps your repositories and their tags to a familiar filesystem structure, allowing you to use standard Unix commands (<code>cd</code>, <code>ls</code>, <code>cp</code>, <code>mv</code>, <code>rm</code>) to organize and navigate your projects.</p>
+<h2 id="filesystem-structure">Filesystem Structure</h2>
+<pre><code>/
+├── repos/              # All repositories
+│   ├── project-a/
+│   ├── project-b/
+│   └── project-c/
+├── by-tag/             # Hierarchical tag organization
+│   ├── alex/
+│   │   ├── beta/       # repos tagged with &quot;alex/beta&quot;
+│   │   └── production/ # repos tagged with &quot;alex/production&quot;
+│   ├── topic/
+│   │   ├── ml/         # &quot;topic:ml&quot;
+│   │   └── scientific/
+│   │       └── engineering/
+│   │           └── ai/  # &quot;topic:scientific/engineering/ai&quot;
+│   └── work/
+│       └── client/
+│           └── acme/    # &quot;work/client/acme&quot;
+├── by-language/        # Grouped by programming language
+│   ├── Python/
+│   ├── JavaScript/
+│   └── Rust/
+└── by-status/          # Grouped by git status
+    ├── clean/
+    └── dirty/
 </code></pre>
-<h3 id="viewing-tagged-repositories">Viewing Tagged Repositories</h3>
-<pre><code class="language-bash"># Show all tagged repos
-ghops catalog show --pretty
-
-# Filter by specific tags
-ghops catalog show -t python --pretty
-
-# Require multiple tags (AND operation)
-ghops catalog show -t python -t ml --all-tags --pretty
-
-# JSONL output for processing
-ghops catalog show -t client-work | jq -r '.name'
+<h2 id="launching-the-shell">Launching the Shell</h2>
+<pre><code class="language-bash">ghops shell
 </code></pre>
-<h3 id="removing-tags">Removing Tags</h3>
-<pre><code class="language-bash"># Remove specific tags
-ghops catalog remove myproject urgent
+<p>You'll see:</p>
+<pre><code>╔════════════════════════════════════════════════════════════════╗
+║                    ghops Interactive Shell                     ║
+║                                                                ║
+║  Navigate repositories with hierarchical tag filesystem       ║
+║  - /repos/           All repositories                         ║
+║  - /by-tag/          Hierarchical tag navigation              ║
+║  - /by-language/     Grouped by programming language          ║
+║  - /by-status/       Grouped by git status                    ║
+║                                                                ║
+║  Tag operations: cp (add tag), mv (retag), rm (remove tag)    ║
+║  Type 'help' for available commands, 'exit' or Ctrl+D to quit ║
+╚════════════════════════════════════════════════════════════════╝
 
-# Remove all tags from a repo
-ghops catalog clear myproject
+ghops:/&gt;
 </code></pre>
-<h3 id="implicit-tags">Implicit Tags</h3>
-<p>The system automatically generates implicit tags from repository metadata:</p>
+<h2 id="navigation-commands">Navigation Commands</h2>
+<h3 id="pwd-print-working-directory"><code>pwd</code> - Print Working Directory</h3>
+<pre><code class="language-bash">ghops:/&gt; pwd
+/
+</code></pre>
+<h3 id="ls-list-directory-contents"><code>ls</code> - List Directory Contents</h3>
+<pre><code class="language-bash"># List with nice formatted table (default)
+ghops:/&gt; ls
+┏━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━┓
+┃ Name          ┃ Type      ┃ Target ┃
+┡━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━┩
+│ 📂 by-language│ directory │        │
+│ 📂 by-status  │ directory │        │
+│ 📂 by-tag     │ directory │        │
+│ 📂 repos      │ directory │        │
+└───────────────┴───────────┴────────┘
+
+# List with JSONL output (opt-in)
+ghops:/&gt; ls --json
+{&quot;name&quot;: &quot;repos&quot;, &quot;type&quot;: &quot;directory&quot;, &quot;icon&quot;: &quot;📂&quot;}
+{&quot;name&quot;: &quot;by-tag&quot;, &quot;type&quot;: &quot;directory&quot;, &quot;icon&quot;: &quot;📂&quot;}
+{&quot;name&quot;: &quot;by-language&quot;, &quot;type&quot;: &quot;directory&quot;, &quot;icon&quot;: &quot;📂&quot;}
+{&quot;name&quot;: &quot;by-status&quot;, &quot;type&quot;: &quot;directory&quot;, &quot;icon&quot;: &quot;📂&quot;}
+</code></pre>
+<h3 id="cd-change-directory"><code>cd</code> - Change Directory</h3>
+<pre><code class="language-bash">ghops:/&gt; cd by-tag
+ghops:/by-tag&gt; cd alex
+ghops:/by-tag/alex&gt; cd beta
+ghops:/by-tag/alex/beta&gt; ls
+{&quot;name&quot;: &quot;myproject&quot;, &quot;type&quot;: &quot;symlink&quot;, &quot;icon&quot;: &quot;🔗&quot;, &quot;target&quot;: &quot;/repos/myproject&quot;}
+</code></pre>
+<h2 id="tag-management-commands">Tag Management Commands</h2>
+<h3 id="cp-add-tags"><code>cp</code> - Add Tags</h3>
+<p>Copy a repository to a tag location to add that tag:</p>
+<pre><code class="language-bash"># Add simple hierarchical tag
+ghops:/&gt; cp /repos/myproject /by-tag/alex/beta
+Added tag 'alex/beta' to myproject
+
+# Add key:value hierarchical tag
+ghops:/&gt; cp /repos/myproject /by-tag/topic/ml/research
+Added tag 'topic:ml/research' to myproject
+
+# Multiple tags can coexist
+ghops:/by-tag/alex/beta&gt; ls
+{&quot;name&quot;: &quot;myproject&quot;, &quot;type&quot;: &quot;symlink&quot;, ...}
+ghops:/by-tag/topic/ml/research&gt; ls
+{&quot;name&quot;: &quot;myproject&quot;, &quot;type&quot;: &quot;symlink&quot;, ...}
+</code></pre>
+<h3 id="mv-move-between-tags"><code>mv</code> - Move Between Tags</h3>
+<p>Move a repository from one tag to another (removes old tag, adds new tag):</p>
+<pre><code class="language-bash">ghops:/&gt; mv /by-tag/alex/beta/myproject /by-tag/alex/production
+Moved myproject from 'alex/beta' to 'alex/production'
+</code></pre>
+<h3 id="rm-remove-tags"><code>rm</code> - Remove Tags</h3>
+<p>Remove a tag from a repository:</p>
+<pre><code class="language-bash">ghops:/&gt; rm /by-tag/work/active/myproject
+Removed tag 'work/active' from myproject
+</code></pre>
+<h3 id="mkdir-create-tag-namespace"><code>mkdir</code> - Create Tag Namespace</h3>
+<p>Create a tag hierarchy (directory will be created when repos are tagged):</p>
+<pre><code class="language-bash">ghops:/&gt; mkdir -p /by-tag/client/acme/backend
+Tag namespace '/by-tag/client/acme/backend' ready for use
+</code></pre>
+<h2 id="hierarchical-tag-formats">Hierarchical Tag Formats</h2>
+<h3 id="simple-hierarchical-tags">Simple Hierarchical Tags</h3>
+<p>Tags without a key prefix:</p>
+<ul>
+<li><code>alex/beta</code> → <code>/by-tag/alex/beta/</code></li>
+<li><code>work/active</code> → <code>/by-tag/work/active/</code></li>
+<li><code>client/acme/backend</code> → <code>/by-tag/client/acme/backend/</code></li>
+</ul>
+<h3 id="keyvalue-hierarchical-tags">Key:Value Hierarchical Tags</h3>
+<p>Tags with a key prefix (automatically detected for known keys like <code>lang</code>, <code>topic</code>, <code>status</code>, etc.):</p>
+<ul>
+<li><code>lang:python</code> → <code>/by-tag/lang/python/</code></li>
+<li><code>topic:ml</code> → <code>/by-tag/topic/ml/</code></li>
+<li><code>topic:scientific/engineering/ai</code> → <code>/by-tag/topic/scientific/engineering/ai/</code></li>
+<li><code>status:active</code> → <code>/by-tag/status/active/</code></li>
+</ul>
+<h2 id="advanced-usage">Advanced Usage</h2>
+<h3 id="refresh-vfs">Refresh VFS</h3>
+<p>After making changes outside the shell (e.g., using <code>ghops catalog add</code>), refresh the VFS:</p>
+<pre><code class="language-bash">ghops:/&gt; refresh
+Refreshing VFS...
+VFS refreshed
+</code></pre>
+<h3 id="query-repositories">Query Repositories</h3>
+<p>Execute queries from within the shell:</p>
+<pre><code class="language-bash">ghops:/&gt; query &quot;stars &gt; 10 and language == 'Python'&quot;
+{&quot;name&quot;: &quot;myproject&quot;, &quot;path&quot;: &quot;/home/user/repos/myproject&quot;}
+{&quot;name&quot;: &quot;another-project&quot;, &quot;path&quot;: &quot;/home/user/repos/another-project&quot;}
+</code></pre>
+<h3 id="find-repositories">Find Repositories</h3>
+<p>Find repositories by criteria:</p>
+<pre><code class="language-bash">ghops:/&gt; find --language Python --dirty
+find with filters: {'language': 'Python', 'dirty': True}
+</code></pre>
+<h2 id="tips-and-tricks">Tips and Tricks</h2>
+<h3 id="1-use-relative-paths">1. Use Relative Paths</h3>
+<pre><code class="language-bash">ghops:/repos&gt; cd ../by-tag/alex/beta
+ghops:/by-tag/alex/beta&gt;
+</code></pre>
+<h3 id="2-tab-completion">2. Tab Completion</h3>
+<p>The shell supports tab completion for paths and commands (if your terminal supports it).</p>
+<h3 id="3-combine-with-cli-commands">3. Combine with CLI Commands</h3>
+<p>You can use the shell for navigation and the CLI for operations:</p>
+<pre><code class="language-bash"># In shell: navigate to tag
+ghops:/&gt; cd /by-tag/lang/python
+ghops:/by-tag/lang/python&gt;
+
+# Outside shell: use CLI
+$ ghops status -t &quot;lang:python&quot; --pretty
+</code></pre>
+<h3 id="4-multi-tag-organization">4. Multi-Tag Organization</h3>
+<p>Repos can have multiple tags and appear in multiple locations:</p>
+<pre><code class="language-bash"># Same repo appears in multiple tag hierarchies
+ghops:/by-tag/alex/beta&gt; ls
+{&quot;name&quot;: &quot;myproject&quot;, ...}
+
+ghops:/by-tag/topic/ml&gt; ls
+{&quot;name&quot;: &quot;myproject&quot;, ...}
+
+ghops:/by-language/Python&gt; ls
+{&quot;name&quot;: &quot;myproject&quot;, ...}
+</code></pre>
+<h3 id="5-use-with-pipes">5. Use with Pipes</h3>
+<p>Combine shell commands with external tools:</p>
+<pre><code class="language-bash">ghops:/&gt; ls /repos | jq -r '.name'
+myproject
+another-project
+</code></pre>
+<h2 id="comparison-with-cli">Comparison with CLI</h2>
+<p>The CLI now has full parity with the shell's tag operations:</p>
 <table>
 <thead>
 <tr>
-<th>Tag Pattern</th>
-<th>Description</th>
-<th>Example</th>
+<th>Operation</th>
+<th>Shell VFS</th>
+<th>CLI</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>repo:NAME</code></td>
-<td>Repository name</td>
-<td><code>repo:ghops</code></td>
+<td><strong>Add tag</strong></td>
+<td><code>cp /repos/myproject /by-tag/alex/beta</code></td>
+<td><code>ghops tag add myproject alex/beta</code></td>
 </tr>
 <tr>
-<td><code>lang:LANGUAGE</code></td>
-<td>Primary language</td>
-<td><code>lang:python</code></td>
+<td><strong>Remove tag</strong></td>
+<td><code>rm /by-tag/alex/beta/myproject</code></td>
+<td><code>ghops tag remove myproject alex/beta</code></td>
 </tr>
 <tr>
-<td><code>dir:PARENT</code></td>
-<td>Parent directory</td>
-<td><code>dir:work</code></td>
+<td><strong>Move between tags</strong></td>
+<td><code>mv /by-tag/alex/beta/myproject /by-tag/alex/production</code></td>
+<td><code>ghops tag move myproject alex/beta alex/production</code></td>
 </tr>
 <tr>
-<td><code>org:OWNER</code></td>
-<td>GitHub organization</td>
-<td><code>org:facebook</code></td>
+<td><strong>List tags</strong></td>
+<td><code>ls /by-tag</code></td>
+<td><code>ghops tag list</code></td>
 </tr>
 <tr>
-<td><code>has:LICENSE</code></td>
-<td>Has license file</td>
-<td><code>has:license</code></td>
+<td><strong>List tagged repos</strong></td>
+<td><code>ls /by-tag/alex/beta</code></td>
+<td><code>ghops tag list -t "alex/beta"</code></td>
 </tr>
 <tr>
-<td><code>has:README</code></td>
-<td>Has README file</td>
-<td><code>has:readme</code></td>
+<td><strong>Show hierarchy</strong></td>
+<td><code>cd /by-tag/alex &amp;&amp; ls</code></td>
+<td><code>ghops tag tree -t alex</code></td>
 </tr>
 <tr>
-<td><code>has:DOCS</code></td>
-<td>Has documentation</td>
-<td><code>has:docs</code></td>
-</tr>
-<tr>
-<td><code>tool:TOOL</code></td>
-<td>Documentation tool</td>
-<td><code>tool:mkdocs</code></td>
-</tr>
-<tr>
-<td><code>license:TYPE</code></td>
-<td>License type</td>
-<td><code>license:mit</code></td>
-</tr>
-<tr>
-<td><code>topic:TOPIC</code></td>
-<td>GitHub topics</td>
-<td><code>topic:machine-learning</code></td>
+<td><strong>Show repo tags</strong></td>
+<td>N/A (use <code>query</code>)</td>
+<td><code>ghops tag list -r myproject</code></td>
 </tr>
 </tbody>
 </table>
-<h2 id="query-language">Query Language</h2>
-<p>The query command provides fuzzy matching and complex boolean expressions.</p>
-<h3 id="basic-syntax">Basic Syntax</h3>
-<pre><code class="language-bash"># Simple equality
-ghops query &quot;language == 'Python'&quot;
-
-# Fuzzy matching with ~=
-ghops query &quot;language ~= 'pyton'&quot;  # Matches Python
-
-# Comparisons
-ghops query &quot;stars &gt; 10&quot;
-ghops query &quot;forks &gt;= 5&quot;
-ghops query &quot;created_at &lt; '2023-01-01'&quot;
-
-# Contains operator
-ghops query &quot;'machine-learning' in topics&quot;
-ghops query &quot;topics contains 'ml'&quot;
-
-# Not equal
-ghops query &quot;license.key != 'proprietary'&quot;
-</code></pre>
-<h3 id="complex-expressions">Complex Expressions</h3>
-<pre><code class="language-bash"># AND operations
-ghops query &quot;stars &gt; 10 and language == 'Python'&quot;
-
-# OR operations
-ghops query &quot;language == 'Python' or language == 'JavaScript'&quot;
-
-# Parentheses for grouping
-ghops query &quot;(stars &gt; 5 or forks &gt; 2) and language ~= 'python'&quot;
-
-# Nested field access
-ghops query &quot;license.name contains 'MIT'&quot;
-ghops query &quot;remote.owner == 'myorg'&quot;
-</code></pre>
-<h3 id="fuzzy-matching">Fuzzy Matching</h3>
-<p>The <code>~=</code> operator uses fuzzy string matching:</p>
-<pre><code class="language-bash"># Typos are forgiven
-ghops query &quot;name ~= 'djago'&quot;  # Matches django
-
-# Partial matches
-ghops query &quot;description ~= 'web framework'&quot;
-
-# Case insensitive
-ghops query &quot;language ~= 'PYTHON'&quot;
-</code></pre>
-<h2 id="combining-catalog-and-query">Combining Catalog and Query</h2>
-<p>Use both systems together for powerful filtering:</p>
-<pre><code class="language-bash"># Tag-based pre-filtering with query refinement
-ghops list -t &quot;lang:python&quot; | jq -r '.path' | \
-  xargs -I {} ghops query &quot;stars &gt; 5&quot; --path {}
-
-# Find untagged repos
-ghops query &quot;true&quot; | jq -r '.name' &gt; all-repos.txt
-ghops catalog show | jq -r '.name' &gt; tagged-repos.txt
-comm -23 &lt;(sort all-repos.txt) &lt;(sort tagged-repos.txt)
-</code></pre>
-<h2 id="common-patterns">Common Patterns</h2>
-<h3 id="project-organization">Project Organization</h3>
-<pre><code class="language-bash"># Tag by project status
-ghops catalog add project1 active in-development
-ghops catalog add project2 completed archived
-ghops catalog add project3 active needs-review
-
-# Find active projects needing review
-ghops catalog show -t active -t needs-review --all-tags
-</code></pre>
-<h3 id="client-work">Client Work</h3>
-<pre><code class="language-bash"># Tag by client
-ghops catalog add webapp client:acme web
-ghops catalog add api client:acme backend
-ghops catalog add report client:bigco analysis
-
-# All work for a client
-ghops catalog show -t &quot;client:acme&quot;
-</code></pre>
-<h3 id="technology-stacks">Technology Stacks</h3>
-<pre><code class="language-bash"># Tag by stack
-ghops catalog add frontend react typescript webpack
-ghops catalog add backend python django postgresql
-ghops catalog add mobile flutter dart
-
-# Find all TypeScript projects
-ghops catalog show -t typescript
-# Or use implicit tags
-ghops list -t &quot;lang:typescript&quot;
-</code></pre>
-<h3 id="maintenance-status">Maintenance Status</h3>
-<pre><code class="language-bash"># Tag by maintenance needs
-ghops catalog add oldproject needs:update needs:tests
-ghops catalog add newproject well-maintained has:ci
-
-# Find projects needing attention
-ghops catalog show -t &quot;needs:update&quot;
-</code></pre>
-<h2 id="query-examples">Query Examples</h2>
-<h3 id="finding-repositories">Finding Repositories</h3>
-<pre><code class="language-bash"># Popular Python projects
-ghops query &quot;language == 'Python' and stars &gt; 10&quot;
-
-# Recently updated
-ghops query &quot;updated_at &gt; '2024-01-01'&quot;
-
-# Projects without licenses
-ghops query &quot;not has_license&quot;
-
-# Large projects
-ghops query &quot;file_count &gt; 1000 or total_size &gt; 10000000&quot;
-
-# ML projects
-ghops query &quot;'machine-learning' in topics or 'ml' in topics or name contains 'learn'&quot;
-</code></pre>
-<h3 id="complex-queries">Complex Queries</h3>
-<pre><code class="language-bash"># Active web projects
-ghops query &quot;(language == 'JavaScript' or language == 'TypeScript') and updated_at &gt; '2023-06-01' and ('web' in topics or description contains 'web')&quot;
-
-# Python packages on PyPI
-ghops query &quot;language == 'Python' and has_package == true and package.registry == 'pypi'&quot;
-
-# Documentation sites
-ghops query &quot;has_docs == true and (has_pages == true or homepage contains 'github.io')&quot;
-</code></pre>
-<h2 id="integration-with-other-commands">Integration with Other Commands</h2>
-<h3 id="audit-filtered-repos">Audit Filtered Repos</h3>
-<pre><code class="language-bash"># Audit all client work
-ghops audit all -t &quot;client:*&quot; --pretty
-
-# Audit Python projects without docs
-ghops audit docs -q &quot;language == 'Python' and not has_docs&quot;
-</code></pre>
-<h3 id="export-filtered-repos">Export Filtered Repos</h3>
-<pre><code class="language-bash"># Export active projects to Hugo
-ghops export generate -t active -f hugo -o ./site/content/active
-
-# Export popular repos to PDF
-ghops export generate -q &quot;stars &gt; 5 or forks &gt; 2&quot; -f pdf
-</code></pre>
-<h3 id="bulk-operations">Bulk Operations</h3>
-<pre><code class="language-bash"># Update all work repos
-ghops update -t &quot;dir:work&quot;
-
-# Build docs for all documented Python projects
-ghops docs build -q &quot;language == 'Python' and has_docs == true&quot;
-</code></pre>
-<h2 id="best-practices">Best Practices</h2>
+<h3 id="legacy-catalog-commands">Legacy Catalog Commands</h3>
+<p>The <code>catalog</code> commands still work for backward compatibility:</p>
+<table>
+<thead>
+<tr>
+<th>Legacy Command</th>
+<th>New Tag Command</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ghops catalog add myproject tag1</code></td>
+<td><code>ghops tag add myproject tag1</code></td>
+</tr>
+<tr>
+<td><code>ghops catalog remove myproject tag1</code></td>
+<td><code>ghops tag remove myproject tag1</code></td>
+</tr>
+<tr>
+<td><code>ghops catalog show -t tag1</code></td>
+<td><code>ghops tag list -t tag1</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="implementation-details">Implementation Details</h2>
+<h3 id="tag-to-path-conversion">Tag to Path Conversion</h3>
+<p>The shell converts tags to paths using these rules:</p>
 <ol>
+<li><strong>Known key prefixes</strong> (lang, topic, status, etc.) → key:value format</li>
+<li><code>/by-tag/lang/python</code> → <code>lang:python</code></li>
 <li>
-<p><strong>Use Namespaces</strong>: Prefix related tags (e.g., <code>client:*</code>, <code>project:*</code>, <code>status:*</code>)</p>
+<p><code>/by-tag/topic/ml</code> → <code>topic:ml</code></p>
 </li>
 <li>
-<p><strong>Combine Systems</strong>: Use tags for stable categorization, queries for dynamic filtering</p>
+<p><strong>Multi-level with known key</strong> → key:hierarchical/value</p>
 </li>
 <li>
-<p><strong>Document Tags</strong>: Keep a README of your tagging conventions</p>
+<p><code>/by-tag/topic/scientific/engineering/ai</code> → <code>topic:scientific/engineering/ai</code></p>
 </li>
 <li>
-<p><strong>Regular Cleanup</strong>: Remove obsolete tags periodically
-   <code>bash
-   ghops catalog show -t obsolete | jq -r '.name' | \
-     xargs -I {} ghops catalog remove {} obsolete</code></p>
+<p><strong>Unknown prefixes</strong> → hierarchical tag</p>
 </li>
-<li>
-<p><strong>Export Tag Documentation</strong>:
-   <code>bash
-   # Generate tag documentation
-   ghops catalog show | jq -r '.tags[]' | sort | uniq -c | \
-     sort -rn &gt; tag-usage.txt</code></p>
-</li>
+<li><code>/by-tag/alex/beta</code> → <code>alex/beta</code></li>
+<li><code>/by-tag/work/client/acme</code> → <code>work/client/acme</code></li>
 </ol>
+<h3 id="vfs-rebuild">VFS Rebuild</h3>
+<p>The VFS is rebuilt after tag operations (<code>cp</code>, <code>mv</code>, <code>rm</code>) to reflect changes. This ensures the filesystem view is always consistent with the underlying tag configuration.</p>
+<h3 id="configuration-storage">Configuration Storage</h3>
+<p>Tags are stored in <code>~/.ghops/config.json</code> under <code>repository_tags</code>:</p>
+<pre><code class="language-json">{
+  &quot;repository_tags&quot;: {
+    &quot;/home/user/repos/myproject&quot;: [
+      &quot;alex/beta&quot;,
+      &quot;topic:ml/research&quot;,
+      &quot;work/active&quot;
+    ]
+  }
+}
+</code></pre>
+<h2 id="see-also">See Also</h2>
+<ul>
+<li><a href="./tags.md">Tag System Documentation</a></li>
+<li><a href="./catalog-command.md">Catalog Command Reference</a></li>
+<li><a href="./configuration.md">Configuration Guide</a></li>
+</ul>
 
 
 

@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../usage/">
+        <link rel="prev" href="..">
       
       
-        <link rel="next" href="../audit-command/">
+        <link rel="next" href="../usage/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -20,7 +20,7 @@
     
     
       
-        <title>Organization & Discovery - ghops</title>
+        <title>Getting Started - ghops</title>
       
     
     
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#repository-organization-with-catalog-and-query" class="md-skip">
+        <a href="#getting-started-with-ghops" class="md-skip">
           Skip to content
         </a>
       
@@ -106,7 +106,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Organization & Discovery
+              Getting Started
             
           </span>
         </div>
@@ -236,9 +236,11 @@
   
   
   
+    
   
-    <li class="md-tabs__item">
-      <a href="../getting-started/" class="md-tabs__link">
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
         
   
   
@@ -274,13 +276,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../catalog-query/" class="md-tabs__link">
           
   
   
@@ -501,10 +501,32 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../getting-started/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Getting Started
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -515,6 +537,323 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prerequisites
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Installation
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-from-pypi-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      Install from PyPI (Recommended)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#install-from-source" class="md-nav__link">
+    <span class="md-ellipsis">
+      Install from Source
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verify-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verify Installation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Quick Setup
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick Setup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-generate-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Generate Configuration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-configure-repository-directories" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Configure Repository Directories
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-set-up-github-token-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Set Up GitHub Token (Optional)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#your-first-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Your First Commands
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Your First Commands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#list-your-repositories" class="md-nav__link">
+    <span class="md-ellipsis">
+      List Your Repositories
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#check-repository-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      Check Repository Status
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#organize-with-tags" class="md-nav__link">
+    <span class="md-ellipsis">
+      Organize with Tags
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#analyze-repository-clusters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Analyze Repository Clusters
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-a-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      Run a Workflow
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interactive-learning" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interactive Learning
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Interactive Learning">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#jupyter-notebooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Jupyter Notebooks
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common Workflows
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Workflows">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#morning-repository-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      Morning Repository Review
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#export-portfolio" class="md-nav__link">
+    <span class="md-ellipsis">
+      Export Portfolio
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#social-media-automation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Social Media Automation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      Environment Variables
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#command-output-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      Command Output Formats
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      Next Steps
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-help" class="md-nav__link">
+    <span class="md-ellipsis">
+      Getting Help
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting-quick-fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Troubleshooting Quick Fixes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting Quick Fixes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#no-repositories-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      No repositories found
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#github-api-rate-limit" class="md-nav__link">
+    <span class="md-ellipsis">
+      GitHub API rate limit
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#permission-denied-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      Permission denied errors
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -545,31 +884,26 @@
       
   
   
-    
   
   
-  
     
     
     
     
-      
-        
-        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -582,7 +916,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             Commands
@@ -593,32 +927,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    Organization & Discovery
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../catalog-query/" class="md-nav__link">
         
   
   
@@ -629,263 +941,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#catalog-system" class="md-nav__link">
-    <span class="md-ellipsis">
-      Catalog System
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Catalog System">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#adding-tags" class="md-nav__link">
-    <span class="md-ellipsis">
-      Adding Tags
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#viewing-tagged-repositories" class="md-nav__link">
-    <span class="md-ellipsis">
-      Viewing Tagged Repositories
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#removing-tags" class="md-nav__link">
-    <span class="md-ellipsis">
-      Removing Tags
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#implicit-tags" class="md-nav__link">
-    <span class="md-ellipsis">
-      Implicit Tags
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#query-language" class="md-nav__link">
-    <span class="md-ellipsis">
-      Query Language
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Query Language">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#basic-syntax" class="md-nav__link">
-    <span class="md-ellipsis">
-      Basic Syntax
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#complex-expressions" class="md-nav__link">
-    <span class="md-ellipsis">
-      Complex Expressions
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fuzzy-matching" class="md-nav__link">
-    <span class="md-ellipsis">
-      Fuzzy Matching
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#combining-catalog-and-query" class="md-nav__link">
-    <span class="md-ellipsis">
-      Combining Catalog and Query
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#common-patterns" class="md-nav__link">
-    <span class="md-ellipsis">
-      Common Patterns
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Common Patterns">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#project-organization" class="md-nav__link">
-    <span class="md-ellipsis">
-      Project Organization
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#client-work" class="md-nav__link">
-    <span class="md-ellipsis">
-      Client Work
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#technology-stacks" class="md-nav__link">
-    <span class="md-ellipsis">
-      Technology Stacks
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#maintenance-status" class="md-nav__link">
-    <span class="md-ellipsis">
-      Maintenance Status
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#query-examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      Query Examples
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Query Examples">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#finding-repositories" class="md-nav__link">
-    <span class="md-ellipsis">
-      Finding Repositories
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#complex-queries" class="md-nav__link">
-    <span class="md-ellipsis">
-      Complex Queries
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#integration-with-other-commands" class="md-nav__link">
-    <span class="md-ellipsis">
-      Integration with Other Commands
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Integration with Other Commands">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#audit-filtered-repos" class="md-nav__link">
-    <span class="md-ellipsis">
-      Audit Filtered Repos
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#export-filtered-repos" class="md-nav__link">
-    <span class="md-ellipsis">
-      Export Filtered Repos
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#bulk-operations" class="md-nav__link">
-    <span class="md-ellipsis">
-      Bulk Operations
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#best-practices" class="md-nav__link">
-    <span class="md-ellipsis">
-      Best Practices
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1385,270 +1440,350 @@
   
 
 
-<h1 id="repository-organization-with-catalog-and-query">Repository Organization with Catalog and Query</h1>
-<p>ghops provides powerful tools for organizing and finding repositories through its tagging system and query language.</p>
-<h2 id="catalog-system">Catalog System</h2>
-<p>The catalog system allows you to organize repositories with tags, both explicit (user-defined) and implicit (auto-generated).</p>
-<h3 id="adding-tags">Adding Tags</h3>
-<pre><code class="language-bash"># Tag a single repository
-ghops catalog add myproject python ml research
-
-# Tag multiple repos
-ghops catalog add project1 client-work urgent
-ghops catalog add project2 client-work completed
+<h1 id="getting-started-with-ghops">Getting Started with ghops</h1>
+<p>Welcome to ghops! This guide will help you get up and running with the repository orchestration platform in just a few minutes.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>Python 3.8 or higher</li>
+<li>Git installed and configured</li>
+<li>Optional: GitHub personal access token for enhanced features</li>
+</ul>
+<h2 id="installation">Installation</h2>
+<h3 id="install-from-pypi-recommended">Install from PyPI (Recommended)</h3>
+<pre><code class="language-bash">pip install ghops
 </code></pre>
-<h3 id="viewing-tagged-repositories">Viewing Tagged Repositories</h3>
-<pre><code class="language-bash"># Show all tagged repos
-ghops catalog show --pretty
-
-# Filter by specific tags
-ghops catalog show -t python --pretty
-
-# Require multiple tags (AND operation)
-ghops catalog show -t python -t ml --all-tags --pretty
-
-# JSONL output for processing
-ghops catalog show -t client-work | jq -r '.name'
+<h3 id="install-from-source">Install from Source</h3>
+<pre><code class="language-bash">git clone https://github.com/queelius/ghops.git
+cd ghops
+pip install -e .
 </code></pre>
-<h3 id="removing-tags">Removing Tags</h3>
-<pre><code class="language-bash"># Remove specific tags
-ghops catalog remove myproject urgent
-
-# Remove all tags from a repo
-ghops catalog clear myproject
+<h3 id="verify-installation">Verify Installation</h3>
+<pre><code class="language-bash">ghops --version
+ghops --help
 </code></pre>
-<h3 id="implicit-tags">Implicit Tags</h3>
-<p>The system automatically generates implicit tags from repository metadata:</p>
+<h2 id="quick-setup">Quick Setup</h2>
+<h3 id="1-generate-configuration">1. Generate Configuration</h3>
+<p>Create your initial configuration file with sensible defaults:</p>
+<pre><code class="language-bash">ghops config generate
+</code></pre>
+<p>This creates <code>~/.ghops/config.json</code> with example settings. The configuration includes:
+- Repository directories to scan
+- GitHub API settings
+- Social media templates
+- Export preferences</p>
+<h3 id="2-configure-repository-directories">2. Configure Repository Directories</h3>
+<p>Edit <code>~/.ghops/config.json</code> to specify where your repositories are located:</p>
+<pre><code class="language-json">{
+  &quot;general&quot;: {
+    &quot;repository_directories&quot;: [
+      &quot;~/projects&quot;,
+      &quot;~/work&quot;,
+      &quot;~/github/**&quot;
+    ]
+  }
+}
+</code></pre>
+<p>The <code>**</code> pattern recursively searches subdirectories.</p>
+<h3 id="3-set-up-github-token-optional">3. Set Up GitHub Token (Optional)</h3>
+<p>For enhanced GitHub features, add your personal access token:</p>
+<pre><code class="language-bash">export GHOPS_GITHUB_TOKEN=&quot;your-token-here&quot;
+</code></pre>
+<p>Or add it to your configuration:</p>
+<pre><code class="language-json">{
+  &quot;github&quot;: {
+    &quot;token&quot;: &quot;your-token-here&quot;
+  }
+}
+</code></pre>
+<h2 id="your-first-commands">Your First Commands</h2>
+<h3 id="list-your-repositories">List Your Repositories</h3>
+<pre><code class="language-bash"># List all repositories (JSONL output)
+ghops list
+
+# Pretty-print as a table
+ghops list --pretty
+
+# Show only Python projects
+ghops list --pretty | grep Python
+</code></pre>
+<h3 id="check-repository-status">Check Repository Status</h3>
+<pre><code class="language-bash"># Status of current directory
+ghops status
+
+# Status of all repositories
+ghops status -r --pretty
+
+# Find repos with uncommitted changes (using jq)
+ghops status -r | jq 'select(.status.uncommitted_changes == true)'
+</code></pre>
+<h3 id="organize-with-tags">Organize with Tags</h3>
+<pre><code class="language-bash"># Add tags to repositories
+ghops catalog tag myproject &quot;important&quot; &quot;python&quot; &quot;ml&quot;
+
+# Query by tags
+ghops query &quot;tag:important&quot;
+
+# List all tags
+ghops catalog tags --pretty
+</code></pre>
+<h3 id="analyze-repository-clusters">Analyze Repository Clusters</h3>
+<p>Clustering helps you organize and understand relationships between your repositories.</p>
+<pre><code class="language-bash"># Find similar repositories using K-means
+ghops cluster analyze --algorithm kmeans --n-clusters 5 -r
+
+# Use DBSCAN for density-based clustering
+ghops cluster analyze --algorithm dbscan --eps 0.3 -r
+
+# Pretty-print cluster analysis
+ghops cluster analyze --pretty
+
+# Find duplicate code across repositories
+ghops cluster find-duplicates --min-similarity 0.7 -r --pretty
+
+# Get consolidation suggestions for similar repos
+ghops cluster suggest-consolidation --confidence 0.8 -r --pretty
+
+# Export cluster results for visualization
+ghops cluster export --format html --output clusters.html
+</code></pre>
+<p><strong>Understanding Clustering Algorithms:</strong></p>
+<ul>
+<li><strong>K-means</strong>: Fast, works well when you know the number of clusters. Good for evenly distributed groups.</li>
+<li><strong>DBSCAN</strong>: Finds clusters of arbitrary shapes, no need to specify cluster count. Good for finding outliers.</li>
+<li><strong>Hierarchical</strong>: Creates a tree of clusters, great for understanding nested relationships.</li>
+<li><strong>Network</strong>: Uses repository connections and dependencies for clustering.</li>
+</ul>
+<h3 id="run-a-workflow">Run a Workflow</h3>
+<p>Workflows automate complex multi-step operations with conditional logic and parallel execution.</p>
+<pre><code class="language-bash"># Run example morning routine workflow
+ghops workflow run examples/workflows/morning-routine.yaml
+
+# Run release pipeline with variables
+ghops workflow run examples/workflows/release-pipeline.yaml \
+  --var version=1.2.0 \
+  --var branch=main
+
+# Dry run to preview without executing
+ghops workflow run my-workflow.yaml --dry-run
+
+# Validate workflow syntax
+ghops workflow validate my-workflow.yaml
+</code></pre>
+<p><strong>Create Your First Workflow:</strong></p>
+<pre><code class="language-bash">cat &gt; my-workflow.yaml &lt;&lt; 'EOF'
+name: Daily Repository Health Check
+description: Check all repositories for issues and generate report
+
+variables:
+  notification_email: dev@example.com
+  max_age_days: 30
+
+tasks:
+  - id: check_status
+    type: ghops
+    name: Check all repository statuses
+    command: status
+    args: [&quot;--recursive&quot;, &quot;--format&quot;, &quot;json&quot;]
+    parse_output: true
+    output_var: repo_statuses
+
+  - id: find_stale
+    type: ghops
+    name: Find stale repositories
+    command: query
+    args:
+      - &quot;days_since_commit &gt; ${max_age_days}&quot;
+    parse_output: true
+    output_var: stale_repos
+    depends_on: [check_status]
+
+  - id: analyze_duplicates
+    type: ghops
+    name: Find duplicate code
+    command: cluster find-duplicates
+    args: [&quot;--recursive&quot;, &quot;--min-similarity&quot;, &quot;0.8&quot;]
+    parse_output: true
+    output_var: duplicates
+    depends_on: [check_status]
+
+  - id: generate_report
+    type: python
+    name: Generate health report
+    code: |
+      report = []
+      report.append(&quot;# Repository Health Report&quot;)
+      report.append(f&quot;Generated: {datetime.now().strftime('%Y-%m-%d')}&quot;)
+      report.append(&quot;&quot;)
+
+      if context.get('stale_repos'):
+          report.append(f&quot;## Stale Repositories ({len(context['stale_repos'])})&quot;)
+          for repo in context['stale_repos']:
+              report.append(f&quot;- {repo['name']}: {repo['days_since_commit']} days old&quot;)
+          report.append(&quot;&quot;)
+
+      if context.get('duplicates'):
+          report.append(f&quot;## Duplicate Code Found ({len(context['duplicates'])})&quot;)
+          for dup in context['duplicates']:
+              report.append(f&quot;- {dup['repo1']} ↔ {dup['repo2']}: {dup['similarity']:.0%} similar&quot;)
+          report.append(&quot;&quot;)
+
+      with open('health-report.md', 'w') as f:
+          f.write('\n'.join(report))
+
+      context['report_path'] = 'health-report.md'
+    depends_on: [find_stale, analyze_duplicates]
+
+  - id: send_notification
+    type: shell
+    name: Email the report
+    command: |
+      cat ${report_path} | mail -s &quot;Daily Repository Report&quot; ${notification_email}
+    condition: stale_repos or duplicates
+    ignore_errors: true
+    depends_on: [generate_report]
+
+on_failure: continue
+timeout: 600
+EOF
+
+# Run your workflow
+ghops workflow run my-workflow.yaml
+</code></pre>
+<p><strong>Workflow Features:</strong>
+- <strong>Parallel Execution</strong>: Independent tasks run concurrently
+- <strong>Conditional Steps</strong>: Use <code>condition</code> to control execution
+- <strong>Variable Templating</strong>: Access variables with <code>${var_name}</code>
+- <strong>Error Handling</strong>: Configure retries and fallback actions
+- <strong>Output Capture</strong>: Save step outputs to variables for later use</p>
+<h2 id="interactive-learning">Interactive Learning</h2>
+<h3 id="jupyter-notebooks">Jupyter Notebooks</h3>
+<p>Explore ghops features interactively with our tutorial notebooks:</p>
+<pre><code class="language-bash"># Clone the repository to access notebooks
+git clone https://github.com/queelius/ghops.git
+cd ghops/notebooks
+
+# Start Jupyter
+jupyter notebook
+
+# Open notebooks in order:
+# 1. 01_getting_started.ipynb
+# 2. 02_clustering_analysis.ipynb
+# 3. 03_workflow_orchestration.ipynb
+# 4. 04_advanced_integrations.ipynb
+# 5. 05_data_visualization.ipynb
+</code></pre>
+<h2 id="common-workflows">Common Workflows</h2>
+<h3 id="morning-repository-review">Morning Repository Review</h3>
+<pre><code class="language-bash"># Update all repositories
+ghops update -r
+
+# Check status
+ghops status -r --pretty
+
+# Audit for issues
+ghops audit -r --check license,readme,security
+</code></pre>
+<h3 id="export-portfolio">Export Portfolio</h3>
+<pre><code class="language-bash"># Export to Markdown
+ghops export markdown --output portfolio.md
+
+# Export to interactive HTML
+ghops export html --output portfolio.html --group-by language
+
+# Export for Hugo site
+ghops export hugo --output-dir my-site/content
+</code></pre>
+<h3 id="social-media-automation">Social Media Automation</h3>
+<pre><code class="language-bash"># Sample repositories for promotion
+ghops social sample --size 3
+
+# Preview posts (dry run)
+ghops social post --dry-run
+
+# Post to configured platforms
+ghops social post
+</code></pre>
+<h2 id="environment-variables">Environment Variables</h2>
+<p>ghops respects the following environment variables:</p>
 <table>
 <thead>
 <tr>
-<th>Tag Pattern</th>
+<th>Variable</th>
 <th>Description</th>
 <th>Example</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>repo:NAME</code></td>
-<td>Repository name</td>
-<td><code>repo:ghops</code></td>
+<td><code>GHOPS_CONFIG</code></td>
+<td>Path to config file</td>
+<td><code>~/.config/ghops/config.json</code></td>
 </tr>
 <tr>
-<td><code>lang:LANGUAGE</code></td>
-<td>Primary language</td>
-<td><code>lang:python</code></td>
+<td><code>GHOPS_GITHUB_TOKEN</code></td>
+<td>GitHub API token</td>
+<td><code>ghp_xxxxxxxxxxxx</code></td>
 </tr>
 <tr>
-<td><code>dir:PARENT</code></td>
-<td>Parent directory</td>
-<td><code>dir:work</code></td>
+<td><code>GHOPS_LOG_LEVEL</code></td>
+<td>Logging level</td>
+<td><code>DEBUG</code>, <code>INFO</code>, <code>WARNING</code></td>
 </tr>
 <tr>
-<td><code>org:OWNER</code></td>
-<td>GitHub organization</td>
-<td><code>org:facebook</code></td>
-</tr>
-<tr>
-<td><code>has:LICENSE</code></td>
-<td>Has license file</td>
-<td><code>has:license</code></td>
-</tr>
-<tr>
-<td><code>has:README</code></td>
-<td>Has README file</td>
-<td><code>has:readme</code></td>
-</tr>
-<tr>
-<td><code>has:DOCS</code></td>
-<td>Has documentation</td>
-<td><code>has:docs</code></td>
-</tr>
-<tr>
-<td><code>tool:TOOL</code></td>
-<td>Documentation tool</td>
-<td><code>tool:mkdocs</code></td>
-</tr>
-<tr>
-<td><code>license:TYPE</code></td>
-<td>License type</td>
-<td><code>license:mit</code></td>
-</tr>
-<tr>
-<td><code>topic:TOPIC</code></td>
-<td>GitHub topics</td>
-<td><code>topic:machine-learning</code></td>
+<td><code>GHOPS_NO_COLOR</code></td>
+<td>Disable colored output</td>
+<td><code>1</code> or <code>true</code></td>
 </tr>
 </tbody>
 </table>
-<h2 id="query-language">Query Language</h2>
-<p>The query command provides fuzzy matching and complex boolean expressions.</p>
-<h3 id="basic-syntax">Basic Syntax</h3>
-<pre><code class="language-bash"># Simple equality
-ghops query &quot;language == 'Python'&quot;
+<h2 id="command-output-formats">Command Output Formats</h2>
+<p>ghops follows Unix philosophy - all commands output JSONL by default:</p>
+<pre><code class="language-bash"># JSONL output (default) - great for piping
+ghops list | jq '.name'
 
-# Fuzzy matching with ~=
-ghops query &quot;language ~= 'pyton'&quot;  # Matches Python
+# Pretty table output - great for humans
+ghops list --pretty
 
-# Comparisons
-ghops query &quot;stars &gt; 10&quot;
-ghops query &quot;forks &gt;= 5&quot;
-ghops query &quot;created_at &lt; '2023-01-01'&quot;
-
-# Contains operator
-ghops query &quot;'machine-learning' in topics&quot;
-ghops query &quot;topics contains 'ml'&quot;
-
-# Not equal
-ghops query &quot;license.key != 'proprietary'&quot;
+# Export specific format
+ghops export json --output repos.json
+ghops export csv --output repos.csv
 </code></pre>
-<h3 id="complex-expressions">Complex Expressions</h3>
-<pre><code class="language-bash"># AND operations
-ghops query &quot;stars &gt; 10 and language == 'Python'&quot;
-
-# OR operations
-ghops query &quot;language == 'Python' or language == 'JavaScript'&quot;
-
-# Parentheses for grouping
-ghops query &quot;(stars &gt; 5 or forks &gt; 2) and language ~= 'python'&quot;
-
-# Nested field access
-ghops query &quot;license.name contains 'MIT'&quot;
-ghops query &quot;remote.owner == 'myorg'&quot;
-</code></pre>
-<h3 id="fuzzy-matching">Fuzzy Matching</h3>
-<p>The <code>~=</code> operator uses fuzzy string matching:</p>
-<pre><code class="language-bash"># Typos are forgiven
-ghops query &quot;name ~= 'djago'&quot;  # Matches django
-
-# Partial matches
-ghops query &quot;description ~= 'web framework'&quot;
-
-# Case insensitive
-ghops query &quot;language ~= 'PYTHON'&quot;
-</code></pre>
-<h2 id="combining-catalog-and-query">Combining Catalog and Query</h2>
-<p>Use both systems together for powerful filtering:</p>
-<pre><code class="language-bash"># Tag-based pre-filtering with query refinement
-ghops list -t &quot;lang:python&quot; | jq -r '.path' | \
-  xargs -I {} ghops query &quot;stars &gt; 5&quot; --path {}
-
-# Find untagged repos
-ghops query &quot;true&quot; | jq -r '.name' &gt; all-repos.txt
-ghops catalog show | jq -r '.name' &gt; tagged-repos.txt
-comm -23 &lt;(sort all-repos.txt) &lt;(sort tagged-repos.txt)
-</code></pre>
-<h2 id="common-patterns">Common Patterns</h2>
-<h3 id="project-organization">Project Organization</h3>
-<pre><code class="language-bash"># Tag by project status
-ghops catalog add project1 active in-development
-ghops catalog add project2 completed archived
-ghops catalog add project3 active needs-review
-
-# Find active projects needing review
-ghops catalog show -t active -t needs-review --all-tags
-</code></pre>
-<h3 id="client-work">Client Work</h3>
-<pre><code class="language-bash"># Tag by client
-ghops catalog add webapp client:acme web
-ghops catalog add api client:acme backend
-ghops catalog add report client:bigco analysis
-
-# All work for a client
-ghops catalog show -t &quot;client:acme&quot;
-</code></pre>
-<h3 id="technology-stacks">Technology Stacks</h3>
-<pre><code class="language-bash"># Tag by stack
-ghops catalog add frontend react typescript webpack
-ghops catalog add backend python django postgresql
-ghops catalog add mobile flutter dart
-
-# Find all TypeScript projects
-ghops catalog show -t typescript
-# Or use implicit tags
-ghops list -t &quot;lang:typescript&quot;
-</code></pre>
-<h3 id="maintenance-status">Maintenance Status</h3>
-<pre><code class="language-bash"># Tag by maintenance needs
-ghops catalog add oldproject needs:update needs:tests
-ghops catalog add newproject well-maintained has:ci
-
-# Find projects needing attention
-ghops catalog show -t &quot;needs:update&quot;
-</code></pre>
-<h2 id="query-examples">Query Examples</h2>
-<h3 id="finding-repositories">Finding Repositories</h3>
-<pre><code class="language-bash"># Popular Python projects
-ghops query &quot;language == 'Python' and stars &gt; 10&quot;
-
-# Recently updated
-ghops query &quot;updated_at &gt; '2024-01-01'&quot;
-
-# Projects without licenses
-ghops query &quot;not has_license&quot;
-
-# Large projects
-ghops query &quot;file_count &gt; 1000 or total_size &gt; 10000000&quot;
-
-# ML projects
-ghops query &quot;'machine-learning' in topics or 'ml' in topics or name contains 'learn'&quot;
-</code></pre>
-<h3 id="complex-queries">Complex Queries</h3>
-<pre><code class="language-bash"># Active web projects
-ghops query &quot;(language == 'JavaScript' or language == 'TypeScript') and updated_at &gt; '2023-06-01' and ('web' in topics or description contains 'web')&quot;
-
-# Python packages on PyPI
-ghops query &quot;language == 'Python' and has_package == true and package.registry == 'pypi'&quot;
-
-# Documentation sites
-ghops query &quot;has_docs == true and (has_pages == true or homepage contains 'github.io')&quot;
-</code></pre>
-<h2 id="integration-with-other-commands">Integration with Other Commands</h2>
-<h3 id="audit-filtered-repos">Audit Filtered Repos</h3>
-<pre><code class="language-bash"># Audit all client work
-ghops audit all -t &quot;client:*&quot; --pretty
-
-# Audit Python projects without docs
-ghops audit docs -q &quot;language == 'Python' and not has_docs&quot;
-</code></pre>
-<h3 id="export-filtered-repos">Export Filtered Repos</h3>
-<pre><code class="language-bash"># Export active projects to Hugo
-ghops export generate -t active -f hugo -o ./site/content/active
-
-# Export popular repos to PDF
-ghops export generate -q &quot;stars &gt; 5 or forks &gt; 2&quot; -f pdf
-</code></pre>
-<h3 id="bulk-operations">Bulk Operations</h3>
-<pre><code class="language-bash"># Update all work repos
-ghops update -t &quot;dir:work&quot;
-
-# Build docs for all documented Python projects
-ghops docs build -q &quot;language == 'Python' and has_docs == true&quot;
-</code></pre>
-<h2 id="best-practices">Best Practices</h2>
+<h2 id="next-steps">Next Steps</h2>
+<p>Now that you're up and running:</p>
 <ol>
-<li>
-<p><strong>Use Namespaces</strong>: Prefix related tags (e.g., <code>client:*</code>, <code>project:*</code>, <code>status:*</code>)</p>
-</li>
-<li>
-<p><strong>Combine Systems</strong>: Use tags for stable categorization, queries for dynamic filtering</p>
-</li>
-<li>
-<p><strong>Document Tags</strong>: Keep a README of your tagging conventions</p>
-</li>
-<li>
-<p><strong>Regular Cleanup</strong>: Remove obsolete tags periodically
-   <code>bash
-   ghops catalog show -t obsolete | jq -r '.name' | \
-     xargs -I {} ghops catalog remove {} obsolete</code></p>
-</li>
-<li>
-<p><strong>Export Tag Documentation</strong>:
-   <code>bash
-   # Generate tag documentation
-   ghops catalog show | jq -r '.tags[]' | sort | uniq -c | \
-     sort -rn &gt; tag-usage.txt</code></p>
-</li>
+<li><strong>Explore Commands</strong>: Run <code>ghops --help</code> to see all available commands</li>
+<li><strong>Read the Usage Guide</strong>: Dive deeper into <a href="../usage/">command reference</a></li>
+<li><strong>Try Clustering</strong>: Group similar repositories with <a href="../integrations/clustering/">clustering integration</a></li>
+<li><strong>Automate Workflows</strong>: Create complex automations with <a href="../integrations/workflow/">workflow orchestration</a></li>
+<li><strong>Query Your Repos</strong>: Master the <a href="../query-cookbook/">query language</a></li>
 </ol>
+<h2 id="getting-help">Getting Help</h2>
+<ul>
+<li><strong>Documentation</strong>: You're reading it!</li>
+<li><strong>Command Help</strong>: <code>ghops &lt;command&gt; --help</code></li>
+<li><strong>GitHub Issues</strong>: <a href="https://github.com/queelius/ghops/issues">Report bugs or request features</a></li>
+<li><strong>Discussions</strong>: <a href="https://github.com/queelius/ghops/discussions">Ask questions and share ideas</a></li>
+</ul>
+<h2 id="troubleshooting-quick-fixes">Troubleshooting Quick Fixes</h2>
+<h3 id="no-repositories-found">No repositories found</h3>
+<ul>
+<li>Check your <code>repository_directories</code> configuration</li>
+<li>Ensure directories contain <code>.git</code> folders</li>
+<li>Use <code>ghops config show</code> to verify settings</li>
+</ul>
+<h3 id="github-api-rate-limit">GitHub API rate limit</h3>
+<ul>
+<li>Add a GitHub token to increase limits</li>
+<li>Use <code>--no-github-check</code> to skip API calls</li>
+<li>Configure rate limiting in config</li>
+</ul>
+<h3 id="permission-denied-errors">Permission denied errors</h3>
+<ul>
+<li>Check file permissions in repository directories</li>
+<li>Ensure git credentials are configured</li>
+<li>Run with appropriate user permissions</li>
+</ul>
+<p>For more detailed troubleshooting, see the <a href="guides/troubleshooting.md">Troubleshooting Guide</a>.</p>
 
 
 
