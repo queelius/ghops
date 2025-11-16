@@ -222,14 +222,15 @@ class TestGetRepoStatus:
         
         # Mock all the helper functions
         mock_load_config.return_value = {"pypi": {"check_by_default": True}}
-        mock_get_git_status.return_value = {"status": "clean", "branch": "main"}
+        mock_get_git_status.return_value = {"status": "clean", "current_branch": "main", "ahead": 0, "behind": 0}
         mock_get_license.return_value = {"spdx_id": "MIT", "name": "MIT License"}
         mock_get_pages.return_value = "https://user.github.io/clean-repo"
         mock_detect_pypi.return_value = {
-            "has_packaging_files": True,
-            "is_published": True,
-            "package_name": "clean-repo",
-            "pypi_info": {"version": "1.0.0", "url": "https://pypi.org/p/clean-repo"}
+            "type": "python",
+            "name": "clean-repo",
+            "version": "1.0.0",
+            "published": True,
+            "registry": "pypi"
         }
         mock_is_outdated.return_value = False
 
@@ -239,11 +240,11 @@ class TestGetRepoStatus:
         status = result[0]
         assert status["name"] == "clean-repo"
         assert status["status"]["clean"] == True
-        assert status["branch"] == "main"
+        assert status["status"]["branch"] == "main"
         assert status["license"]["spdx_id"] == "MIT"
-        assert status["pages_url"] == "https://user.github.io/clean-repo"
-        assert status["pypi_info"]["package_name"] == "clean-repo"
-        assert status["pypi_info"]["version"] == "1.0.0"
+        assert status["github"]["pages_url"] == "https://user.github.io/clean-repo"
+        assert status["package"]["name"] == "clean-repo"
+        assert status["package"]["version"] == "1.0.0"
 
         mock_get_git_status.assert_called_once_with(repo_path)
         mock_get_license.assert_called_once_with(repo_path)

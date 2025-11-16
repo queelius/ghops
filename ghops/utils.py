@@ -24,13 +24,14 @@ def get_git_remote_url(repo_path, remote_name="origin"):
         str: The URL of the remote, or None if not found.
     """
     try:
-        return run_command(
+        result, _ = run_command(
             f"git config --get remote.{remote_name}.url",
             cwd=repo_path,
             capture_output=True,
             check=False,
             log_stderr=False
         )
+        return result.strip() if result else None
     except Exception:
         return None
 
@@ -274,11 +275,11 @@ def get_git_status(repo_path):
     """
     try:
         # Get current branch
-        branch_output, _, _ = run_command("git rev-parse --abbrev-ref HEAD", cwd=repo_path, capture_output=True, check=False)
+        branch_output, _ = run_command("git rev-parse --abbrev-ref HEAD", cwd=repo_path, capture_output=True, check=False)
         branch = branch_output.strip() if branch_output else "unknown"
 
         # Get status (porcelain format for clean parsing)
-        status_output, _, _ = run_command("git status --porcelain", cwd=repo_path, capture_output=True, check=False)
+        status_output, _ = run_command("git status --porcelain", cwd=repo_path, capture_output=True, check=False)
 
         if status_output is None:
             return None
@@ -311,7 +312,7 @@ def get_git_status(repo_path):
         behind = 0
 
         # Check if we have an upstream branch
-        upstream_check, _, _ = run_command(
+        upstream_check, _ = run_command(
             "git rev-parse --abbrev-ref @{u}",
             cwd=repo_path,
             capture_output=True,
@@ -321,7 +322,7 @@ def get_git_status(repo_path):
 
         if upstream_check and not upstream_check.startswith("fatal:"):
             # Get ahead/behind counts
-            rev_list_output, _, _ = run_command(
+            rev_list_output, _ = run_command(
                 "git rev-list --left-right --count HEAD...@{u}",
                 cwd=repo_path,
                 capture_output=True,
