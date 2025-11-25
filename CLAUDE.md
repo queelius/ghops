@@ -8,7 +8,7 @@ ghops is a multi-platform git project management system that helps developers ma
 
 **Key Philosophy**: Local-first with remote awareness. Your local git repositories are the ground truth, and remote platforms (GitHub, GitLab, PyPI, etc.) are services that enrich and distribute your projects.
 
-**Current Version**: 0.8.0 (with clustering, workflow orchestration, TUI, and shell features)
+**Current Version**: 0.8.1 (with event-driven automation, social media integration, and analytics)
 
 ## Vision & Use Cases
 
@@ -185,11 +185,16 @@ pytest --cov=ghops --cov-report=html && open htmlcov/index.html
 ```
 
 **Test Coverage Requirements**:
-- Test suite contains 138+ comprehensive tests with ~86% code coverage
+- Test suite contains 450+ tests (some need mock updates for `run_command` return values)
 - Tests located in `tests/` directory, using `pyfakefs` for filesystem mocking
 - **ALWAYS run coverage after adding new features**: `pytest --cov=ghops --cov-report=html`
-- New code should maintain or improve the 86% coverage threshold
 - Coverage report available in `htmlcov/index.html` after running coverage
+
+**Note on `run_command` return values**:
+The `run_command()` function in `utils.py` returns a tuple `(stdout, returncode)`. When mocking or using this function:
+```python
+output, returncode = run_command("git status", cwd=repo_path, capture_output=True)
+```
 
 ## Architecture
 
@@ -202,7 +207,10 @@ pytest --cov=ghops --cov-report=html && open htmlcov/index.html
 - `ghops/metadata.py` - Unified metadata store for all repo information
 - `ghops/simple_query.py` - Query language with fuzzy matching
 - `ghops/pypi.py` - PyPI package detection and API integration
-- `ghops/social.py` - Social media content generation
+- `ghops/events.py` - Event system definitions
+- `ghops/event_detector.py` - Git event detection (tags, releases)
+- `ghops/event_handlers.py` - Event handler execution
+- `ghops/analytics_store.py` - SQLite analytics for engagement tracking
 - `ghops/tags.py` - Tag management and implicit tag generation
 
 ### Architecture Components
@@ -291,13 +299,18 @@ Organization & discovery:
 - **metadata** - Metadata store management
 
 Content generation:
-- **social** - Social media automation
+- **social** - Social media content generation (Bluesky, Mastodon)
+- **generate-post** - LLM-powered post generation
 - **export** - Generate portfolios in multiple formats (markdown, hugo, html, pdf, etc.)
 - **docs** - Documentation detection, building, and deployment
 
+Event-driven automation:
+- **poll** - Poll repositories for events (tags, releases) and trigger handlers
+- **analytics** - View engagement metrics and post history
+- **templates** - Manage Jinja2 templates for content generation
+
 Advanced features:
 - **audit** - Repository health checks and auto-fix capabilities
-- **service** - Background service for automation
 - **network** - Network analysis of repository relationships
 - **ai** - AI-powered repository conversation features
 - **cluster** - Repository clustering and consolidation analysis
@@ -772,11 +785,12 @@ ghops tag list -r myproject
 - Respects GitHub's rate limit reset time
 - Use `GHOPS_GITHUB_TOKEN` for higher limits
 
-### Service Mode
-- Can run as daemon with `ghops service start`
-- Configured intervals for posting and reporting
-- Email notifications via SMTP
-- Systemd service file in `examples/ghops.service`
+### Event-Driven Automation
+- Use `ghops poll` to detect git events (new tags, releases)
+- Configurable event handlers in `~/.ghops/config.json` under `events.handlers`
+- SQLite analytics store at `~/.ghops/analytics.db`
+- Supports Bluesky and Mastodon platforms for social media posting
+- Jinja2 templates for customizable post content
 
 ### TUI Mode
 - Launch with `ghops tui` for interactive dashboard
@@ -823,3 +837,30 @@ Optional dependencies enable advanced features:
   - Real-time monitoring
 
 Install all: `pip install ghops[all]`
+
+### LLM Integration
+- **Content Generation**: `ghops/llm/` module for AI-powered content
+  - `content_context.py` - Gathers repo context for prompts
+  - `content_generator.py` - Generates posts using LLM APIs
+  - `prompt_templates.py` - Default and custom Jinja2 templates
+- **Supported Providers**: OpenAI, Anthropic (via environment variables)
+- **Custom Templates**: Place in `~/.ghops/templates/` to override defaults
+
+### Poll Command Configuration
+Configure in `~/.ghops/config.json`:
+```json
+{
+  "events": {
+    "enabled": true,
+    "exclude_patterns": ["/_deps/", "/build/", "/node_modules/"],
+    "handlers": [
+      {
+        "name": "social-announce",
+        "trigger": "git_tag",
+        "conditions": {"tag_pattern": "v*"},
+        "actions": [{"type": "social_post", "platforms": ["bluesky"]}]
+      }
+    ]
+  }
+}
+```
