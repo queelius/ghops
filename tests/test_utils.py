@@ -17,33 +17,42 @@ from ghops.utils import (
 
 
 class TestRunCommand(unittest.TestCase):
-    """Test the run_command utility function"""
-    
+    """Test the run_command utility function
+
+    Note: run_command returns (stdout, returncode) tuple when capture_output=True,
+    and (None, returncode) when capture_output=False.
+    """
+
     def test_run_command_capture_output(self):
-        """Test run_command with capture_output=True"""
-        result = run_command("echo 'test'", capture_output=True)
-        self.assertEqual(result, "test")
-    
+        """Test run_command with capture_output=True returns (stdout, returncode)"""
+        output, returncode = run_command("echo 'test'", capture_output=True)
+        self.assertEqual(output.strip(), "test")
+        self.assertEqual(returncode, 0)
+
     def test_run_command_no_capture(self):
-        """Test run_command with capture_output=False"""
-        result = run_command("echo 'test'", capture_output=False)
-        self.assertIsNone(result)
-    
+        """Test run_command with capture_output=False returns (None, returncode)"""
+        output, returncode = run_command("echo 'test'", capture_output=False)
+        self.assertIsNone(output)
+        self.assertEqual(returncode, 0)
+
     def test_run_command_dry_run(self):
-        """Test run_command with dry_run=True"""
-        result = run_command("echo 'test'", dry_run=True, capture_output=True)
-        self.assertEqual(result, "Dry run output")
-    
+        """Test run_command with dry_run=True returns simulated output"""
+        output, returncode = run_command("echo 'test'", dry_run=True, capture_output=True)
+        self.assertEqual(output, "Dry run output")
+        self.assertEqual(returncode, 0)
+
     def test_run_command_failure(self):
-        """Test run_command with failing command"""
-        result = run_command("false", capture_output=True, check=False)
-        self.assertEqual(result, "")
-    
+        """Test run_command with failing command returns non-zero returncode"""
+        output, returncode = run_command("false", capture_output=True, check=False)
+        self.assertEqual(output, "")
+        self.assertEqual(returncode, 1)
+
     def test_run_command_with_cwd(self):
         """Test run_command with different working directory"""
         with tempfile.TemporaryDirectory() as temp_dir:
-            result = run_command("pwd", cwd=temp_dir, capture_output=True)
-            self.assertEqual(result.strip(), temp_dir)
+            output, returncode = run_command("pwd", cwd=temp_dir, capture_output=True)
+            self.assertEqual(output.strip(), temp_dir)
+            self.assertEqual(returncode, 0)
 
 
 class TestGitRepoDetection(unittest.TestCase):
@@ -93,72 +102,75 @@ class TestGitRepoDetection(unittest.TestCase):
 
 
 class TestGetGitStatus(unittest.TestCase):
-    """Test the get_git_status function"""
-    
+    """Test the get_git_status function
+
+    Note: run_command returns (stdout, returncode) tuple, so mocks must return tuples.
+    """
+
     def setUp(self):
         """Set up test environment"""
         self.temp_dir = tempfile.mkdtemp()
         os.chdir(self.temp_dir)
-    
+
     def tearDown(self):
         """Clean up test environment"""
         os.chdir("/")
         shutil.rmtree(self.temp_dir)
-    
+
     @patch('ghops.utils.run_command')
     def test_get_git_status_clean_repo(self, mock_run_command):
         """Test get_git_status with clean repository"""
         mock_run_command.side_effect = [
-            "main",              # git rev-parse --abbrev-ref HEAD
-            "",                  # git status --porcelain
-            "fatal: no upstream" # git rev-parse --abbrev-ref @{u}
+            ("main", 0),              # git rev-parse --abbrev-ref HEAD
+            ("", 0),                  # git status --porcelain
+            ("fatal: no upstream", 1) # git rev-parse --abbrev-ref @{u}
         ]
-        
+
         result = get_git_status(self.temp_dir)
-        
+
         self.assertEqual(result['status'], 'clean')
-        self.assertEqual(result['branch'], 'main')
-    
+        self.assertEqual(result['current_branch'], 'main')
+
     @patch('ghops.utils.run_command')
     def test_get_git_status_modified_files(self, mock_run_command):
         """Test get_git_status with modified files"""
         mock_run_command.side_effect = [
-            "main",                                      # git rev-parse --abbrev-ref HEAD
-            " M file1.py\nM  file2.py\n?? new_file.py", # git status --porcelain
-            "fatal: no upstream"                         # git rev-parse --abbrev-ref @{u}
+            ("main", 0),                                      # git rev-parse --abbrev-ref HEAD
+            (" M file1.py\nM  file2.py\n?? new_file.py", 0), # git status --porcelain
+            ("fatal: no upstream", 1)                         # git rev-parse --abbrev-ref @{u}
         ]
-        
+
         result = get_git_status(self.temp_dir)
-        
-        self.assertEqual(result['branch'], 'main')
+
+        self.assertEqual(result['current_branch'], 'main')
         self.assertIn('modified', result['status'])
         self.assertIn('untracked', result['status'])
-    
+
     @patch('ghops.utils.run_command')
     def test_get_git_status_error(self, mock_run_command):
         """Test get_git_status with command failure"""
         mock_run_command.side_effect = Exception("Git command failed")
-        
+
         result = get_git_status(self.temp_dir)
-        
+
         self.assertEqual(result['status'], 'error')
-        self.assertEqual(result['branch'], 'unknown')
-    
+        self.assertEqual(result['current_branch'], 'unknown')
+
     @patch('ghops.utils.run_command')
     def test_get_git_status_various_changes(self, mock_run_command):
         """Test get_git_status with various types of changes"""
         mock_run_command.side_effect = [
-            "feature-branch",                                               # git rev-parse --abbrev-ref HEAD
-            "A  added.py\n D deleted.py\nM  modified.py\n?? untracked.py", # git status --porcelain
-            "fatal: no upstream"                                            # git rev-parse --abbrev-ref @{u}
+            ("feature-branch", 0),                                               # git rev-parse --abbrev-ref HEAD
+            ("A  added.py\n D deleted.py\nM  modified.py\n?? untracked.py", 0), # git status --porcelain
+            ("fatal: no upstream", 1)                                            # git rev-parse --abbrev-ref @{u}
         ]
-        
+
         result = get_git_status(self.temp_dir)
-        
-        self.assertEqual(result['branch'], 'feature-branch')
+
+        self.assertEqual(result['current_branch'], 'feature-branch')
         status = result['status']
         self.assertIn('1 added', status)
-        self.assertIn('1 deleted', status) 
+        self.assertIn('1 deleted', status)
         self.assertIn('1 modified', status)
         self.assertIn('1 untracked', status)
 

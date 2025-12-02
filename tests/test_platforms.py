@@ -19,20 +19,27 @@ from ghops.llm.platforms import (
     extract_tags_from_content
 )
 
-# Try to import platform classes, but skip tests if dependencies missing
+# Try to import actual dependencies, skip tests if not installed
 try:
-    from ghops.llm.platforms import BlueskyPlatform
+    import atproto
     HAS_BLUESKY = True
 except (ImportError, ModuleNotFoundError):
     HAS_BLUESKY = False
 
 try:
-    from ghops.llm.platforms import MastodonPlatform
+    import mastodon
     HAS_MASTODON = True
 except (ImportError, ModuleNotFoundError):
     HAS_MASTODON = False
 
+# Import platform classes if available (they use lazy imports of the dependencies)
+if HAS_BLUESKY:
+    from ghops.llm.platforms import BlueskyPlatform
+if HAS_MASTODON:
+    from ghops.llm.platforms import MastodonPlatform
 
+
+@pytest.mark.skipif(not HAS_BLUESKY, reason="Bluesky dependencies not installed (atproto)")
 class TestBlueskyPlatform:
     """Test BlueskyPlatform integration."""
 
@@ -189,6 +196,7 @@ class TestBlueskyPlatform:
         assert info['supports_markdown'] is False
 
 
+@pytest.mark.skipif(not HAS_MASTODON, reason="Mastodon dependencies not installed (Mastodon.py)")
 class TestMastodonPlatform:
     """Test MastodonPlatform integration."""
 
@@ -399,15 +407,16 @@ class TestMastodonPlatform:
 class TestDevToPlatform:
     """Test DevToPlatform integration (already exists, add edge cases)."""
 
-    @patch('ghops.llm.platforms.requests')
-    def test_publish_with_all_metadata(self, mock_requests):
+    @patch('requests.post')
+    @patch('requests.get')
+    def test_publish_with_all_metadata(self, mock_get, mock_post):
         """Test publishing with all optional metadata."""
         # Mock API responses
-        mock_requests.get.return_value = MagicMock(
+        mock_get.return_value = MagicMock(
             status_code=200,
             json=lambda: {'username': 'testuser'}
         )
-        mock_requests.post.return_value = MagicMock(
+        mock_post.return_value = MagicMock(
             status_code=201,
             json=lambda: {
                 'id': 12345,
@@ -433,7 +442,7 @@ class TestDevToPlatform:
         assert result['platform'] == 'devto'
 
         # Verify API call
-        call_args = mock_requests.post.call_args
+        call_args = mock_post.call_args
         article_data = call_args[1]['json']['article']
         assert article_data['title'] == 'Test Article'
         assert len(article_data['tags']) == 4

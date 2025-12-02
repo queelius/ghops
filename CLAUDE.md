@@ -8,7 +8,7 @@ ghops is a multi-platform git project management system that helps developers ma
 
 **Key Philosophy**: Local-first with remote awareness. Your local git repositories are the ground truth, and remote platforms (GitHub, GitLab, PyPI, etc.) are services that enrich and distribute your projects.
 
-**Current Version**: 0.8.1 (with event-driven automation, social media integration, and analytics)
+**Current Version**: 0.8.2 (with event-driven automation, social media integration, and analytics)
 
 ## Vision & Use Cases
 
@@ -185,16 +185,28 @@ pytest --cov=ghops --cov-report=html && open htmlcov/index.html
 ```
 
 **Test Coverage Requirements**:
-- Test suite contains 450+ tests (some need mock updates for `run_command` return values)
+- Test suite contains 625+ tests (625 passed, 21 skipped as of v0.8.2)
 - Tests located in `tests/` directory, using `pyfakefs` for filesystem mocking
 - **ALWAYS run coverage after adding new features**: `pytest --cov=ghops --cov-report=html`
 - Coverage report available in `htmlcov/index.html` after running coverage
 
-**Note on `run_command` return values**:
+**IMPORTANT - `run_command` return values**:
 The `run_command()` function in `utils.py` returns a tuple `(stdout, returncode)`. When mocking or using this function:
 ```python
+# Correct usage:
 output, returncode = run_command("git status", cwd=repo_path, capture_output=True)
+
+# When mocking in tests:
+mock_run_command.return_value = ("output string", 0)  # Success
+mock_run_command.return_value = (None, 1)  # Failure
+mock_run_command.side_effect = [("output1", 0), ("output2", 0)]  # Multiple calls
 ```
+
+**Skipped Tests**:
+Some tests are skipped due to infrastructure limitations:
+- Tests for removed CLI commands (`license`, `social`) - functionality moved to core functions
+- Integration tests using temp directories (ghops uses config directories)
+- Platform tests requiring optional dependencies (`atproto` for Bluesky, `mastodon` for Mastodon)
 
 ## Architecture
 
@@ -289,8 +301,9 @@ Core commands:
 - **status** - Repository status with git, license, package info
 - **get** - Clone repositories from GitHub
 - **update** - Update and sync repositories
-- **license** - Manage open source licenses
 - **config** - Configuration management
+
+Note: License management functionality is available via core functions in `ghops/core.py` (e.g., `get_license_info()`, `detect_license()`). The standalone `license` CLI command was removed in v0.8.x.
 
 Organization & discovery:
 - **tag** - Hierarchical tag management (add, remove, move, list, tree)
@@ -299,10 +312,11 @@ Organization & discovery:
 - **metadata** - Metadata store management
 
 Content generation:
-- **social** - Social media content generation (Bluesky, Mastodon)
-- **generate-post** - LLM-powered post generation
+- **generate-post** - LLM-powered post generation for social media (Bluesky, Mastodon)
 - **export** - Generate portfolios in multiple formats (markdown, hugo, html, pdf, etc.)
 - **docs** - Documentation detection, building, and deployment
+
+Note: Social media posting is integrated with the event system and LLM module (`ghops/llm/platforms.py`). The standalone `social` CLI module was refactored in v0.8.x.
 
 Event-driven automation:
 - **poll** - Poll repositories for events (tags, releases) and trigger handlers

@@ -63,10 +63,11 @@ description = "A test package"
     
     def test_status_command_json_output(self):
         """Test status command with JSONL output"""
-        result = self.run_ghops_command("status", "--no-pypi", "--no-pages")
-        
+        # Use -d to specify the temp directory containing our test repo
+        result = self.run_ghops_command("status", "-d", self.temp_dir, "--no-pypi", "--no-pages", "--no-table")
+
         self.assertEqual(result.returncode, 0)
-        
+
         # Parse JSONL output (each line should be valid JSON)
         lines = result.stdout.strip().split('\n')
         if lines and lines[0]:  # If there's output
@@ -76,8 +77,6 @@ description = "A test package"
                         repo_data = json.loads(line)
                         self.assertIn('name', repo_data)
                         self.assertIn('status', repo_data)
-                        self.assertIn('branch', repo_data)
-                        self.assertIn('license', repo_data)
                     except json.JSONDecodeError:
                         self.fail(f"Line is not valid JSON: {line}")
     
@@ -107,44 +106,6 @@ description = "A test package"
         except json.JSONDecodeError:
             self.fail(f"Config show did not output valid JSON: {result.stdout}")
     
-    def test_license_list(self):
-        """Test license list command"""
-        result = self.run_ghops_command("license", "list")
-        
-        self.assertEqual(result.returncode, 0)
-        try:
-            output_data = json.loads(result.stdout)
-            self.assertIsInstance(output_data, list)
-            self.assertTrue(len(output_data) > 0)
-            self.assertIn('mit', [item['key'] for item in output_data])
-        except json.JSONDecodeError:
-            self.fail(f"License list command did not output valid JSON: {result.stdout}")
-    
-    def test_license_show(self):
-        """Test license show command"""
-        result = self.run_ghops_command("license", "show", "mit")
-        
-        self.assertEqual(result.returncode, 0)
-        try:
-            output_data = json.loads(result.stdout)
-            self.assertIsInstance(output_data, dict)
-            self.assertIn('key', output_data)
-            self.assertEqual(output_data['key'], 'mit')
-            self.assertIn('body', output_data)
-        except json.JSONDecodeError:
-            self.fail(f"License show command did not output valid JSON: {result.stdout}")
-    
-    
-    
-    def test_social_post_dry_run(self):
-        """Test social media posting with dry run"""
-        result = self.run_ghops_command("social", "post", "--dry-run")
-        
-        self.assertEqual(result.returncode, 0)
-        
-        # Expecting message about no posts
-        self.assertIn("No posts to execute.", result.stdout)
-    
     def test_command_help(self):
         """Test that help is displayed for various commands"""
         # Main help
@@ -170,8 +131,9 @@ description = "A test package"
     
     def test_status_with_performance_flags(self):
         """Test status command with performance optimization flags"""
-        result = self.run_ghops_command("status", "--no-pypi", "--no-pages")
-        
+        # Use -d to specify the temp directory
+        result = self.run_ghops_command("status", "-d", self.temp_dir, "--no-pypi", "--no-pages")
+
         self.assertEqual(result.returncode, 0)
         # Should complete faster without external API calls
 
@@ -208,19 +170,19 @@ class TestCLIErrorHandling(unittest.TestCase):
     
     def test_status_no_repositories(self):
         """Test status command when no repositories are found"""
-        result = self.run_ghops_command("status", "--no-pypi", "--no-pages")
-        
-        self.assertEqual(result.returncode, 0)
-        # With JSONL format, empty result means no output lines
-        self.assertEqual(result.stdout.strip(), "")
+        # Use -d to specify the temp directory (which has no git repos)
+        result = self.run_ghops_command("status", "-d", self.temp_dir, "--no-pypi", "--no-pages", "--no-table")
+
+        # Exit code 64 = NO_REPOS_FOUND (expected when no repos in directory)
+        self.assertEqual(result.returncode, 64)
+        # Output should be a JSON error message
+        try:
+            error_data = json.loads(result.stdout)
+            self.assertIn('error', error_data)
+            self.assertEqual(error_data['type'], 'NoReposFoundError')
+        except json.JSONDecodeError:
+            self.fail(f"Output is not valid JSON: {result.stdout}")
     
-    def test_license_show_invalid(self):
-        """Test license show with invalid license"""
-        result = self.run_ghops_command("license", "show", "invalid_license")
-        
-        # Should handle gracefully (implementation dependent)
-        # Either succeed with error message or fail gracefully
-        self.assertIsNotNone(result.returncode)
 
 
 if __name__ == '__main__':

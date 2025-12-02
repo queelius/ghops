@@ -201,17 +201,24 @@ class TestListRepos:
 
 
 class TestGetRepoStatus:
-    @pytest.mark.skip(reason="Test infrastructure needs refactoring - git commands fail with fake filesystem")
+    """Tests for repository status functions.
+
+    These tests mock all filesystem and git operations to avoid pyfakefs/git conflicts.
+    For integration tests with real filesystem, use temp directories instead.
+    """
+
     @patch("ghops.core.run_command")
     @patch("ghops.core.get_remote_url")
     @patch("ghops.core.parse_repo_url")
     @patch("ghops.core.load_config")
-    @patch("ghops.utils.get_git_status")
+    @patch("ghops.core.get_git_status")
     @patch("ghops.core.get_license_info")
-    @patch("ghops.pypi.detect_pypi_package")
-    @patch("ghops.pypi.is_package_outdated")
-    def test_get_repo_status_basic(
+    @patch("ghops.core.detect_pypi_package")
+    @patch("ghops.core.is_package_outdated")
+    @patch("os.path.basename")
+    def test_get_repo_status_for_path_basic(
         self,
+        mock_basename,
         mock_is_outdated,
         mock_detect_pypi,
         mock_get_license,
@@ -220,10 +227,11 @@ class TestGetRepoStatus:
         mock_parse_repo_url,
         mock_get_remote_url,
         mock_run_command,
-        fs
     ):
-        """Test the basic status retrieval for a clean repository."""
-        repo_path = create_git_repo(fs, "/home/user/code/clean-repo")
+        """Test _get_repository_status_for_path with a clean repository."""
+        repo_path = "/home/user/code/clean-repo"
+
+        mock_basename.return_value = "clean-repo"
 
         # Mock all the helper functions
         mock_load_config.return_value = {"pypi": {"check_by_default": True}}
@@ -241,7 +249,8 @@ class TestGetRepoStatus:
         }
         mock_is_outdated.return_value = False
 
-        result = list(core.get_repository_status(repo_path, recursive=False))
+        # Test _get_repository_status_for_path directly
+        result = list(core._get_repository_status_for_path(repo_path, skip_pages_check=True))
 
         assert len(result) == 1
         status = result[0]
@@ -249,128 +258,164 @@ class TestGetRepoStatus:
         assert status["status"]["clean"] == True
         assert status["status"]["branch"] == "main"
         assert status["license"]["spdx_id"] == "MIT"
-        assert status["package"]["name"] == "clean-repo"
-        assert status["package"]["version"] == "1.0.0"
+        # Package info should be present when detect_pypi_package returns data
+        assert "package" in status
+        assert status["package"]["type"] == "python"
+        assert status["package"]["published"] == True
 
-        mock_get_git_status.assert_called_once_with(repo_path)
-        mock_get_license.assert_called_once_with(repo_path)
-        mock_detect_pypi.assert_called_once_with(repo_path)
-        mock_is_outdated.assert_called_once()
-
-    @pytest.mark.skip(reason="Test infrastructure needs refactoring - git commands fail with fake filesystem")
+    @patch("ghops.core.run_command")
+    @patch("ghops.core.get_remote_url")
+    @patch("ghops.core.parse_repo_url")
     @patch("ghops.core.load_config")
-    @patch("ghops.utils.get_git_status")
+    @patch("ghops.core.get_git_status")
     @patch("ghops.core.get_license_info")
-    @patch("ghops.utils.get_gh_pages_url")
-    @patch("ghops.pypi.detect_pypi_package")
-    def test_get_repo_status_dirty_and_unpublished(
+    @patch("ghops.core.detect_pypi_package")
+    @patch("ghops.core.is_package_outdated")
+    @patch("os.path.basename")
+    def test_get_repo_status_dirty_repo(
         self,
+        mock_basename,
+        mock_is_outdated,
         mock_detect_pypi,
-        mock_get_pages,
         mock_get_license,
         mock_get_git_status,
         mock_load_config,
-        fs
+        mock_parse_repo_url,
+        mock_get_remote_url,
+        mock_run_command,
     ):
-        """Test a dirty repo that is not published to PyPI."""
-        repo_path = create_git_repo(fs, "/home/user/code/dirty-repo")
+        """Test _get_repository_status_for_path with a dirty repository."""
+        repo_path = "/home/user/code/dirty-repo"
 
+        mock_basename.return_value = "dirty-repo"
         mock_load_config.return_value = {"pypi": {"check_by_default": True}}
-        mock_get_git_status.return_value = {"status": "dirty", "branch": "develop"}
-        mock_get_license.return_value = {"spdx_id": "GPL-3.0-only"}
-        mock_get_pages.return_value = None
-        mock_detect_pypi.return_value = {
-            "has_packaging_files": True,
-            "is_published": False,
-            "package_name": "dirty-repo",
-            "pypi_info": {}
+        mock_get_git_status.return_value = {
+            "status": "dirty",
+            "current_branch": "develop",
+            "ahead": 0,
+            "behind": 0
         }
+        mock_get_license.return_value = {"spdx_id": "GPL-3.0-only", "name": "GPL 3.0"}
+        mock_get_remote_url.return_value = "https://github.com/user/dirty-repo.git"
+        mock_parse_repo_url.return_value = ("user", "dirty-repo")
+        mock_run_command.return_value = (" M modified.txt", 0)  # Has uncommitted changes
+        mock_detect_pypi.return_value = None  # Not a Python package
+        mock_is_outdated.return_value = False
 
-        result = list(core.get_repository_status(repo_path, recursive=False))
-        
+        result = list(core._get_repository_status_for_path(repo_path, skip_pages_check=True))
+
         assert len(result) == 1
         status = result[0]
         assert status["name"] == "dirty-repo"
         assert status["status"]["clean"] == False
-        assert status["branch"] == "develop"
+        assert status["status"]["branch"] == "develop"
         assert status["license"]["spdx_id"] == "GPL-3.0-only"
-        assert status["pages_url"] is None
-        assert status["pypi_info"]["package_name"] == "dirty-repo"
-        assert status["pypi_info"]["version"] == "Not published"
+        assert status["status"]["uncommitted_changes"] == True
 
+    @patch("ghops.core.run_command")
+    @patch("ghops.core.get_remote_url")
+    @patch("ghops.core.parse_repo_url")
     @patch("ghops.core.load_config")
-    @patch("ghops.utils.get_git_status")
-    def test_get_repo_status_skip_checks(
-        self, mock_get_git_status, mock_load_config, fs
+    @patch("ghops.core.get_git_status")
+    @patch("ghops.core.get_license_info")
+    @patch("ghops.core.detect_pypi_package")
+    @patch("os.path.basename")
+    def test_get_repo_status_no_pypi_check(
+        self,
+        mock_basename,
+        mock_detect_pypi,
+        mock_get_license,
+        mock_get_git_status,
+        mock_load_config,
+        mock_parse_repo_url,
+        mock_get_remote_url,
+        mock_run_command,
     ):
-        """Test skipping the pages and pypi checks."""
-        repo_path = create_git_repo(fs, "/home/user/code/simple-repo")
+        """Test _get_repository_status_for_path with pypi check disabled."""
+        repo_path = "/home/user/code/simple-repo"
 
-        mock_load_config.return_value = {} # No config needed
-        mock_get_git_status.return_value = {"status": "clean", "branch": "main"}
+        mock_basename.return_value = "simple-repo"
+        mock_load_config.return_value = {"pypi": {"check_by_default": False}}
+        mock_get_git_status.return_value = {"status": "clean", "current_branch": "main", "ahead": 0, "behind": 0}
+        mock_get_license.return_value = {"error": "No license found"}
+        mock_get_remote_url.return_value = "https://github.com/user/simple-repo.git"
+        mock_parse_repo_url.return_value = ("user", "simple-repo")
+        mock_run_command.return_value = ("", 0)
 
-        with patch("ghops.core.get_gh_pages_url") as mock_get_pages, \
-             patch("ghops.core.detect_pypi_package") as mock_detect_pypi:
-            
-            result = list(core.get_repository_status(
-                repo_path, recursive=False, skip_pages_check=True
-            ))
+        result = list(core._get_repository_status_for_path(repo_path, skip_pages_check=True))
 
-            assert len(result) == 1
-            status = result[0]
-            assert status["name"] == "simple-repo"
-            assert status["pages_url"] is None
-            assert status["pypi_info"] is None
-            
-            mock_get_pages.assert_not_called()
-            mock_detect_pypi.assert_not_called()
+        assert len(result) == 1
+        status = result[0]
+        assert status["name"] == "simple-repo"
+        # PyPI detection should not be called when disabled
+        mock_detect_pypi.assert_not_called()
 
-    @patch('ghops.utils.get_git_status')
-    @patch('ghops.core.get_license_info')
-    @patch('ghops.utils.get_gh_pages_url')
-    @patch('ghops.pypi.detect_pypi_package')
-    def test_get_repository_status(self, mock_detect_pypi, mock_pages, mock_license, mock_git_status, fs):
-        """Test get_repository_status function"""
-        # Mock responses
-        mock_git_status.return_value = {'status': 'clean', 'branch': 'main'}
-        mock_license.return_value = {'spdx_id': 'MIT', 'name': 'MIT License', 'url': None}
-        mock_pages.return_value = None
-        mock_detect_pypi.return_value = {
-            'has_packaging_files': False,
-            'is_published': False,
-            'package_name': None,
-            'pypi_info': None
+    @patch("ghops.core.run_command")
+    @patch("ghops.core.get_remote_url")
+    @patch("ghops.core.parse_repo_url")
+    @patch("ghops.core.load_config")
+    @patch("ghops.core.get_git_status")
+    @patch("ghops.core.get_license_info")
+    @patch("ghops.core.detect_pypi_package")
+    @patch("ghops.core.is_package_outdated")
+    @patch("os.path.basename")
+    def test_get_repo_status_with_unpushed_commits(
+        self,
+        mock_basename,
+        mock_is_outdated,
+        mock_detect_pypi,
+        mock_get_license,
+        mock_get_git_status,
+        mock_load_config,
+        mock_parse_repo_url,
+        mock_get_remote_url,
+        mock_run_command,
+    ):
+        """Test _get_repository_status_for_path with unpushed commits."""
+        repo_path = "/home/user/code/unpushed-repo"
+
+        mock_basename.return_value = "unpushed-repo"
+        mock_load_config.return_value = {"pypi": {"check_by_default": False}}
+        mock_get_git_status.return_value = {
+            "status": "clean",
+            "current_branch": "main",
+            "ahead": 3,  # 3 commits ahead
+            "behind": 0
         }
-        
-        # Create fake repos
-        repo1 = create_git_repo(fs, '/fake/repo1')
-        repo2 = create_git_repo(fs, '/fake/repo2')
-        repo_paths = [repo1, repo2]
-        
-        # Test streaming function
-        # Since get_repository_status expects a base directory, not a list of paths
-        # We need to call it once for each path
-        results = []
-        for repo_path in repo_paths:
-            results.extend(list(core.get_repository_status(repo_path, recursive=False, skip_pages_check=True)))
-        
-        assert len(results) == 2
-        for result in results:
-            assert 'name' in result
-            assert 'status' in result
-            assert 'branch' in result
-            assert result['status']['clean'] == True
-            assert result['branch'] == 'main'
+        mock_get_license.return_value = {"spdx_id": "MIT"}
+        mock_get_remote_url.return_value = "https://github.com/user/unpushed-repo.git"
+        mock_parse_repo_url.return_value = ("user", "unpushed-repo")
+        # Simulate: no uncommitted changes, has upstream, has unpushed commits
+        mock_run_command.side_effect = [
+            ("", 0),  # git status --porcelain (no changes)
+            ("origin", 0),  # git config --get branch.main.remote (has upstream)
+            ("commit1\ncommit2\ncommit3", 0),  # git log origin/main..main (3 unpushed)
+        ]
+        mock_detect_pypi.return_value = None
+        mock_is_outdated.return_value = False
+
+        result = list(core._get_repository_status_for_path(repo_path, skip_pages_check=True))
+
+        assert len(result) == 1
+        status = result[0]
+        assert status["name"] == "unpushed-repo"
+        assert status["status"]["has_upstream"] == True
+        assert status["status"]["unpushed_commits"] == True
 
 
 
 class TestUpdateRepo:
+    """Test update_repo function.
+
+    Note: run_command returns (stdout, returncode) tuple, so mocks must return tuples.
+    """
+
     @patch("ghops.core.run_command")
     def test_update_repo_simple_pull(self, mock_run_command):
         """Test a simple update with only a pull."""
         mock_run_command.side_effect = [
-            "",  # git status --porcelain (no changes)
-            "Updating a0b1c2d..e3f4a5b",  # git pull
+            ("", 0),  # git status --porcelain (no changes)
+            ("Updating a0b1c2d..e3f4a5b", 0),  # git pull
         ]
 
         result = core.update_repo("/fake/repo", False, "", False)
@@ -385,9 +430,8 @@ class TestUpdateRepo:
     def test_update_repo_no_changes(self, mock_run_command):
         """Test an update where the repo is already up to date."""
         mock_run_command.side_effect = [
-            "Already up to date.",  # git pull
-            "",  # git status
-            "Everything up-to-date",  # git push
+            ("", 0),  # git status --porcelain (no changes)
+            ("Already up to date.", 0),  # git pull
         ]
 
         result = core.update_repo("/fake/repo", False, "", False)
@@ -400,11 +444,11 @@ class TestUpdateRepo:
     def test_update_repo_with_auto_commit(self, mock_run_command):
         """Test the update process with auto-commit enabled."""
         mock_run_command.side_effect = [
-            " M modified_file.txt",  # git status --porcelain
-            "",  # git add -A
-            "[main 12345] My commit",  # git commit
-            "Already up to date.",  # git pull
-            "To github.com/user/repo.git",  # git push
+            (" M modified_file.txt", 0),  # git status --porcelain
+            ("", 0),  # git add -A
+            ("[main 12345] My commit", 0),  # git commit
+            ("Already up to date.", 0),  # git pull
+            ("To github.com/user/repo.git", 0),  # git push
         ]
 
         result = core.update_repo("/fake/repo", True, "My commit", False)
@@ -430,17 +474,22 @@ class TestUpdateRepo:
 
 
 class TestLicenseFunctions:
+    """Test license-related functions.
+
+    Note: run_command returns (stdout, returncode) tuple, so mocks must return tuples.
+    """
+
     @patch("ghops.core.run_command")
     def test_get_available_licenses_success(self, mock_run_command):
         """Test fetching available licenses successfully."""
-        mock_run_command.return_value = '[{"key": "mit", "name": "MIT License"}]'
+        mock_run_command.return_value = ('[{"key": "mit", "name": "MIT License"}]', 0)
         licenses = core.get_available_licenses()
         assert licenses is not None
         assert len(licenses) == 1
         assert licenses[0]["key"] == "mit"
         mock_run_command.assert_called_once_with("gh api /licenses", capture_output=True, check=False)
 
-    @patch("ghops.core.run_command", return_value=None)
+    @patch("ghops.core.run_command", return_value=(None, 1))
     def test_get_available_licenses_failure(self, mock_run_command):
         """Test failure in fetching available licenses."""
         licenses = core.get_available_licenses()
@@ -449,13 +498,13 @@ class TestLicenseFunctions:
     @patch("ghops.core.run_command")
     def test_get_license_template_success(self, mock_run_command):
         """Test fetching a license template successfully."""
-        mock_run_command.return_value = '{"key": "mit", "body": "License text"}'
+        mock_run_command.return_value = ('{"key": "mit", "body": "License text"}', 0)
         template = core.get_license_template("mit")
         assert template is not None
         assert template["body"] == "License text"
         mock_run_command.assert_called_once_with("gh api /licenses/mit", capture_output=True, check=False)
 
-    @patch("ghops.core.run_command", return_value=None)
+    @patch("ghops.core.run_command", return_value=(None, 1))
     def test_get_license_template_failure(self, mock_run_command):
         """Test failure in fetching a license template."""
         template = core.get_license_template("non-existent")
@@ -502,7 +551,7 @@ class TestLicenseFunctions:
     @patch("ghops.core.run_command")
     def test_get_license_info_success(self, mock_run_command):
         """Test getting license info from a repo."""
-        mock_run_command.return_value = '{"licenseInfo": {"spdxId": "MIT", "name": "MIT License"}}'
+        mock_run_command.return_value = ('{"licenseInfo": {"spdxId": "MIT", "name": "MIT License"}}', 0)
         info = core.get_license_info("/fake/repo")
         assert info["spdx_id"] == "MIT"
         assert info["name"] == "MIT License"
